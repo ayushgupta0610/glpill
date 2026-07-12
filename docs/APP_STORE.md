@@ -70,7 +70,7 @@ Built for the new GLP-1 pills. Daily streaks, the Rybelsus 30-minute timer, weig
 
 ## Privacy policy URL
 
-Deploy `docs/website/privacy.html` (Vercel/GitHub Pages) and paste the URL into App Store Connect. Required field.
+**Live: https://glpill-privacy.vercel.app/privacy.html** (deployed 2026-07-12, Vercel project `glpill-privacy`). Paste this into App Store Connect → App Privacy / App Information. To update: edit `docs/website/privacy.html`, then `cd docs/website && vercel deploy --prod --yes`.
 
 ## Review notes (paste into App Review Information)
 
