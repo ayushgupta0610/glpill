@@ -1,10 +1,34 @@
 import SwiftUI
+import SwiftData
 
 @main
 struct GLPillApp: App {
+    private let container: ModelContainer
+    private let storageFailed: Bool
+    @State private var subscriptions = SubscriptionStore()
+
+    init() {
+        do {
+            container = try ModelContainerFactory.make()
+            storageFailed = false
+        } catch {
+            // In-memory fallback keeps the app usable; RootView surfaces a warning.
+            container = try! ModelContainerFactory.make(inMemory: true)
+            storageFailed = true
+        }
+    }
+
     var body: some Scene {
         WindowGroup {
-            RootView()
+            RootView(storageFailed: storageFailed)
+                .environment(subscriptions)
+                .tint(Theme.primary)
+                .task {
+                    _ = subscriptions.startTransactionListener()
+                    await subscriptions.refresh()
+                    await subscriptions.loadProducts()
+                }
         }
+        .modelContainer(container)
     }
 }
