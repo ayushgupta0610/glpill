@@ -16,6 +16,15 @@ struct GLPillApp: App {
             container = try! ModelContainerFactory.make(inMemory: true)
             storageFailed = true
         }
+        #if DEBUG
+        if ProcessInfo.processInfo.arguments.contains("-resetData") {
+            ModelContainerFactory.wipe(container)
+            UserDefaults.standard.removeObject(forKey: "eatTimerEnd")
+        }
+        if ProcessInfo.processInfo.arguments.contains("-uiTestUnlocked") {
+            _subscriptions = State(initialValue: SubscriptionStore(provider: AlwaysActiveProvider()))
+        }
+        #endif
     }
 
     var body: some Scene {

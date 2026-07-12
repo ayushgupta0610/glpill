@@ -36,16 +36,30 @@ targets:
     settings:
       base:
         GENERATE_INFOPLIST_FILE: YES
+  GLPillUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources:
+      - App/UITests
+    dependencies:
+      - target: GLPill
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES
+        TEST_TARGET_NAME: GLPill
 schemes:
   GLPill:
     build:
       targets:
         GLPill: all
         GLPillTests: [test]
+        GLPillUITests: [test]
     run:
       config: Debug
       storeKitConfiguration: App/Resources/GLPill.storekit
     test:
       config: Debug
+      storeKitConfiguration: App/Resources/GLPill.storekit
       targets:
         - GLPillTests
+        - GLPillUITests
