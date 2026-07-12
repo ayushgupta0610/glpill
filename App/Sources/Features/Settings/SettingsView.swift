@@ -109,20 +109,26 @@ struct SettingsView: View {
 struct PrivacyPolicyView: View {
     var body: some View {
         ScrollView {
-            Text("""
-            GLPill Privacy Policy
+            VStack(alignment: .leading, spacing: 16) {
+                Text("""
+                GLPill Privacy Policy (summary)
 
-            All data you enter in GLPill — doses, weight, side effects, protein and water intake — is stored only on your device. GLPill has no servers, no accounts, and no analytics. We never see, collect, transmit, or sell your data.
+                Everything you enter in GLPill — medication choice, dose plan and history, weight, side effects, protein and water — is stored only in a local database on your iPhone. GLPill has no servers, no accounts, no analytics, no ads, and no tracking. We never see, collect, transmit, share, or sell your data.
 
-            Subscriptions are processed by Apple. GLPill receives no personal information from your purchase.
+                Subscriptions are billed and managed entirely by Apple; we receive only an anonymous confirmation that a subscription is active — never your name, email, or payment details.
 
-            Notifications are scheduled locally on your device.
+                Reminders are scheduled locally on your device. Reports and progress cards leave your phone only when you explicitly share them.
 
-            If you delete the app, your data is deleted with it.
+                Your data is protected with iOS's strongest file-protection class (encrypted whenever your device is locked). Deleting the app permanently deletes your data — there is nothing on any server to remove.
 
-            Contact: ayushgupta0610@gmail.com
-            """)
-            .font(.subheadline)
+                Contact: ayushgupta0610@gmail.com
+                """)
+                .font(.subheadline)
+
+                Link("Read the full policy at glpill-privacy.vercel.app",
+                     destination: URL(string: "https://glpill-privacy.vercel.app/privacy.html")!)
+                    .font(.subheadline.weight(.semibold))
+            }
             .padding()
         }
         .navigationTitle("Privacy policy")
