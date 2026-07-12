@@ -179,7 +179,10 @@ private struct TitrationSetupStep: View {
             List {
                 ForEach($store.steps) { $draft in
                     HStack {
-                        TextField("Dose", value: $draft.doseMg, format: .number)
+                        TextField("Dose", value: Binding(
+                            get: { draft.doseMg },
+                            set: { draft.doseMg = min(max($0, 0.05), 50) }
+                        ), format: .number)
                             .keyboardType(.decimalPad)
                             .frame(width: 64)
                         Text("mg")

@@ -13,9 +13,15 @@ final class OnboardingStore {
 
     enum OnboardingError: LocalizedError {
         case invalidWeight
+        case invalidDose
 
         var errorDescription: String? {
-            "Please enter a weight between 55–1100 lb (25–500 kg)."
+            switch self {
+            case .invalidWeight:
+                return "Please enter a weight between 55–1100 lb (25–500 kg)."
+            case .invalidDose:
+                return "Dose steps must be between 0.05 and 50 mg. Double-check your prescriber's plan."
+            }
         }
     }
 
@@ -40,8 +46,15 @@ final class OnboardingStore {
         let medication = Medication(kind: kind, customName: kind == .custom ? customName : nil, createdAt: now)
         context.insert(medication)
 
-        for (index, step) in steps.enumerated() where step.doseMg > 0 && step.durationWeeks > 0 {
-            context.insert(TitrationStep(order: index, doseMg: step.doseMg, durationWeeks: step.durationWeeks))
+        if steps.contains(where: { !UnitFormat.isValidDose(mg: $0.doseMg) }) {
+            throw OnboardingError.invalidDose
+        }
+        for (index, step) in steps.enumerated() {
+            context.insert(TitrationStep(
+                order: index,
+                doseMg: step.doseMg,
+                durationWeeks: min(max(step.durationWeeks, 1), 52)
+            ))
         }
 
         context.insert(UserSettings(

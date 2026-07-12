@@ -10,15 +10,17 @@ struct TitrationEditor: View {
         List {
             Section {
                 ForEach(steps) { step in
-                    @Bindable var step = step
                     HStack {
-                        TextField("Dose", value: $step.doseMg, format: .number)
+                        TextField("Dose", value: clampedDose(step), format: .number)
                             .keyboardType(.decimalPad)
                             .frame(width: 64)
                         Text("mg")
                             .foregroundStyle(.secondary)
                         Spacer()
-                        Stepper("\(step.durationWeeks) wk", value: $step.durationWeeks, in: 1...52)
+                        Stepper("\(step.durationWeeks) wk", value: Binding(
+                            get: { step.durationWeeks },
+                            set: { step.durationWeeks = $0 }
+                        ), in: 1...52)
                             .fixedSize()
                     }
                 }
@@ -43,6 +45,19 @@ struct TitrationEditor: View {
         } message: {
             Text(errorMessage ?? "")
         }
+    }
+
+    /// Binding that keeps user-typed doses inside the plausible range.
+    private func clampedDose(_ step: TitrationStep) -> Binding<Double> {
+        Binding(
+            get: { step.doseMg },
+            set: { newValue in
+                step.doseMg = UnitFormat.isValidDose(mg: newValue)
+                    ? newValue
+                    : min(max(newValue, 0.05), 50)
+                saveOrReport()
+            }
+        )
     }
 
     private func addStep() {

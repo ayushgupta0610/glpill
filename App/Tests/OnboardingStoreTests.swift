@@ -69,4 +69,38 @@ final class OnboardingStoreTests: XCTestCase {
         XCTAssertThrowsError(try store.complete(in: context))
         XCTAssertTrue(try context.fetch(FetchDescriptor<UserSettings>()).isEmpty)
     }
+
+    @MainActor
+    func testCompleteRejectsImplausibleDose() throws {
+        let container = try makeContainer()
+        let context = container.mainContext
+        let store = OnboardingStore()
+        store.steps = [OnboardingStore.DraftStep(doseMg: 800, durationWeeks: 4)]
+
+        XCTAssertThrowsError(try store.complete(in: context))
+        XCTAssertTrue(try context.fetch(FetchDescriptor<UserSettings>()).isEmpty)
+    }
+
+    @MainActor
+    func testCompleteClampsDurationWeeks() throws {
+        let container = try makeContainer()
+        let context = container.mainContext
+        let store = OnboardingStore()
+        store.steps = [OnboardingStore.DraftStep(doseMg: 3, durationWeeks: 500)]
+
+        try store.complete(in: context)
+
+        let step = try XCTUnwrap(try context.fetch(FetchDescriptor<TitrationStep>()).first)
+        XCTAssertEqual(step.durationWeeks, 52)
+    }
+
+    func testDoseValidationBounds() {
+        XCTAssertTrue(UnitFormat.isValidDose(mg: 0.05))
+        XCTAssertTrue(UnitFormat.isValidDose(mg: 36))
+        XCTAssertTrue(UnitFormat.isValidDose(mg: 50))
+        XCTAssertFalse(UnitFormat.isValidDose(mg: 0.04))
+        XCTAssertFalse(UnitFormat.isValidDose(mg: 50.1))
+        XCTAssertFalse(UnitFormat.isValidDose(mg: 0))
+        XCTAssertFalse(UnitFormat.isValidDose(mg: -1))
+    }
 }
