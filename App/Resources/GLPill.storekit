@@ -32,7 +32,7 @@
           "displayPrice" : "6.99",
           "familyShareable" : false,
           "groupNumber" : 1,
-          "internalID" : "6E000001",
+          "internalID" : "1000000001",
           "introductoryOffer" : null,
           "localizations" : [
             {
@@ -60,9 +60,9 @@
           "displayPrice" : "39.99",
           "familyShareable" : false,
           "groupNumber" : 1,
-          "internalID" : "6E000002",
+          "internalID" : "1000000002",
           "introductoryOffer" : {
-            "internalID" : "6E000003",
+            "internalID" : "1000000003",
             "numberOfPeriods" : 1,
             "paymentMode" : "free",
             "subscriptionPeriod" : "P3D"

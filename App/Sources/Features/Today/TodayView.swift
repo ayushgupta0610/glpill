@@ -24,13 +24,18 @@ struct TodayView: View {
     }
 
     private var eatTimerActive: Bool {
-        Date(timeIntervalSince1970: eatTimerEnd) > .now
+        // Keep the card visible ~15 min past the end so users see "you can eat now".
+        Date(timeIntervalSince1970: eatTimerEnd + 15 * 60) > .now && eatTimerEnd > 0
     }
 
     var body: some View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 16) {
+                    Text(Date.now.formatted(.dateTime.weekday(.wide).month(.wide).day()))
+                        .font(.subheadline.weight(.medium))
+                        .foregroundStyle(.secondary)
+                        .frame(maxWidth: .infinity, alignment: .leading)
                     doseCard
                     if eatTimerActive {
                         EatTimerView(end: Date(timeIntervalSince1970: eatTimerEnd))
@@ -45,7 +50,7 @@ struct TodayView: View {
                 .padding()
             }
             .background(Color(.systemGroupedBackground))
-            .navigationTitle(Date.now.formatted(date: .abbreviated, time: .omitted))
+            .navigationTitle("Today")
             .sensoryFeedback(.success, trigger: doseJustLogged)
             .sheet(isPresented: $showSideEffectSheet) {
                 SideEffectSheet { kind, severity, note in
@@ -118,7 +123,8 @@ struct TodayView: View {
                         Text("\(streak)-day streak")
                             .font(.title3.bold())
                             .contentTransition(.numericText())
-                        Text("Longest: \(StreakCalculator.longestStreak(doseDays: doseLogs.map(\.date), calendar: calendar)) days")
+                        let longest = StreakCalculator.longestStreak(doseDays: doseLogs.map(\.date), calendar: calendar)
+                        Text("Longest: \(longest) \(longest == 1 ? "day" : "days")")
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     } else {

@@ -7,11 +7,15 @@ struct IntakeCountersView: View {
 
     @Query private var intakeDays: [IntakeDay]
     @Query private var settingsList: [UserSettings]
+    @State private var tapPulse = false
+
+    private static let mlPerOz = 29.5735
 
     private var today: IntakeDay? {
         intakeDays.first { Calendar.current.isDateInToday($0.date) }
     }
 
+    private var metric: Bool { settingsList.first?.usesMetric ?? false }
     private var proteinTarget: Int { settingsList.first?.proteinTargetGrams ?? 100 }
     private var waterTarget: Int { settingsList.first?.waterTargetMl ?? 2000 }
 
@@ -27,8 +31,9 @@ struct IntakeCountersView: View {
                 tint: Theme.primary,
                 value: today?.proteinGrams ?? 0,
                 target: proteinTarget,
-                unit: "g",
-                increments: [10, 25],
+                display: { "\($0) g" },
+                increments: [(10, "+10"), (25, "+25")],
+                unitName: "grams of protein",
                 action: onProtein
             )
             counterRow(
@@ -36,11 +41,13 @@ struct IntakeCountersView: View {
                 tint: .blue,
                 value: today?.waterMl ?? 0,
                 target: waterTarget,
-                unit: "ml",
-                increments: [250, 500],
+                display: { metric ? "\($0) ml" : "\(Int((Double($0) / Self.mlPerOz).rounded())) oz" },
+                increments: metric ? [(250, "+250"), (500, "+500")] : [(237, "+8 oz"), (473, "+16 oz")],
+                unitName: metric ? "milliliters of water" : "ounces of water",
                 action: onWater
             )
         }
+        .sensoryFeedback(.impact(weight: .light), trigger: tapPulse)
     }
 
     private func counterRow(
@@ -48,23 +55,34 @@ struct IntakeCountersView: View {
         tint: Color,
         value: Int,
         target: Int,
-        unit: String,
-        increments: [Int],
+        display: (Int) -> String,
+        increments: [(amount: Int, label: String)],
+        unitName: String,
         action: @escaping (Int) -> Void
     ) -> some View {
-        VStack(alignment: .leading, spacing: 6) {
+        let targetHit = value >= target
+        return VStack(alignment: .leading, spacing: 6) {
             HStack {
-                Image(systemName: icon)
+                Image(systemName: targetHit ? "checkmark.circle.fill" : icon)
                     .foregroundStyle(tint)
-                Text("\(value) / \(target) \(unit)")
+                Text("\(display(value)) / \(display(target))")
                     .font(.subheadline.weight(.semibold))
                     .monospacedDigit()
+                if targetHit {
+                    Text("Target hit")
+                        .font(.caption2.weight(.semibold))
+                        .foregroundStyle(tint)
+                }
                 Spacer()
-                ForEach(increments, id: \.self) { amount in
-                    Button("+\(amount)") { action(amount) }
-                        .font(.caption.weight(.semibold))
-                        .buttonStyle(.bordered)
-                        .tint(tint)
+                ForEach(increments, id: \.amount) { increment in
+                    Button(increment.label) {
+                        tapPulse.toggle()
+                        action(increment.amount)
+                    }
+                    .font(.caption.weight(.semibold))
+                    .buttonStyle(.bordered)
+                    .tint(tint)
+                    .accessibilityLabel("Add \(increment.label.dropFirst()) \(unitName)")
                 }
             }
             ProgressView(value: min(Double(value), Double(target)), total: Double(target))

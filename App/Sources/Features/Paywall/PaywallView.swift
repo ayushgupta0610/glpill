@@ -1,8 +1,10 @@
 import SwiftUI
+import SwiftData
 import StoreKit
 
 struct PaywallView: View {
     @Environment(SubscriptionStore.self) private var subscriptions
+    @Query private var medications: [Medication]
     @State private var selectedId = SubscriptionStore.yearlyId
     @State private var purchasing = false
     @State private var showPrivacy = false
@@ -33,15 +35,23 @@ struct PaywallView: View {
                 .frame(width: 84, height: 84)
                 .background(Theme.heroGradient, in: RoundedRectangle(cornerRadius: 22))
                 .shadow(color: Theme.primary.opacity(0.35), radius: 14, y: 6)
-            Text("Make every pill count")
+            Text(heroTitle)
                 .font(.system(.largeTitle, design: .rounded).bold())
                 .multilineTextAlignment(.center)
-            Text("The companion built for GLP-1 pills — stay consistent, watch the scale move, and walk into every appointment prepared.")
+            Text("Stay consistent, watch the scale move, and walk into every appointment prepared.")
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
         }
         .padding(.top, 28)
+    }
+
+    private var heroTitle: String {
+        if let med = medications.first {
+            let shortName = med.displayName.components(separatedBy: " (").first ?? med.displayName
+            return "Your \(shortName) plan is ready"
+        }
+        return "Make every pill count"
     }
 
     private var featureList: some View {
@@ -53,7 +63,7 @@ struct PaywallView: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(20)
-        .background(.background, in: RoundedRectangle(cornerRadius: Theme.cardCornerRadius))
+        .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: Theme.cardCornerRadius))
     }
 
     private func feature(_ icon: String, _ title: String, _ subtitle: String) -> some View {
@@ -95,7 +105,7 @@ struct PaywallView: View {
             }
             .frame(maxWidth: .infinity)
             .padding(20)
-            .background(.background, in: RoundedRectangle(cornerRadius: Theme.cardCornerRadius))
+            .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: Theme.cardCornerRadius))
         } else {
             VStack(spacing: 10) {
                 ForEach(subscriptions.products.sorted { $0.price > $1.price }, id: \.id) { product in
@@ -135,7 +145,7 @@ struct PaywallView: View {
                     .foregroundStyle(selected ? Theme.primary : Color.secondary.opacity(0.4))
             }
             .padding(16)
-            .background(.background, in: RoundedRectangle(cornerRadius: Theme.cardCornerRadius))
+            .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: Theme.cardCornerRadius))
             .overlay(
                 RoundedRectangle(cornerRadius: Theme.cardCornerRadius)
                     .stroke(selected ? Theme.primary : Color.clear, lineWidth: 2)
@@ -155,13 +165,35 @@ struct PaywallView: View {
         if isYearly {
             let weekly = product.price / 52
             let weeklyString = weekly.formatted(product.priceFormatStyle)
+            if let savings = yearlySavingsPercent {
+                return "\(product.displayPrice)/year — \(weeklyString)/week · Save \(savings)%"
+            }
             return "\(product.displayPrice)/year — just \(weeklyString) a week"
         }
         return "\(product.displayPrice)/month, flexible"
     }
 
+    private var yearlySavingsPercent: Int? {
+        guard let yearly = subscriptions.products.first(where: { $0.id == SubscriptionStore.yearlyId }),
+              let monthly = subscriptions.products.first(where: { $0.id == SubscriptionStore.monthlyId }) else {
+            return nil
+        }
+        let fullYear = monthly.price * 12
+        guard fullYear > 0 else { return nil }
+        let ratio = (fullYear - yearly.price) / fullYear * 100
+        let percent = Int(NSDecimalNumber(decimal: ratio).doubleValue.rounded())
+        return percent > 0 ? percent : nil
+    }
+
     private var ctaSection: some View {
         VStack(spacing: 10) {
+            HStack(spacing: 14) {
+                reassurance("iphone.gen3", "Data stays on iPhone")
+                reassurance("person.crop.circle.badge.xmark", "No account needed")
+                reassurance("apple.logo", "Billed by Apple")
+            }
+            .padding(.bottom, 2)
+
             Button {
                 purchase()
             } label: {
@@ -215,6 +247,19 @@ struct PaywallView: View {
             return "No payment now. \(offer.period.value) days free, then \(product.displayPrice)/year. Cancel anytime."
         }
         return "Billed monthly. Cancel anytime."
+    }
+
+    private func reassurance(_ icon: String, _ text: String) -> some View {
+        VStack(spacing: 4) {
+            Image(systemName: icon)
+                .font(.footnote)
+                .foregroundStyle(Theme.primary)
+            Text(text)
+                .font(.caption2)
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+        }
+        .frame(maxWidth: .infinity)
     }
 
     private func purchase() {

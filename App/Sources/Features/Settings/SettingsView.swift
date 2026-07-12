@@ -6,6 +6,7 @@ struct SettingsView: View {
     @Query private var settingsList: [UserSettings]
     @State private var reminderTime = Date.now
     @State private var restoreMessage: String?
+    @State private var showManageSubscription = false
 
     var body: some View {
         NavigationStack {
@@ -28,8 +29,12 @@ struct SettingsView: View {
                         }
                         Stepper("Protein target: \(settings.proteinTargetGrams) g",
                                 value: $settings.proteinTargetGrams, in: 30...300, step: 5)
-                        Stepper("Water target: \(settings.waterTargetMl) ml",
-                                value: $settings.waterTargetMl, in: 500...5000, step: 250)
+                        Stepper(
+                            settings.usesMetric
+                                ? "Water target: \(settings.waterTargetMl) ml"
+                                : "Water target: \(Int((Double(settings.waterTargetMl) / 29.5735).rounded())) oz",
+                            value: $settings.waterTargetMl, in: 500...5000, step: 250
+                        )
                     }
 
                     Section("Daily reminder") {
@@ -54,6 +59,9 @@ struct SettingsView: View {
 
                 Section("Subscription") {
                     LabeledContent("Status", value: subscriptions.isUnlocked ? "Active" : "Inactive")
+                    Button("Manage subscription") {
+                        showManageSubscription = true
+                    }
                     Button("Restore purchases") {
                         Task {
                             await subscriptions.restore()
@@ -78,6 +86,7 @@ struct SettingsView: View {
                 }
             }
             .navigationTitle("Settings")
+            .manageSubscriptionsSheet(isPresented: $showManageSubscription)
             .onAppear {
                 if let settings = settingsList.first {
                     reminderTime = Calendar.current.date(

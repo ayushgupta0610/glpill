@@ -8,7 +8,7 @@ struct ProgressScreen: View {
     @Query(sort: \DoseLog.date) private var doseLogs: [DoseLog]
     @State private var showEntrySheet = false
 
-    private var metric: Bool { settingsList.first?.usesMetric ?? true }
+    private var metric: Bool { settingsList.first?.usesMetric ?? false }
 
     var body: some View {
         NavigationStack {
@@ -70,10 +70,20 @@ struct ProgressScreen: View {
         Card {
             SectionHeader(title: "Weight trend")
             if entries.count < 2 {
-                Text("Log at least two weigh-ins to see your curve.")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-                    .frame(maxWidth: .infinity, minHeight: 120)
+                VStack(spacing: 12) {
+                    Text("Log at least two weigh-ins to see your curve.")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                    Button {
+                        showEntrySheet = true
+                    } label: {
+                        Label("Add today's weight", systemImage: "plus.circle.fill")
+                            .font(.subheadline.weight(.semibold))
+                    }
+                    .buttonStyle(.bordered)
+                    .tint(Theme.primary)
+                }
+                .frame(maxWidth: .infinity, minHeight: 120)
             } else {
                 Chart(entries) { entry in
                     LineMark(

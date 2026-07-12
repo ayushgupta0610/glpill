@@ -17,7 +17,7 @@ struct EatTimerView: View {
                                 .font(.title2.bold())
                                 .monospacedDigit()
                                 .contentTransition(.numericText())
-                            Text("until you can eat or drink")
+                            Text("You can eat at \(end.formatted(date: .omitted, time: .shortened))")
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
                         } else {

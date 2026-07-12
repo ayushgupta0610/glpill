@@ -102,6 +102,14 @@ struct HistoryView: View {
         }
         .buttonStyle(.plain)
         .disabled(isFuture)
+        .accessibilityLabel(accessibilityText(for: day, dosed: dosed, hasEffect: hasEffect))
+    }
+
+    private func accessibilityText(for day: Date, dosed: Bool, hasEffect: Bool) -> String {
+        var parts = [day.formatted(date: .long, time: .omitted)]
+        parts.append(dosed ? "pill taken" : "no pill logged")
+        if hasEffect { parts.append("side effect logged") }
+        return parts.joined(separator: ", ")
     }
 
     private func legend(color: Color, text: String) -> some View {
@@ -135,8 +143,10 @@ private struct DayDetailSheet: View {
     @Query private var doseLogs: [DoseLog]
     @Query private var sideEffects: [SideEffectLog]
     @Query private var intakeDays: [IntakeDay]
+    @Query private var settingsList: [UserSettings]
 
     private var calendar: Calendar { .current }
+    private var metric: Bool { settingsList.first?.usesMetric ?? false }
 
     var body: some View {
         NavigationStack {
@@ -172,7 +182,9 @@ private struct DayDetailSheet: View {
                 Section("Intake") {
                     if let intake = intakeDays.first(where: { calendar.isDate($0.date, inSameDayAs: day) }) {
                         LabeledContent("Protein", value: "\(intake.proteinGrams) g")
-                        LabeledContent("Water", value: "\(intake.waterMl) ml")
+                        LabeledContent("Water", value: metric
+                            ? "\(intake.waterMl) ml"
+                            : "\(Int((Double(intake.waterMl) / 29.5735).rounded())) oz")
                     } else {
                         Text("Nothing tracked")
                             .foregroundStyle(.secondary)

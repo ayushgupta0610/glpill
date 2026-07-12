@@ -46,10 +46,11 @@ struct TitrationEditor: View {
     }
 
     private func addStep() {
+        // Prefill with the previous dose unchanged — GLPill never suggests escalations.
         let last = steps.last
         context.insert(TitrationStep(
             order: (last?.order ?? -1) + 1,
-            doseMg: (last?.doseMg ?? 0.8) * 2,
+            doseMg: last?.doseMg ?? 0.8,
             durationWeeks: last?.durationWeeks ?? 4
         ))
         saveOrReport()

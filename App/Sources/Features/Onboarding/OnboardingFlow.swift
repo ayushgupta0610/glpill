@@ -11,10 +11,12 @@ struct OnboardingFlow: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            ProgressView(value: Double(step + 1), total: Double(totalSteps))
-                .tint(Theme.primary)
-                .padding(.horizontal)
-                .padding(.top, 8)
+            if step > 0 {
+                ProgressView(value: Double(step + 1), total: Double(totalSteps))
+                    .tint(Theme.primary)
+                    .padding(.horizontal)
+                    .padding(.top, 8)
+            }
 
             switch step {
             case 0: WelcomeStep(next: advance)
@@ -67,9 +69,14 @@ private struct WelcomeStep: View {
                 .foregroundStyle(.white)
                 .frame(width: 120, height: 120)
                 .background(Theme.heroGradient, in: RoundedRectangle(cornerRadius: 28))
-            Text("The companion app for GLP-1 pills")
+            Text("Make every pill count")
                 .font(.largeTitle.bold())
                 .multilineTextAlignment(.center)
+            Text("Built for Foundayo®, Rybelsus® and daily GLP-1 pills — not injections.")
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal)
             VStack(alignment: .leading, spacing: 12) {
                 bullet("checkmark.circle.fill", "One-tap daily pill tracking with streaks")
                 bullet("chart.line.uptrend.xyaxis", "Weight trend and milestones")
@@ -122,6 +129,10 @@ private struct MedicationStep: View {
                                 Text("Empty stomach + 30-min wait — we'll time it for you")
                                     .font(.caption)
                                     .foregroundStyle(.secondary)
+                            } else if kind == .foundayo {
+                                Text("No food or water rules — take it any time of day")
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
                             }
                         }
                         Spacer()
@@ -129,7 +140,7 @@ private struct MedicationStep: View {
                             .foregroundStyle(store.kind == kind ? Theme.primary : Color.secondary)
                     }
                     .padding()
-                    .background(.background, in: RoundedRectangle(cornerRadius: Theme.cardCornerRadius))
+                    .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: Theme.cardCornerRadius))
                     .overlay(
                         RoundedRectangle(cornerRadius: Theme.cardCornerRadius)
                             .stroke(store.kind == kind ? Theme.primary : Color.clear, lineWidth: 2)
@@ -181,9 +192,10 @@ private struct TitrationSetupStep: View {
                 .onDelete { store.steps.remove(atOffsets: $0) }
 
                 Button {
+                    // Prefill with the previous dose unchanged — GLPill never suggests escalations.
                     let last = store.steps.last
                     store.steps.append(OnboardingStore.DraftStep(
-                        doseMg: (last?.doseMg ?? 0.8) * 2,
+                        doseMg: last?.doseMg ?? 0.8,
                         durationWeeks: last?.durationWeeks ?? 4
                     ))
                 } label: {
@@ -224,7 +236,7 @@ private struct WeightStep: View {
                     .frame(width: 100)
             }
             .padding()
-            .background(.background, in: RoundedRectangle(cornerRadius: Theme.cardCornerRadius))
+            .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: Theme.cardCornerRadius))
 
             LabeledContent("Goal weight (optional)") {
                 TextField("0", value: $store.displayGoal, format: .number)
@@ -233,7 +245,7 @@ private struct WeightStep: View {
                     .frame(width: 100)
             }
             .padding()
-            .background(.background, in: RoundedRectangle(cornerRadius: Theme.cardCornerRadius))
+            .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: Theme.cardCornerRadius))
 
             Text("Stored only on your iPhone. GLPill has no servers.")
                 .font(.caption)
@@ -258,6 +270,10 @@ private struct ReminderStep: View {
             Text("Daily reminder")
                 .font(.title.bold())
                 .padding(.top, 24)
+                .task {
+                    // Ask here so the system dialog never lands on top of the paywall.
+                    _ = await UNNotificationScheduler().requestAuthorization()
+                }
             Text("Consistency is everything with a daily pill. When should we nudge you?")
                 .font(.subheadline)
                 .foregroundStyle(.secondary)

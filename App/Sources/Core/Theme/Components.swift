@@ -9,7 +9,7 @@ struct Card<Content: View>: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(16)
-        .background(.background, in: RoundedRectangle(cornerRadius: Theme.cardCornerRadius))
+        .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: Theme.cardCornerRadius))
         .shadow(color: .black.opacity(0.05), radius: 4, y: 2)
     }
 }
@@ -21,10 +21,13 @@ struct PillCTAButton: View {
 
     var body: some View {
         Button(action: action) {
-            Label(title, systemImage: systemImage)
-                .font(.headline)
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 16)
+            HStack(spacing: 8) {
+                Text(title)
+                Image(systemName: systemImage)
+            }
+            .font(.headline)
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 16)
         }
         .buttonStyle(.borderedProminent)
         .tint(Theme.primary)
@@ -48,6 +51,7 @@ struct StatBadge: View {
                 .foregroundStyle(.secondary)
         }
         .frame(maxWidth: .infinity)
+        .accessibilityElement(children: .combine)
     }
 }
 
