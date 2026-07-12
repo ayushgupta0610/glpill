@@ -212,8 +212,8 @@ private struct WeightStep: View {
                 .padding(.top, 24)
 
             Picker("Units", selection: $store.usesMetric) {
-                Text("kg").tag(true)
                 Text("lb").tag(false)
+                Text("kg").tag(true)
             }
             .pickerStyle(.segmented)
 

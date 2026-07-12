@@ -22,7 +22,8 @@ final class OnboardingStore {
     var kind: MedicationKind = .foundayo
     var customName = ""
     var steps: [DraftStep] = [DraftStep(doseMg: 0.8, durationWeeks: 4)]
-    var usesMetric = true
+    // US-first default: pounds
+    var usesMetric = false
     var displayWeight: Double?
     var displayGoal: Double?
     var reminderHour = 9

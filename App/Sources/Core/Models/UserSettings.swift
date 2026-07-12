@@ -15,7 +15,7 @@ final class UserSettings {
 
     init(
         onboardingComplete: Bool = false,
-        usesMetric: Bool = true,
+        usesMetric: Bool = false,
         goalKilograms: Double? = nil,
         startKilograms: Double? = nil,
         reminderHour: Int = 9,

@@ -10,6 +10,7 @@ struct TodayView: View {
     @AppStorage("eatTimerEnd") private var eatTimerEnd: Double = 0
     @State private var showSideEffectSheet = false
     @State private var errorMessage: String?
+    @State private var doseJustLogged = false
 
     private var store: TodayStore { TodayStore(context: context) }
     private var calendar: Calendar { .current }
@@ -45,6 +46,7 @@ struct TodayView: View {
             }
             .background(Color(.systemGroupedBackground))
             .navigationTitle(Date.now.formatted(date: .abbreviated, time: .omitted))
+            .sensoryFeedback(.success, trigger: doseJustLogged)
             .sheet(isPresented: $showSideEffectSheet) {
                 SideEffectSheet { kind, severity, note in
                     withErrorHandling { try store.logSideEffect(kind, severity: severity, note: note) }
@@ -82,6 +84,7 @@ struct TodayView: View {
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 16)
                     .background(Theme.primary.opacity(0.12), in: RoundedRectangle(cornerRadius: 12))
+                    .symbolEffect(.bounce, value: doseJustLogged)
             } else {
                 PillCTAButton(title: "Take today's pill", systemImage: "pills.fill") {
                     takePill()
@@ -109,13 +112,22 @@ struct TodayView: View {
             HStack(spacing: 16) {
                 Image(systemName: "flame.fill")
                     .font(.title)
-                    .foregroundStyle(.orange)
+                    .foregroundStyle(streak > 0 ? .orange : .secondary)
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("\(streak)-day streak")
-                        .font(.title3.bold())
-                    Text("Longest: \(StreakCalculator.longestStreak(doseDays: doseLogs.map(\.date), calendar: calendar)) days")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+                    if streak > 0 {
+                        Text("\(streak)-day streak")
+                            .font(.title3.bold())
+                            .contentTransition(.numericText())
+                        Text("Longest: \(StreakCalculator.longestStreak(doseDays: doseLogs.map(\.date), calendar: calendar)) days")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    } else {
+                        Text("Start your streak")
+                            .font(.title3.bold())
+                        Text("Take today's pill to light the flame")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
                 }
                 Spacer()
             }
@@ -140,6 +152,7 @@ struct TodayView: View {
     private func takePill() {
         withErrorHandling {
             let startTimer = try store.logDose()
+            doseJustLogged.toggle()
             if startTimer {
                 eatTimerEnd = Date().addingTimeInterval(30 * 60).timeIntervalSince1970
                 ReminderScheduler.scheduleEatTimer(using: UNNotificationScheduler())
