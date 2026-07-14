@@ -2,6 +2,14 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-3WKYBWQRFP"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-3WKYBWQRFP');
+  </script>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>GLPill — The app for GLP-1 pills</title>
   <meta name="description" content="GLPill is the iPhone app built for GLP-1 pills — Foundayo® (orforglipron), Rybelsus® and compounded orals. Daily streaks, the 30-minute meal timer, weight trends, doctor-ready reports. All data stays on your iPhone.">
@@ -123,6 +131,7 @@
           .then(function (r) { return r.json().then(function (d) { return { ok: r.ok, d: d }; }); })
           .then(function (res) {
             if (res.ok) {
+              if (typeof gtag === "function") { gtag("event", "waitlist_signup", { method: "landing" }); }
               form.style.display = "none";
               msg.textContent = "You're on the list. We'll email you the moment it's live. 💊";
             } else {
