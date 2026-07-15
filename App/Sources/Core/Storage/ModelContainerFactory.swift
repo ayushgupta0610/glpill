@@ -20,7 +20,12 @@ enum ModelContainerFactory {
             return try ModelContainer(for: schema, configurations: [config])
         }
 
-        #if DEBUG
+        // The Simulator can't apply the CloudKit entitlement, so SwiftData's
+        // CloudKit mirroring setup traps at launch (PFCloudKitContainerProvider).
+        // Always use the local store there; real devices still sync via CloudKit.
+        #if targetEnvironment(simulator)
+        let cloudDisabled = true
+        #elseif DEBUG
         let cloudDisabled = ProcessInfo.processInfo.arguments.contains("-disableCloudKit")
         #else
         let cloudDisabled = false
