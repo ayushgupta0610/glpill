@@ -16,7 +16,11 @@ targets:
     platform: iOS
     sources:
       - App/Sources
+      - App/Shared
       - App/Resources
+    dependencies:
+      - target: GLPillWidget
+        embed: true
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.ayushgupta.glpill
@@ -27,6 +31,21 @@ targets:
         INFOPLIST_KEY_UIApplicationSceneManifest_Generation: YES
         INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone: UIInterfaceOrientationPortrait
         INFOPLIST_KEY_ITSAppUsesNonExemptEncryption: NO
+        TARGETED_DEVICE_FAMILY: "1"
+  GLPillWidget:
+    type: app-extension
+    platform: iOS
+    sources:
+      - App/Widget
+      - App/Shared
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.ayushgupta.glpill.widget
+        CODE_SIGN_ENTITLEMENTS: App/Widget/GLPillWidget.entitlements
+        INFOPLIST_FILE: App/Widget/Info.plist
+        GENERATE_INFOPLIST_FILE: NO
+        INFOPLIST_KEY_CFBundleDisplayName: GLPill
+        SKIP_INSTALL: YES
         TARGETED_DEVICE_FAMILY: "1"
   GLPillTests:
     type: bundle.unit-test
@@ -56,6 +75,7 @@ schemes:
     build:
       targets:
         GLPill: all
+        GLPillWidget: all
         GLPillTests: [test]
         GLPillUITests: [test]
     run:
@@ -64,6 +84,8 @@ schemes:
     test:
       config: Debug
       storeKitConfiguration: App/Resources/GLPill.storekit
+      commandLineArguments:
+        "-disableCloudKit": true
       targets:
         - GLPillTests
         - GLPillUITests

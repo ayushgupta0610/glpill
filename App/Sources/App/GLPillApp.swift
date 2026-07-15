@@ -34,6 +34,7 @@ struct GLPillApp: App {
                 .tint(Theme.primary)
                 .task {
                     _ = subscriptions.startTransactionListener()
+                    WidgetSnapshotBuilder.refresh(context: container.mainContext)
                     await subscriptions.refresh()
                     await subscriptions.loadProducts()
                 }

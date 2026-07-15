@@ -19,7 +19,7 @@ A living list so good ideas don't evaporate. Nothing here is committed; it's a m
 - **Food-noise journal insights** — light AI over the side-effect/notes log. v2.
 
 ## Platform & delight (iOS-native, high fit for a daily-habit app)
-- **Home/Lock Screen widget** — "Take today's pill" + streak flame at a glance. Perfect for a daily-habit app; strong retention lever, moderate effort.
+- **Home/Lock Screen widget** — ✅ SHIPPED (2026-07-15, first post-launch feature). Streak flame + count + today's status ("Taken today" / "Take today's pill") on the brand gradient; systemSmall + Lock Screen circular/rectangular. Screenshot-worthy by design (growth lever, per MeAgain's viral capybara widget). Data via App Group snapshot — no CloudKit in the extension. See docs/WIDGET.md.
 - **Live Activity / Dynamic Island for the Rybelsus 30-min timer** — the countdown lives in the Dynamic Island. Near-perfect fit for our signature feature; very demoable in reels.
 - **Apple Watch app / complication** — log the dose from the wrist. Later.
 - **Real-time cross-device CloudKit push** — add Background Modes → Remote notifications + Push capability so sync is instant, not just on launch/foreground. Provisioning step is in APP_STORE.md; currently launch/foreground sync already covers reinstall/new-phone.

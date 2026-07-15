@@ -18,6 +18,7 @@ struct TodayStore {
 
         context.insert(DoseLog(date: day, takenAt: now, doseMg: currentDoseMg(on: now)))
         try context.save()
+        WidgetSnapshotBuilder.refresh(context: context, now: now, calendar: calendar)
 
         let medication = try context.fetch(FetchDescriptor<Medication>()).first
         return medication?.requiresEmptyStomach ?? false
