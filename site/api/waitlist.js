@@ -44,8 +44,9 @@ export default async function handler(req, res) {
         },
         body: JSON.stringify({ email, source }),
       });
-      // 2xx = inserted or duplicate-ignored; 404/42P01 = table missing (fine, fallback covers it)
-      results.supabase = r.ok;
+      // 2xx = inserted; 409 = already on the list (a conflict on the unique email) — both are success.
+      // 404/42P01 = table missing (fine, the fallback covers it).
+      results.supabase = r.ok || r.status === 409;
     } catch { /* fall through to email */ }
   }
 
