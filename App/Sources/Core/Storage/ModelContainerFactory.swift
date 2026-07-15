@@ -12,12 +12,44 @@ enum ModelContainerFactory {
         UserSettings.self,
     ])
 
+    static let cloudKitContainerID = "iCloud.com.ayushgupta.glpill"
+
     static func make(inMemory: Bool = false) throws -> ModelContainer {
-        let configuration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: inMemory)
-        let container = try ModelContainer(for: schema, configurations: [configuration])
-        if !inMemory {
-            hardenFileProtection(storeURL: configuration.url)
+        if inMemory {
+            let config = ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)
+            return try ModelContainer(for: schema, configurations: [config])
         }
+
+        #if DEBUG
+        let cloudDisabled = ProcessInfo.processInfo.arguments.contains("-disableCloudKit")
+        #else
+        let cloudDisabled = false
+        #endif
+
+        // Sync privately through the user's OWN iCloud (CloudKit private database).
+        // We run no servers and never see the data: it lives on the device and in
+        // the user's private iCloud, keyed to their Apple ID. This is what lets a
+        // paid user reinstall or switch phones without losing their history.
+        if !cloudDisabled {
+            do {
+                let cloudConfig = ModelConfiguration(
+                    schema: schema,
+                    isStoredInMemoryOnly: false,
+                    cloudKitDatabase: .private(cloudKitContainerID)
+                )
+                let container = try ModelContainer(for: schema, configurations: [cloudConfig])
+                hardenFileProtection(storeURL: cloudConfig.url)
+                return container
+            } catch {
+                // CloudKit unavailable (e.g. unsigned dev build with no iCloud
+                // container provisioned) — fall back to a local-only store so the
+                // app always works. Data still persists on device.
+            }
+        }
+
+        let localConfig = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
+        let container = try ModelContainer(for: schema, configurations: [localConfig])
+        hardenFileProtection(storeURL: localConfig.url)
         return container
     }
 

@@ -188,7 +188,7 @@ struct PaywallView: View {
     private var ctaSection: some View {
         VStack(spacing: 10) {
             HStack(spacing: 14) {
-                reassurance("iphone.gen3", "Data stays on iPhone")
+                reassurance("icloud.fill", "Private in your iCloud")
                 reassurance("person.crop.circle.badge.xmark", "No account needed")
                 reassurance("apple.logo", "Billed by Apple")
             }
@@ -282,7 +282,7 @@ struct PaywallView: View {
             }
             .font(.caption.weight(.medium))
 
-            Text("Auto-renews until cancelled in Settings › Apple Account › Subscriptions. Tracking tool — not medical advice. All data stays on your iPhone.")
+            Text("Auto-renews until cancelled in Settings › Apple Account › Subscriptions. Tracking tool — not medical advice. Your data syncs privately through your own iCloud — we never see it.")
                 .font(.caption2)
                 .foregroundStyle(.tertiary)
                 .multilineTextAlignment(.center)

@@ -21,10 +21,10 @@ enum MedicationKind: String, Codable, CaseIterable {
 
 @Model
 final class Medication {
-    var kindRaw: String
+    var kindRaw: String = MedicationKind.custom.rawValue
     var customName: String?
-    var requiresEmptyStomach: Bool
-    var createdAt: Date
+    var requiresEmptyStomach: Bool = false
+    var createdAt: Date = Date.now
 
     init(kind: MedicationKind, customName: String? = nil, createdAt: Date = .now) {
         self.kindRaw = kind.rawValue

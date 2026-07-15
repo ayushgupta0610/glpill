@@ -250,7 +250,7 @@ private struct WeightStep: View {
             .padding()
             .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: Theme.cardCornerRadius))
 
-            Text("Stored only on your iPhone. GLPill has no servers.")
+            Text("Synced privately through your own iCloud. GLPill has no servers and never sees your data.")
                 .font(.caption)
                 .foregroundStyle(.secondary)
 

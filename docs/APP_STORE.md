@@ -68,6 +68,16 @@ Built for the new GLP-1 pills. Daily streaks, the Rybelsus 30-minute timer, weig
 5. App Store Connect → App Privacy: answer **"Data Not Collected"** (accurate: no accounts, no analytics, local-only storage).
 6. Paid Apps agreement + banking must be active before subscriptions go live.
 
+## iCloud / CloudKit capability (required for data sync — do this in Xcode once)
+
+GLPill syncs user data through the user's **own private iCloud** (CloudKit private database) so a paying user never loses their history on reinstall or a new phone. The entitlement is already in the project (`App/Resources/GLPill.entitlements`, container `iCloud.com.ayushgupta.glpill`), but the container must be **provisioned under your Apple Developer account**:
+
+1. Open `GLPill.xcodeproj` → GLPill target → **Signing & Capabilities**.
+2. Set your **Team** (this also enables automatic provisioning).
+3. The **iCloud** capability should show, with **CloudKit** checked and the container `iCloud.com.ayushgupta.glpill`. If the container isn't created yet, click **+** next to Containers — Xcode auto-provisions it under your account.
+4. (Optional, for real-time cross-device sync) add **Background Modes → Remote notifications** + the **Push Notifications** capability. Without these, sync still happens on app launch/foreground — which already covers reinstall and new-phone recovery.
+5. **Privacy label is unaffected:** CloudKit private database is the user's own iCloud, which the developer cannot read, so the App Store answer stays **"Data Not Collected."**
+
 ## Privacy policy URL
 
 **Live: https://glpill-privacy.vercel.app/privacy.html** (deployed 2026-07-12, Vercel project `glpill-privacy`). Paste this into App Store Connect → App Privacy / App Information. To update: edit `docs/website/privacy.html`, then `cd docs/website && vercel deploy --prod --yes`.

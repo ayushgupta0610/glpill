@@ -3,15 +3,15 @@ import SwiftData
 
 @Model
 final class UserSettings {
-    var onboardingComplete: Bool
-    var usesMetric: Bool
+    var onboardingComplete: Bool = false
+    var usesMetric: Bool = false
     var goalKilograms: Double?
     var startKilograms: Double?
-    var reminderHour: Int
-    var reminderMinute: Int
-    var proteinTargetGrams: Int
-    var waterTargetMl: Int
-    var startDate: Date
+    var reminderHour: Int = 9
+    var reminderMinute: Int = 0
+    var proteinTargetGrams: Int = 100
+    var waterTargetMl: Int = 2000
+    var startDate: Date = Date.now
 
     init(
         onboardingComplete: Bool = false,

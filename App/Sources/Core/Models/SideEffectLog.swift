@@ -40,10 +40,10 @@ enum SideEffectKind: String, Codable, CaseIterable {
 
 @Model
 final class SideEffectLog {
-    var date: Date
-    var kindRaw: String
+    var date: Date = Date.now
+    var kindRaw: String = SideEffectKind.other.rawValue
     /// 1 = mild, 2 = moderate, 3 = severe
-    var severity: Int
+    var severity: Int = 1
     var note: String?
 
     init(date: Date, kind: SideEffectKind, severity: Int, note: String? = nil) {

@@ -113,20 +113,20 @@ struct PrivacyPolicyView: View {
                 Text("""
                 GLPill Privacy Policy (summary)
 
-                Everything you enter in GLPill — medication choice, dose plan and history, weight, side effects, protein and water — is stored only in a local database on your iPhone. GLPill has no servers, no accounts, no analytics, no ads, and no tracking. We never see, collect, transmit, share, or sell your data.
+                Everything you enter in GLPill — medication choice, dose plan and history, weight, side effects, protein and water — is stored on your device and synced privately through your own iCloud (Apple's, tied to your Apple ID). That means your history follows you to a new iPhone and survives a reinstall. GLPill has no servers of its own, no accounts, no analytics, no ads, and no tracking. We never see, collect, transmit, share, or sell your data — it stays within Apple's ecosystem, under your control.
 
-                Subscriptions are billed and managed entirely by Apple; we receive only an anonymous confirmation that a subscription is active — never your name, email, or payment details.
+                Subscriptions are billed and managed entirely by Apple; we receive only an anonymous confirmation that a subscription is active — never your name, email, or payment details. On a new phone, tap Restore Purchases to get your subscription back.
 
                 Reminders are scheduled locally on your device. Reports and progress cards leave your phone only when you explicitly share them.
 
-                Your data is protected with iOS's strongest file-protection class (encrypted whenever your device is locked). Deleting the app permanently deletes your data — there is nothing on any server to remove.
+                On-device data is protected with iOS's strongest file-protection class (encrypted whenever your device is locked). To remove everything, delete the app and clear its iCloud data in Settings › your Apple Account › iCloud.
 
                 Contact: ayushgupta0610@gmail.com
                 """)
                 .font(.subheadline)
 
-                Link("Read the full policy at glpill-privacy.vercel.app",
-                     destination: URL(string: "https://glpill-privacy.vercel.app/privacy.html")!)
+                Link("Read the full policy at glpillapp.com",
+                     destination: URL(string: "https://glpillapp.com/privacy.html")!)
                     .font(.subheadline.weight(.semibold))
             }
             .padding()
