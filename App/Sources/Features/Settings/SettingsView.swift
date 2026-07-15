@@ -121,7 +121,7 @@ struct PrivacyPolicyView: View {
 
                 On-device data is protected with iOS's strongest file-protection class (encrypted whenever your device is locked). To remove everything, delete the app and clear its iCloud data in Settings › your Apple Account › iCloud.
 
-                Contact: ayushgupta0610@gmail.com
+                Contact: support@glpillapp.com
                 """)
                 .font(.subheadline)
 
