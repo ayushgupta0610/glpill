@@ -38,7 +38,7 @@ struct PaywallView: View {
             Text(heroTitle)
                 .font(.system(.largeTitle, design: .rounded).bold())
                 .multilineTextAlignment(.center)
-            Text("Stay consistent, watch the scale move, and walk into every appointment prepared.")
+            Text("Stay consistent, watch the scale move, and never lose your history — it syncs privately across your devices.")
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
@@ -58,6 +58,7 @@ struct PaywallView: View {
         VStack(alignment: .leading, spacing: 14) {
             feature("pills.fill", "Never miss a dose", "One-tap logging, streaks and a daily reminder")
             feature("clock.fill", "Rybelsus® timer", "30-minute empty-stomach countdown, automatic")
+            feature("icloud.fill", "Never lose your history", "Syncs privately across your devices — new phone or reinstall, it's all still there")
             feature("chart.line.uptrend.xyaxis", "Watch it work", "Weight trend, milestones and share-ready cards")
             feature("doc.text.fill", "Doctor-ready reports", "Adherence, doses and side effects in one summary")
         }
