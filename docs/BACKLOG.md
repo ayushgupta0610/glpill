@@ -14,7 +14,7 @@ A living list so good ideas don't evaporate. Nothing here is committed; it's a m
 - **Pill-bottle scan → auto-setup** — point camera at the Rx label to prefill medication + dose. A 2-second "whoa" onboarding moment; also our reserved lever if creator-driven installs convert poorly (makes the app more filmable).
 - **Maintenance / off-ramp mode** — a dedicated phase for after goal weight, which is exactly where most trackers abandon people. Strong retention play; the audience (see @jasmines.best.life "No Bullshit Maintenance") clearly wants it.
 - **5-lb milestone chart annotations** — from the original spec, unimplemented. Small delight.
-- **Bigger streak celebrations at day 7 / 30** — from the UX audit. Cheap dopamine that drives retention.
+- **Bigger streak celebrations at day 7 / 30** — ✅ SHIPPED (2026-07-16) as the auto-firing **Trophy Card** at 7/30/100/365-day streaks (full-screen celebration + shareable card). See recap feature below.
 - **AI meal → protein estimate (photo)** — v2 candidate. Careful not to become a calorie-tracker (don't fight MyFitnessPal); keep it protein-only, on-brand.
 - **Food-noise journal insights** — light AI over the side-effect/notes log. v2.
 
@@ -25,7 +25,7 @@ A living list so good ideas don't evaporate. Nothing here is committed; it's a m
 - **Real-time cross-device CloudKit push** — add Background Modes → Remote notifications + Push capability so sync is instant, not just on launch/foreground. Provisioning step is in APP_STORE.md; currently launch/foreground sync already covers reinstall/new-phone.
 
 ## Monetization / retention
-- **"Wrapped"-style monthly recap card** — shareable summary of the month's streak + progress; doubles as organic content the user posts for us.
+- **"Wrapped"-style monthly recap card** — ✅ SHIPPED (2026-07-16) as **Consistency Wrapped** ("My Month" on the Progress tab): a 9:16 share card with a consistency *archetype* (Quiet Machine / Comeback Kid / On a Roll / Steady One / Just Starting), streak, days-shown-up, optional non-scale-victory + opt-in weight. Privacy-first per research (~43% of GLP-1 users hide the drug): the card never names the medication or shows weight unless opted in. Built with the shared `ImageRenderer → ShareLink` pipeline (`App/Sources/Features/Recap/`). Follow-ups: multi-slide (currently one card), the abstract companion character (#3 from research), the "food-noise quiet-o-meter" as a Wrapped slide.
 - **Annual paywall experiments** — copy/ordering tests (not price) once we have funnel data.
 
 ## Market expansion (later, deliberate)
