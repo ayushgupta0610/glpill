@@ -35,6 +35,11 @@ struct GLPillApp: App {
                 .task {
                     _ = subscriptions.startTransactionListener()
                     WidgetSnapshotBuilder.refresh(context: container.mainContext)
+                    #if DEBUG
+                    if ProcessInfo.processInfo.arguments.contains("-exportCards") {
+                        ShareCardExporter.exportSamples()
+                    }
+                    #endif
                     await subscriptions.refresh()
                     await subscriptions.loadProducts()
                 }
