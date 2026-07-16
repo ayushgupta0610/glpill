@@ -1,7 +1,10 @@
 import Foundation
+import OSLog
 #if canImport(WidgetKit)
 import WidgetKit
 #endif
+
+private let widgetLog = Logger(subsystem: "com.ayushgupta.glpill", category: "widget")
 
 /// The small, Codable slice of state the widget needs. Written by the app into
 /// the shared App Group, read by the widget extension. Deliberately tiny — the
@@ -22,9 +25,13 @@ enum GLPillWidgetBridge {
     static let snapshotKey = "widgetSnapshot"
 
     static func save(_ snapshot: GLPillWidgetSnapshot) {
-        guard let defaults = UserDefaults(suiteName: appGroupID),
-              let data = try? JSONEncoder().encode(snapshot) else { return }
+        guard let defaults = UserDefaults(suiteName: appGroupID) else {
+            widgetLog.error("save: App Group \(appGroupID, privacy: .public) unavailable (defaults nil)")
+            return
+        }
+        guard let data = try? JSONEncoder().encode(snapshot) else { return }
         defaults.set(data, forKey: snapshotKey)
+        widgetLog.log("save: streak=\(snapshot.streak, privacy: .public) taken=\(snapshot.doseTakenToday, privacy: .public)")
         reload()
     }
 
@@ -32,8 +39,10 @@ enum GLPillWidgetBridge {
         guard let defaults = UserDefaults(suiteName: appGroupID),
               let data = defaults.data(forKey: snapshotKey),
               let snapshot = try? JSONDecoder().decode(GLPillWidgetSnapshot.self, from: data) else {
+            widgetLog.log("load: no snapshot -> empty (defaults nil? \(UserDefaults(suiteName: appGroupID) == nil, privacy: .public))")
             return .empty
         }
+        widgetLog.log("load: streak=\(snapshot.streak, privacy: .public) taken=\(snapshot.doseTakenToday, privacy: .public)")
         return snapshot
     }
 

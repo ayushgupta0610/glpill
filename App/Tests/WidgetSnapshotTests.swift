@@ -1,8 +1,29 @@
 import XCTest
+import SwiftData
 @testable import GLPill
 
 final class WidgetSnapshotTests: XCTestCase {
     private let calendar = Calendar(identifier: .gregorian)
+
+    override func setUp() {
+        super.setUp()
+        UserDefaults(suiteName: GLPillWidgetBridge.appGroupID)?
+            .removeObject(forKey: GLPillWidgetBridge.snapshotKey)
+    }
+
+    /// End-to-end: logging a dose must publish a streak of 1 to the App Group
+    /// snapshot the widget reads. Reproduces the "widget shows 0" report.
+    @MainActor
+    func testLogDosePublishesStreakToWidget() throws {
+        let container = try ModelContainerFactory.make(inMemory: true)
+        let store = TodayStore(context: container.mainContext)
+
+        try store.logDose()
+
+        let snapshot = GLPillWidgetBridge.load()
+        XCTAssertEqual(snapshot.streak, 1)
+        XCTAssertTrue(snapshot.doseTakenToday)
+    }
 
     private func day(_ offset: Int) -> Date {
         calendar.startOfDay(for: calendar.date(byAdding: .day, value: offset, to: .now)!)
