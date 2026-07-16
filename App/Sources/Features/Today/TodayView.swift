@@ -11,6 +11,7 @@ struct TodayView: View {
     @State private var showSideEffectSheet = false
     @State private var errorMessage: String?
     @State private var doseJustLogged = false
+    @State private var celebratingMilestone: Int?
 
     private var store: TodayStore { TodayStore(context: context) }
     private var calendar: Calendar { .current }
@@ -57,6 +58,14 @@ struct TodayView: View {
                     withErrorHandling { try store.logSideEffect(kind, severity: severity, note: note) }
                 }
                 .presentationDetents([.medium])
+            }
+            .sheet(isPresented: .init(
+                get: { celebratingMilestone != nil },
+                set: { if !$0 { celebratingMilestone = nil } }
+            )) {
+                if let milestone = celebratingMilestone {
+                    MilestoneCelebrationView(milestone: milestone)
+                }
             }
             .alert("Couldn't save", isPresented: .init(
                 get: { errorMessage != nil },
@@ -156,6 +165,7 @@ struct TodayView: View {
     }
 
     private func takePill() {
+        let wasAlreadyLogged = todayLog != nil
         withErrorHandling {
             let startTimer = try store.logDose()
             doseJustLogged.toggle()
@@ -164,6 +174,22 @@ struct TodayView: View {
                 ReminderScheduler.scheduleEatTimer(using: UNNotificationScheduler())
             }
         }
+        if !wasAlreadyLogged { celebrateMilestoneIfReached() }
+    }
+
+    /// After a fresh dose log, fire the shareable Trophy Card once if the streak
+    /// just crossed a milestone (7/30/100/365).
+    private func celebrateMilestoneIfReached() {
+        let today = calendar.startOfDay(for: .now)
+        var days = doseLogs.map(\.date)
+        if !days.contains(where: { calendar.isDate($0, inSameDayAs: today) }) { days.append(today) }
+        let newStreak = StreakCalculator.currentStreak(doseDays: days, today: .now, calendar: calendar)
+        guard let settings = settingsList.first,
+              let milestone = StreakMilestone.newlyReached(streak: newStreak, lastCelebrated: settings.lastCelebratedMilestone)
+        else { return }
+        settings.lastCelebratedMilestone = milestone
+        try? context.save()
+        celebratingMilestone = milestone
     }
 
     private func withErrorHandling(_ work: () throws -> Void) {

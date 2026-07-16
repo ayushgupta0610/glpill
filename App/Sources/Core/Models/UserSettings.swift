@@ -12,6 +12,9 @@ final class UserSettings {
     var proteinTargetGrams: Int = 100
     var waterTargetMl: Int = 2000
     var startDate: Date = Date.now
+    /// Highest streak milestone (7/30/100/365) already celebrated, so the Trophy
+    /// Card fires once per milestone rather than on every dose log.
+    var lastCelebratedMilestone: Int = 0
 
     init(
         onboardingComplete: Bool = false,
@@ -22,7 +25,8 @@ final class UserSettings {
         reminderMinute: Int = 0,
         proteinTargetGrams: Int = 100,
         waterTargetMl: Int = 2000,
-        startDate: Date = .now
+        startDate: Date = .now,
+        lastCelebratedMilestone: Int = 0
     ) {
         self.onboardingComplete = onboardingComplete
         self.usesMetric = usesMetric
@@ -33,5 +37,6 @@ final class UserSettings {
         self.proteinTargetGrams = proteinTargetGrams
         self.waterTargetMl = waterTargetMl
         self.startDate = startDate
+        self.lastCelebratedMilestone = lastCelebratedMilestone
     }
 }

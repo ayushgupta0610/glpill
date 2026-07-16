@@ -7,6 +7,7 @@ struct ProgressScreen: View {
     @Query private var settingsList: [UserSettings]
     @Query(sort: \DoseLog.date) private var doseLogs: [DoseLog]
     @State private var showEntrySheet = false
+    @State private var showRecap = false
 
     private var metric: Bool { settingsList.first?.usesMetric ?? false }
 
@@ -14,6 +15,7 @@ struct ProgressScreen: View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 16) {
+                    monthCard
                     statsCard
                     chartCard
                     shareCard
@@ -35,7 +37,34 @@ struct ProgressScreen: View {
                 WeightEntrySheet(metric: metric)
                     .presentationDetents([.medium])
             }
+            .sheet(isPresented: $showRecap) {
+                RecapView()
+            }
         }
+    }
+
+    private var monthCard: some View {
+        Button {
+            showRecap = true
+        } label: {
+            HStack(spacing: 14) {
+                Text("✨").font(.system(size: 30))
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("My Month")
+                        .font(.headline)
+                        .foregroundStyle(.white)
+                    Text("A shareable recap of your consistency")
+                        .font(.caption)
+                        .foregroundStyle(.white.opacity(0.85))
+                }
+                Spacer()
+                Image(systemName: "chevron.right").foregroundStyle(.white.opacity(0.8))
+            }
+            .padding(18)
+            .frame(maxWidth: .infinity)
+            .background(Theme.heroGradient, in: RoundedRectangle(cornerRadius: Theme.cardCornerRadius))
+        }
+        .buttonStyle(.plain)
     }
 
     private var statsCard: some View {
