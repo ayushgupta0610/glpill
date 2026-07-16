@@ -10,6 +10,7 @@ enum ShareCardExporter {
     static func exportSamples() {
         let recap = MonthlyRecap(
             monthName: "July",
+            firstName: "Ayush",
             currentStreak: 30,
             bestStreakThisMonth: 30,
             daysLogged: 30,
@@ -20,7 +21,7 @@ enum ShareCardExporter {
             weightChangeKg: nil
         )
         write(WrappedCardView(recap: recap), name: "wrapped-card.png")
-        write(TrophyCardView(milestone: 30), name: "trophy-card.png")
+        write(TrophyCardView(milestone: 30, name: "Ayush"), name: "trophy-card.png")
     }
 
     private static func write<V: View>(_ view: V, name: String) {

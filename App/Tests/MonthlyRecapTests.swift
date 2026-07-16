@@ -80,6 +80,26 @@ final class MonthlyRecapTests: XCTestCase {
     // MARK: - Privacy guardrail
 
     @MainActor
+    func testRecapCarriesFirstName() {
+        let recap = RecapBuilder.make(
+            monthName: "July", daysLogged: 20, daysElapsed: 20,
+            currentStreak: 20, bestStreakThisMonth: 20, isAllTimeBest: true, hadComeback: false,
+            firstName: "Ayush"
+        )
+        XCTAssertEqual(recap.firstName, "Ayush")
+    }
+
+    @MainActor
+    func testRecapDropsBlankFirstName() {
+        let recap = RecapBuilder.make(
+            monthName: "July", daysLogged: 20, daysElapsed: 20,
+            currentStreak: 20, bestStreakThisMonth: 20, isAllTimeBest: true, hadComeback: false,
+            firstName: "   "
+        )
+        XCTAssertNil(recap.firstName, "Blank names must normalize to nil")
+    }
+
+    @MainActor
     func testRecapExcludesWeightByDefault() {
         let recap = RecapBuilder.make(
             monthName: "July", daysLogged: 20, daysElapsed: 20,

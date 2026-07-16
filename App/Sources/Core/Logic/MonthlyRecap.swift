@@ -7,6 +7,7 @@ import SwiftData
 /// only (`weightChangeKg` stays nil unless the user turns it on).
 struct MonthlyRecap: Equatable {
     var monthName: String
+    var firstName: String?
     var currentStreak: Int
     var bestStreakThisMonth: Int
     var daysLogged: Int
@@ -28,6 +29,7 @@ enum RecapBuilder {
         bestStreakThisMonth: Int,
         isAllTimeBest: Bool,
         hadComeback: Bool,
+        firstName: String? = nil,
         nonScaleVictory: String? = nil,
         weightChangeKg: Double? = nil
     ) -> MonthlyRecap {
@@ -40,8 +42,10 @@ enum RecapBuilder {
             isAllTimeBest: isAllTimeBest,
             hadComeback: hadComeback
         )
+        let trimmedName = firstName?.trimmingCharacters(in: .whitespacesAndNewlines)
         return MonthlyRecap(
             monthName: monthName,
+            firstName: (trimmedName?.isEmpty == false) ? trimmedName : nil,
             currentStreak: currentStreak,
             bestStreakThisMonth: bestStreakThisMonth,
             daysLogged: daysLogged,
@@ -59,7 +63,8 @@ enum RecapBuilder {
         now: Date = .now,
         calendar: Calendar = .current,
         includeWeight: Bool = false,
-        nonScaleVictory: String? = nil
+        nonScaleVictory: String? = nil,
+        firstName: String? = nil
     ) -> MonthlyRecap {
         let allDoseDays = ((try? context.fetch(FetchDescriptor<DoseLog>())) ?? []).map(\.date)
         let monthInterval = calendar.dateInterval(of: .month, for: now)
@@ -92,6 +97,7 @@ enum RecapBuilder {
             bestStreakThisMonth: bestStreakThisMonth,
             isAllTimeBest: isAllTimeBest,
             hadComeback: hadComeback,
+            firstName: firstName,
             nonScaleVictory: nonScaleVictory,
             weightChangeKg: weightChangeKg
         )

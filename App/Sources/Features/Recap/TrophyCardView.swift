@@ -4,6 +4,7 @@ import SwiftUI
 /// Like the Wrapped card, it celebrates the streak only — no medication, no weight.
 struct TrophyCardView: View {
     let milestone: Int
+    var name: String?
 
     var body: some View {
         VStack(spacing: 0) {
@@ -15,6 +16,14 @@ struct TrophyCardView: View {
             .foregroundStyle(.white.opacity(0.9))
 
             Spacer()
+
+            if let name = name?.trimmingCharacters(in: .whitespacesAndNewlines), !name.isEmpty {
+                Text(name.uppercased())
+                    .font(.subheadline.weight(.bold))
+                    .tracking(2)
+                    .foregroundStyle(.white.opacity(0.9))
+                    .padding(.bottom, 6)
+            }
 
             Text("🏆").font(.system(size: 72))
             Text("\(milestone)")

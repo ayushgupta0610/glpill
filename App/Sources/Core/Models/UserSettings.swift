@@ -5,6 +5,9 @@ import SwiftData
 final class UserSettings {
     var onboardingComplete: Bool = false
     var usesMetric: Bool = false
+    /// Optional first name for personalizing the shareable recap card. Stored
+    /// only on-device (+ the user's own private iCloud) — never sent anywhere.
+    var firstName: String?
     var goalKilograms: Double?
     var startKilograms: Double?
     var reminderHour: Int = 9
@@ -19,6 +22,7 @@ final class UserSettings {
     init(
         onboardingComplete: Bool = false,
         usesMetric: Bool = false,
+        firstName: String? = nil,
         goalKilograms: Double? = nil,
         startKilograms: Double? = nil,
         reminderHour: Int = 9,
@@ -30,6 +34,7 @@ final class UserSettings {
     ) {
         self.onboardingComplete = onboardingComplete
         self.usesMetric = usesMetric
+        self.firstName = firstName
         self.goalKilograms = goalKilograms
         self.startKilograms = startKilograms
         self.reminderHour = reminderHour

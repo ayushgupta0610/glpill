@@ -22,6 +22,18 @@ struct SettingsView: View {
 
                 if let settings = settingsList.first {
                     @Bindable var settings = settings
+                    Section {
+                        TextField("First name (optional)", text: Binding(
+                            get: { settings.firstName ?? "" },
+                            set: { settings.firstName = $0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? nil : $0 }
+                        ))
+                        .textInputAutocapitalization(.words)
+                    } header: {
+                        Text("Personal")
+                    } footer: {
+                        Text("Only used to personalize your shareable recap card. Stored on your device — never sent anywhere.")
+                    }
+
                     Section("Units & targets") {
                         Picker("Weight unit", selection: $settings.usesMetric) {
                             Text("kg").tag(true)

@@ -12,11 +12,16 @@ struct WrappedCardView: View {
                 Image(systemName: "pills.fill")
                 Text("GLPill").font(.headline.bold())
                 Spacer()
-                Text(recap.monthName).font(.subheadline.weight(.semibold))
             }
             .foregroundStyle(.white.opacity(0.9))
 
             Spacer(minLength: 12)
+
+            Text(titleLine)
+                .font(.subheadline.weight(.bold))
+                .tracking(2)
+                .foregroundStyle(.white.opacity(0.9))
+                .padding(.bottom, 4)
 
             Text(recap.archetype.emoji).font(.system(size: 68))
             Text(recap.archetype.title)
@@ -62,6 +67,13 @@ struct WrappedCardView: View {
         .padding(28)
         .frame(width: 360, height: 640)
         .background(Theme.heroGradient)
+    }
+
+    private var titleLine: String {
+        if let name = recap.firstName?.trimmingCharacters(in: .whitespacesAndNewlines), !name.isEmpty {
+            return "\(name)'s \(recap.monthName)".uppercased()
+        }
+        return recap.monthName.uppercased()
     }
 
     private var weightText: String? {

@@ -12,6 +12,7 @@ struct RecapView: View {
 
     @State private var includeWeight = false
     @State private var nonScaleVictory: String?
+    @State private var name = ""
 
     private let victories = ["More energy", "Clothes fit better", "Food noise quiet", "Slept better", "Feeling stronger"]
 
@@ -23,7 +24,12 @@ struct RecapView: View {
     }
 
     private var recap: MonthlyRecap {
-        RecapBuilder.build(context: context, includeWeight: includeWeight, nonScaleVictory: nonScaleVictory)
+        RecapBuilder.build(
+            context: context,
+            includeWeight: includeWeight,
+            nonScaleVictory: nonScaleVictory,
+            firstName: name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? nil : name
+        )
     }
 
     var body: some View {
@@ -34,6 +40,8 @@ struct RecapView: View {
                         .clipShape(RoundedRectangle(cornerRadius: 28))
                         .shadow(color: .black.opacity(0.15), radius: 16, y: 8)
                         .padding(.top, 8)
+
+                    nameField
 
                     victoryPicker
 
@@ -70,12 +78,34 @@ struct RecapView: View {
             .background(Color(.systemGroupedBackground))
             .navigationTitle("My Month")
             .navigationBarTitleDisplayMode(.inline)
+            .onAppear { name = settingsList.first?.firstName ?? "" }
+            .onChange(of: name) { _, newValue in persist(name: newValue) }
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Done") { dismiss() }
                 }
             }
         }
+    }
+
+    private var nameField: some View {
+        HStack {
+            Text("Your name").font(.subheadline.weight(.medium))
+            Spacer()
+            TextField("Optional", text: $name)
+                .multilineTextAlignment(.trailing)
+                .textInputAutocapitalization(.words)
+                .submitLabel(.done)
+        }
+        .padding(14)
+        .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 12))
+    }
+
+    private func persist(name newValue: String) {
+        guard let settings = settingsList.first else { return }
+        let trimmed = newValue.trimmingCharacters(in: .whitespacesAndNewlines)
+        settings.firstName = trimmed.isEmpty ? nil : trimmed
+        try? context.save()
     }
 
     private var victoryPicker: some View {
