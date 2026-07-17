@@ -33,6 +33,12 @@ A living list so good ideas don't evaporate. Nothing here is committed; it's a m
 - **Wider availability** — US launch first; UK/CA/AU is a one-click add and unlocks the strong UK Mounjaro/Rybelsus creator scene (already flagged).
 - **Android** — out of scope; only if iOS proves the model.
 
+## Pre-TestFlight QA follow-ups (deferred 2026-07-17)
+From the two-agent QA sweep. The visible/money-path issues were fixed same day; these are deferred (rare or cosmetic):
+- **CloudKit cross-device duplicate dose logs** (HIGH but rare — needs simultaneous multi-device offline use). SwiftData can't enforce `@Attribute(.unique)` on a CloudKit-mirrored store, so two devices logging the same day offline can both sync. Streak/recap already de-dupe by day; the gap is HistoryView showing two rows for one day. Fix: a launch-time de-dup pass that keeps the earliest `takenAt` per day.
+- **`RecapView.recap` recomputed twice per render** (LOW) — computed for the card and again in `shareImage()`, re-fetching all DoseLog/WeightEntry each time. Compute once per render and pass the same `MonthlyRecap` to both (minor perf + removes a near-impossible midnight-straddle mismatch).
+- **Widget streak (not just "taken today") can stale-high** if a user misses a full day and never reopens the app — the midnight timeline entry now flips "taken today" off but keeps the last streak. Full fix needs the widget to recompute the streak from raw dose days (share StreakCalculator + dose-day list into the snapshot).
+
 ## Notes
 - Anything with accounts/servers changes the "Data Not Collected" privacy label — a real tradeoff against the current positioning. Weigh per feature.
 - Add new ideas here as they come up rather than losing them in chat.

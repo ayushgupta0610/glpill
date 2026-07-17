@@ -278,6 +278,7 @@ struct PaywallView: View {
                 Button("Restore Purchases") {
                     Task { await subscriptions.restore() }
                 }
+                .disabled(subscriptions.restoring)
                 Link("Terms", destination: URL(string: "https://www.apple.com/legal/internet-services/itunes/dev/stdeula/")!)
                 Button("Privacy") { showPrivacy = true }
             }

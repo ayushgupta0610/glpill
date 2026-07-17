@@ -12,6 +12,7 @@ final class SubscriptionStore {
     private let provider: EntitlementProviding
     private(set) var state: EntitlementState = .unknown
     private(set) var products: [Product] = []
+    private(set) var restoring = false
     var lastError: String?
 
     var isUnlocked: Bool { state == .active }
@@ -21,7 +22,15 @@ final class SubscriptionStore {
     }
 
     func refresh() async {
-        state = await provider.currentState()
+        let previous = state
+        let next = await provider.currentState()
+        state = next
+        // A live downgrade (refund / expiry / lapse) arrives via the transaction
+        // listener. Explain it so being sent to the paywall doesn't look like the
+        // app reset or lost data.
+        if previous == .active && next != .active {
+            lastError = "Your subscription has ended. Renew to keep using GLPill."
+        }
     }
 
     func loadProducts() async {
@@ -34,20 +43,27 @@ final class SubscriptionStore {
     }
 
     func purchase(_ product: Product) async {
+        lastError = nil
         do {
             let result = try await product.purchase()
             switch result {
-            case .success(let verification):
-                if case .verified(let transaction) = verification {
-                    await transaction.finish()
-                    // Unlock immediately from the verified purchase. Re-querying
-                    // Transaction.currentEntitlements right after a purchase can lag
-                    // a beat and return .locked, leaving the user stuck on the
-                    // paywall despite a successful purchase.
-                    recordVerifiedPurchase(productID: transaction.productID)
-                }
+            case .success(.verified(let transaction)):
+                await transaction.finish()
+                // Unlock immediately from the verified purchase. Re-querying
+                // Transaction.currentEntitlements right after a purchase can lag
+                // a beat and return .locked, leaving the user stuck on the paywall
+                // despite a successful purchase.
+                recordVerifiedPurchase(productID: transaction.productID)
                 if !isUnlocked { await refresh() }
-            case .userCancelled, .pending:
+            case .success(.unverified):
+                // Signature check failed — don't unlock (security), but never leave
+                // the user silently stuck after a charge.
+                lastError = "We couldn't verify your purchase. If you were charged, tap Restore Purchases or contact support."
+            case .pending:
+                // Ask to Buy / Strong Customer Authentication — arrives later via the
+                // transaction listener.
+                lastError = "Your purchase is awaiting approval. You'll get access as soon as it's confirmed."
+            case .userCancelled:
                 break
             @unknown default:
                 break
@@ -67,8 +83,19 @@ final class SubscriptionStore {
     }
 
     func restore() async {
-        try? await AppStore.sync()
+        restoring = true
+        lastError = nil
+        defer { restoring = false }
+        do {
+            try await AppStore.sync()
+        } catch {
+            lastError = "Couldn't restore. Make sure you're signed in to your Apple Account, then try again."
+            return
+        }
         await refresh()
+        if !isUnlocked {
+            lastError = "No active subscription found to restore."
+        }
     }
 
     /// Long-lived listener for transaction updates (renewals, refunds, Ask to Buy).

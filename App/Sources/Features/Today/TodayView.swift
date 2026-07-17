@@ -180,9 +180,9 @@ struct TodayView: View {
     /// After a fresh dose log, fire the shareable Trophy Card once if the streak
     /// just crossed a milestone (7/30/100/365).
     private func celebrateMilestoneIfReached() {
-        let today = calendar.startOfDay(for: .now)
-        var days = doseLogs.map(\.date)
-        if !days.contains(where: { calendar.isDate($0, inSameDayAs: today) }) { days.append(today) }
+        // Read the canonical dose list straight from the store logDose just wrote,
+        // not the @Query (which can lag a run-loop tick).
+        let days = ((try? context.fetch(FetchDescriptor<DoseLog>())) ?? []).map(\.date)
         let newStreak = StreakCalculator.currentStreak(doseDays: days, today: .now, calendar: calendar)
         guard let settings = settingsList.first,
               let milestone = StreakMilestone.newlyReached(streak: newStreak, lastCelebrated: settings.lastCelebratedMilestone)

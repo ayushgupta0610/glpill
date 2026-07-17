@@ -28,15 +28,27 @@ struct GLPillProvider: TimelineProvider {
     }
 
     func getTimeline(in context: Context, completion: @escaping (Timeline<GLPillEntry>) -> Void) {
-        let entry = GLPillEntry(date: Date(), snapshot: GLPillWidgetBridge.load())
-        // Refresh just after midnight so "taken today" resets and the streak re-evaluates.
+        let snapshot = GLPillWidgetBridge.load()
+        let now = Date()
         let calendar = Calendar.current
         let nextMidnight = calendar.nextDate(
-            after: Date(),
+            after: now,
             matching: DateComponents(hour: 0, minute: 1),
             matchingPolicy: .nextTime
-        ) ?? Date().addingTimeInterval(60 * 60 * 6)
-        completion(Timeline(entries: [entry], policy: .after(nextMidnight)))
+        ) ?? now.addingTimeInterval(60 * 60 * 6)
+
+        // Two entries so the widget updates itself at midnight without waiting on
+        // the app: after midnight, today's dose is no longer "taken" until the app
+        // writes a fresh snapshot — otherwise the widget shows a stale "Taken today"
+        // overnight.
+        var afterMidnight = snapshot
+        afterMidnight.doseTakenToday = false
+
+        let entries = [
+            GLPillEntry(date: now, snapshot: snapshot),
+            GLPillEntry(date: nextMidnight, snapshot: afterMidnight)
+        ]
+        completion(Timeline(entries: entries, policy: .after(nextMidnight)))
     }
 }
 

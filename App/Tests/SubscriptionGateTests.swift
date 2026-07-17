@@ -6,6 +6,12 @@ private struct MockProvider: EntitlementProviding {
     func currentState() async -> EntitlementState { state }
 }
 
+private final class MutableProvider: EntitlementProviding, @unchecked Sendable {
+    var current: EntitlementState
+    init(_ current: EntitlementState) { self.current = current }
+    func currentState() async -> EntitlementState { current }
+}
+
 final class SubscriptionGateTests: XCTestCase {
     @MainActor
     func testInitialStateIsUnknownAndLocked() {
@@ -45,5 +51,27 @@ final class SubscriptionGateTests: XCTestCase {
         let store = SubscriptionStore(provider: MockProvider(state: .locked))
         store.recordVerifiedPurchase(productID: "com.someone.else.pro")
         XCTAssertFalse(store.isUnlocked)
+    }
+
+    // A live downgrade (refund/expiry) should lock the app AND explain why, so the
+    // user isn't silently kicked to the paywall.
+    @MainActor
+    func testLiveDowngradeSetsEndedMessage() async {
+        let provider = MutableProvider(.active)
+        let store = SubscriptionStore(provider: provider)
+        await store.refresh()                 // unknown -> active
+        XCTAssertTrue(store.isUnlocked)
+        XCTAssertNil(store.lastError)
+        provider.current = .locked
+        await store.refresh()                 // active -> locked
+        XCTAssertFalse(store.isUnlocked)
+        XCTAssertNotNil(store.lastError)
+    }
+
+    @MainActor
+    func testColdStartLockedHasNoEndedMessage() async {
+        let store = SubscriptionStore(provider: MutableProvider(.locked))
+        await store.refresh()                 // unknown -> locked (not a downgrade)
+        XCTAssertNil(store.lastError)
     }
 }
