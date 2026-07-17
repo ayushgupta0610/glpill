@@ -1,0 +1,104 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Waitlist from '../components/Waitlist.astro';
+
+const title = 'The GLP-1 Pill App — Oral GLP-1 Tracker for iPhone | GLPill';
+const description =
+  'GLPill is the iPhone app built for oral GLP-1s — Foundayo® (orforglipron), Rybelsus® and compounded pills. One-tap daily streaks, the 30-minute meal timer, weight trends and doctor-ready reports. Private by design — synced through your own iCloud.';
+const url = 'https://glpillapp.com/glp1-pill-app/';
+
+const features = [
+  { emoji: '💊', h: 'One-tap dose streaks', p: 'Log your daily pill in one tap and watch the streak grow — consistency is the whole game with an oral GLP-1.' },
+  { emoji: '⏱️', h: 'The 30-minute timer', p: 'On Rybelsus®? GLPill times the empty-stomach wait and tells you the exact minute you can eat.' },
+  { emoji: '📉', h: 'Weight trends', p: 'Weigh-ins become a trend line with milestones — plus protein and water targets to protect your muscle.' },
+  { emoji: '🩺', h: 'Doctor-ready reports', p: 'Adherence, dose steps, weight change and side effects in one summary you can share at your next appointment.' },
+  { emoji: '🔒', h: 'Private by design', p: 'No account. No servers. No analytics. Your data lives on your iPhone and syncs only through your own iCloud.' },
+  { emoji: '☁️', h: 'Never lose your journey', p: 'Your history follows you to a new phone and survives a reinstall, synced privately through your own iCloud.' },
+];
+
+const faqs = [
+  { q: 'What is a GLP-1 pill?', a: 'A GLP-1 pill is an oral form of a GLP-1 receptor agonist — taken daily as a tablet instead of a weekly injection. Examples include Foundayo (orforglipron) and Rybelsus (oral semaglutide). GLPill is an iPhone app built specifically to track a daily oral GLP-1 routine.' },
+  { q: 'Is there an app made for oral GLP-1s instead of injections?', a: 'Yes. Most GLP-1 trackers were built for weekly injections — shot days, injection sites, weekly cadence. GLPill is built around a daily pill: one-tap dose streaks, a daily reminder, and (for Rybelsus) an automatic 30-minute empty-stomach timer.' },
+  { q: 'Which GLP-1 pills does GLPill support?', a: 'GLPill works for Foundayo (orforglipron), Rybelsus (oral semaglutide), and compounded oral GLP-1s. You enter the dose plan your prescriber gave you — GLPill never suggests doses.' },
+  { q: 'Is my GLP-1 tracking data private?', a: 'Yes. There are no accounts and no servers. Your data is stored on your iPhone and syncs only through your own private iCloud, which the developer cannot access. No analytics, no tracking — the App Store privacy label is “Data Not Collected.”' },
+  { q: 'Does GLPill track my weight and side effects too?', a: 'Yes. Alongside your dose streak it charts your weight trend with milestones, logs side effects, and generates a doctor-ready summary of adherence, doses, weight change and side effects for your next appointment.' },
+];
+
+const appLd = {
+  '@context': 'https://schema.org', '@type': 'SoftwareApplication',
+  name: 'GLPill — The GLP-1 Pill App', applicationCategory: 'HealthApplication', operatingSystem: 'iOS 17+',
+  description: 'An iPhone app built for daily oral GLP-1s — Foundayo (orforglipron), Rybelsus (oral semaglutide) and compounded pills. Daily dose streaks, a 30-minute meal timer, weight trends, side-effect log and doctor-ready reports. Private by design — data stays on the device and syncs through the user’s own iCloud.',
+  offers: { '@type': 'Offer', price: '39.99', priceCurrency: 'USD' },
+  publisher: { '@type': 'Organization', name: 'GLPill', url: 'https://glpillapp.com' },
+};
+const faqLd = { '@context': 'https://schema.org', '@type': 'FAQPage', mainEntity: faqs.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })) };
+const crumbLd = { '@context': 'https://schema.org', '@type': 'BreadcrumbList', itemListElement: [
+  { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://glpillapp.com/' },
+  { '@type': 'ListItem', position: 2, name: 'The GLP-1 pill app', item: url },
+] };
+---
+
+<Layout title={title} description={description} path="/glp1-pill-app/">
+  <Fragment slot="head">
+    <script type="application/ld+json" set:html={JSON.stringify(appLd)} />
+    <script type="application/ld+json" set:html={JSON.stringify(faqLd)} />
+    <script type="application/ld+json" set:html={JSON.stringify(crumbLd)} />
+  </Fragment>
+
+  <section class="bg-gradient-to-br from-teal to-mint px-5 py-20 text-center text-white">
+    <img src="/icon.png" alt="GLPill app icon" width="96" height="96" class="mx-auto h-24 w-24 rounded-[22px] shadow-2xl" />
+    <div class="mt-6"><span class="inline-block rounded-full border border-white/35 bg-white/15 px-4 py-1.5 text-sm font-semibold">Coming soon to the App Store</span></div>
+    <h1 class="mx-auto mt-5 max-w-3xl text-3xl font-bold tracking-tight sm:text-5xl">The app built for GLP-1 pills</h1>
+    <p class="mx-auto mt-4 max-w-2xl text-lg text-white/90">Injections had their apps. Your daily oral GLP-1 deserves one too — Foundayo® (orforglipron), Rybelsus® and compounded pills. One tap a day, everything else handled.</p>
+    <div class="mt-8 flex flex-wrap justify-center gap-3">
+      <a href="#waitlist" class="rounded-full bg-white px-7 py-3.5 font-bold text-deep hover:bg-white/90">Join the waitlist</a>
+      <a href="https://www.instagram.com/glpillapp/" target="_blank" rel="noopener" class="rounded-full border-2 border-white/70 px-7 py-3.5 font-bold text-white hover:bg-white/10">Follow @glpillapp</a>
+    </div>
+  </section>
+
+  <nav class="mx-auto max-w-5xl px-5 pt-5 text-sm text-muted" aria-label="Breadcrumb">
+    <a class="hover:text-teal" href="/">Home</a> <span aria-hidden="true">›</span> <span class="text-ink">The GLP-1 pill app</span>
+  </nav>
+
+  <section class="mx-auto max-w-5xl px-5 py-14">
+    <h2 class="text-center text-2xl font-bold text-deep">Built for a daily pill, not a weekly shot</h2>
+    <div class="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+      {features.map((f) => (
+        <div class="rounded-2xl bg-white p-6 shadow-sm"><div class="text-3xl">{f.emoji}</div><h3 class="mt-3 font-bold text-deep">{f.h}</h3><p class="mt-1.5 text-sm text-muted">{f.p}</p></div>
+      ))}
+    </div>
+  </section>
+
+  <section class="mx-auto max-w-5xl px-5 py-8">
+    <h2 class="text-center text-2xl font-bold text-deep">Which pill are you on?</h2>
+    <div class="mt-6 grid gap-4 sm:grid-cols-2">
+      <a href="/foundayo-tracker/" class="block rounded-2xl bg-white p-6 shadow-sm hover:shadow-md">
+        <h3 class="font-bold text-deep">Foundayo (orforglipron)</h3>
+        <p class="mt-1 text-sm text-muted">The daily pill you can take any time, with or without food.</p>
+        <span class="mt-2 inline-block font-bold text-teal">See the Foundayo tracker →</span>
+      </a>
+      <a href="/rybelsus-tracker/" class="block rounded-2xl bg-white p-6 shadow-sm hover:shadow-md">
+        <h3 class="font-bold text-deep">Rybelsus (oral semaglutide)</h3>
+        <p class="mt-1 text-sm text-muted">The empty-stomach pill with the 30-minute rule — timed for you.</p>
+        <span class="mt-2 inline-block font-bold text-teal">See the Rybelsus tracker →</span>
+      </a>
+    </div>
+    <p class="mt-6 text-center">
+      <a href="/blog/" class="inline-block rounded-full bg-teal px-7 py-3 font-bold text-white hover:bg-deep">New to the pill? Read the GLP-1 guide →</a>
+    </p>
+  </section>
+
+  <section class="mx-auto max-w-2xl px-5 py-8">
+    <h2 class="text-center text-2xl font-bold text-deep">The GLP-1 pill app — questions</h2>
+    <div class="mt-6 space-y-3">
+      {faqs.map((f, i) => (
+        <details class="group rounded-xl border border-teal/15 bg-white p-4" open={i === 0}>
+          <summary class="cursor-pointer list-none font-semibold text-deep marker:hidden">{f.q}</summary>
+          <p class="mt-2 text-sm text-muted">{f.a}</p>
+        </details>
+      ))}
+    </div>
+  </section>
+
+  <Waitlist source="glp1-pill-app" />
+</Layout>
