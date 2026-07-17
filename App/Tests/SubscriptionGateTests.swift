@@ -29,4 +29,21 @@ final class SubscriptionGateTests: XCTestCase {
         XCTAssertEqual(store.state, .locked)
         XCTAssertFalse(store.isUnlocked)
     }
+
+    // A verified purchase must unlock immediately, without waiting on a
+    // (possibly-lagging) entitlements re-query. Reproduces "purchase succeeded
+    // but the app stayed on the paywall."
+    @MainActor
+    func testVerifiedPurchaseOfOurProductUnlocksImmediately() {
+        let store = SubscriptionStore(provider: MockProvider(state: .locked))
+        store.recordVerifiedPurchase(productID: SubscriptionStore.monthlyId)
+        XCTAssertTrue(store.isUnlocked)
+    }
+
+    @MainActor
+    func testVerifiedPurchaseOfUnknownProductDoesNotUnlock() {
+        let store = SubscriptionStore(provider: MockProvider(state: .locked))
+        store.recordVerifiedPurchase(productID: "com.someone.else.pro")
+        XCTAssertFalse(store.isUnlocked)
+    }
 }

@@ -40,8 +40,13 @@ final class SubscriptionStore {
             case .success(let verification):
                 if case .verified(let transaction) = verification {
                     await transaction.finish()
+                    // Unlock immediately from the verified purchase. Re-querying
+                    // Transaction.currentEntitlements right after a purchase can lag
+                    // a beat and return .locked, leaving the user stuck on the
+                    // paywall despite a successful purchase.
+                    recordVerifiedPurchase(productID: transaction.productID)
                 }
-                await refresh()
+                if !isUnlocked { await refresh() }
             case .userCancelled, .pending:
                 break
             @unknown default:
@@ -49,6 +54,15 @@ final class SubscriptionStore {
             }
         } catch {
             lastError = "Purchase failed. You have not been charged — please try again."
+        }
+    }
+
+    /// Marks the app unlocked when a verified transaction matches one of our
+    /// products. Trusts a cryptographically `.verified` purchase directly, so it
+    /// never depends on entitlement-refresh timing.
+    func recordVerifiedPurchase(productID: String) {
+        if Self.productIds.contains(productID) {
+            state = .active
         }
     }
 
