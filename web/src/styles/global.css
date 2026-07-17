@@ -10,3 +10,10 @@
   --color-ink: #16302f;
   --color-muted: #4a615f;
 }
+
+/* Wide article tables scroll horizontally on mobile instead of overflowing the page. */
+.prose table {
+  display: block;
+  overflow-x: auto;
+  max-width: 100%;
+}
