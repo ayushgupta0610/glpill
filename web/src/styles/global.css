@@ -1,0 +1,12 @@
+@import "tailwindcss";
+@plugin "@tailwindcss/typography";
+
+/* GLPill brand palette (ported from the original site). */
+@theme {
+  --color-teal: #0E7C7B;
+  --color-deep: #085453;
+  --color-mint: #6BC7AB;
+  --color-cream: #F7FAF9;
+  --color-ink: #16302f;
+  --color-muted: #4a615f;
+}

@@ -1,0 +1,95 @@
+---
+import '../styles/global.css';
+
+interface Props {
+  title: string;
+  description: string;
+  /** Path for canonical/OG url; defaults to current page. */
+  path?: string;
+  /** Absolute or root-relative OG image; defaults to the app icon. */
+  ogImage?: string;
+  noindex?: boolean;
+}
+
+const { title, description, path = Astro.url.pathname, ogImage = '/icon.png', noindex = false } = Astro.props;
+const site = Astro.site ?? new URL('https://glpillapp.com');
+const canonical = new URL(path, site).href;
+const ogAbs = new URL(ogImage, site).href;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <!-- Google Analytics 4 (ported from the original site) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-3WKYBWQRFP" is:inline></script>
+    <script is:inline>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-3WKYBWQRFP');
+    </script>
+
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    {noindex ? <meta name="robots" content="noindex, follow" /> : <link rel="canonical" href={canonical} />}
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="GLPill" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:image" content={ogAbs} />
+    {!noindex && <meta property="og:url" content={canonical} />}
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogAbs} />
+
+    <link rel="icon" type="image/png" href="/icon.png" />
+    <link rel="apple-touch-icon" href="/icon.png" />
+    <meta name="theme-color" content="#0E7C7B" />
+    <link rel="sitemap" href="/sitemap-index.xml" />
+
+    <slot name="head" />
+  </head>
+
+  <body class="min-h-screen bg-cream text-ink antialiased [font-family:-apple-system,BlinkMacSystemFont,'Segoe_UI',sans-serif]">
+    <header class="sticky top-0 z-10 border-b border-teal/10 bg-cream/85 backdrop-blur">
+      <div class="mx-auto flex max-w-5xl items-center justify-between px-5 py-3">
+        <a href="/" class="flex items-center gap-2 font-bold tracking-tight text-deep">
+          <span aria-hidden="true">💊</span><span>GLPill</span>
+        </a>
+        <nav class="flex items-center gap-5 text-sm font-semibold">
+          <a class="text-muted hover:text-teal" href="/blog/">Guides</a>
+          <a class="rounded-full bg-teal px-4 py-2 text-white hover:bg-deep" href="/#waitlist">Get the app</a>
+        </nav>
+      </div>
+    </header>
+
+    <main>
+      <slot />
+    </main>
+
+    <footer class="mt-20 border-t border-teal/10 py-10 text-sm text-muted">
+      <div class="mx-auto max-w-3xl space-y-3 px-5 text-center">
+        <p>
+          GLPill is a tracking tool and provides <strong>educational information, not medical advice</strong>.
+          Always follow your prescriber's instructions and consult a qualified clinician about your treatment.
+          GLPill never suggests doses.
+        </p>
+        <p class="text-xs">
+          Foundayo® is a trademark of Eli Lilly and Company. Rybelsus® is a trademark of Novo Nordisk A/S.
+          GLPill is not affiliated with or endorsed by either company.
+        </p>
+        <p>
+          <a class="text-teal hover:underline" href="/blog/">Guides</a> ·
+          <a class="text-teal hover:underline" href="/privacy.html">Privacy</a> ·
+          <a class="text-teal hover:underline" href="https://www.instagram.com/glpillapp/" rel="noopener" target="_blank">@glpillapp</a>
+          · © 2026 GLPill
+        </p>
+      </div>
+    </footer>
+  </body>
+</html>

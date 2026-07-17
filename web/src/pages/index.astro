@@ -1,0 +1,139 @@
+---
+import Layout from '../layouts/Layout.astro';
+
+const title = 'GLPill — The app for GLP-1 pills';
+const description =
+  'GLPill is the iPhone app built for GLP-1 pills — Foundayo® (orforglipron), Rybelsus® and compounded orals. Daily streaks, the 30-minute meal timer, weight trends, doctor-ready reports. Private by design — synced through your own iCloud, we never see your data.';
+
+const appJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'SoftwareApplication',
+  name: 'GLPill',
+  applicationCategory: 'HealthApplication',
+  operatingSystem: 'iOS',
+  description:
+    'The iPhone app built for GLP-1 pills — Foundayo (orforglipron), Rybelsus and compounded oral GLP-1s. Daily dose streaks, the 30-minute meal timer, weight trends and doctor-ready reports. All data stays on your device.',
+  offers: { '@type': 'Offer', price: '39.99', priceCurrency: 'USD' },
+  publisher: { '@type': 'Organization', name: 'GLPill', url: 'https://glpillapp.com' },
+};
+
+const features = [
+  { emoji: '💊', h: 'Dose streaks', p: 'Log the daily pill in one tap. Watch the streak grow — consistency is the whole game with a daily GLP-1.' },
+  { emoji: '⏱️', h: 'The 30-minute timer', p: 'On Rybelsus®? GLPill times the empty-stomach wait and tells you the exact minute you can eat.' },
+  { emoji: '📉', h: 'Weight trends', p: 'Weigh-ins become a trend line with milestones — plus protein & water targets to protect your muscle.' },
+  { emoji: '🩺', h: 'Doctor-ready reports', p: 'Adherence, dose steps, weight change and side effects in one summary you can share at your next appointment.' },
+  { emoji: '🔒', h: 'Private by design', p: 'No account. No analytics. No tracking. We run no servers and never see your data — it stays on your device and syncs privately through your own iCloud.' },
+  { emoji: '☁️', h: 'Never lose your journey', p: 'Your history syncs privately across your devices and survives a reinstall or a new phone — through your own iCloud, never our servers.' },
+  { emoji: '🧭', h: 'Your plan, tracked', p: 'Enter the dose plan your prescriber gave you and always know your current step. GLPill never suggests doses.' },
+];
+---
+
+<Layout title={title} description={description}>
+  <script type="application/ld+json" slot="head" set:html={JSON.stringify(appJsonLd)} />
+
+  <!-- Hero -->
+  <section class="bg-gradient-to-br from-teal to-mint px-5 py-20 text-center text-white sm:py-24">
+    <img src="/icon.png" alt="GLPill app icon" width="96" height="96" class="mx-auto h-24 w-24 rounded-[22px] shadow-2xl" />
+    <div class="mt-6">
+      <span class="inline-block rounded-full border border-white/35 bg-white/15 px-4 py-1.5 text-sm font-semibold">Coming soon to the App Store</span>
+    </div>
+    <h1 class="mx-auto mt-5 max-w-3xl text-4xl font-bold tracking-tight sm:text-5xl">The app for GLP-1 pills</h1>
+    <p class="mx-auto mt-4 max-w-xl text-lg text-white/90">
+      Injections had their apps. Your daily pill deserves one too. Built for Foundayo® (orforglipron), Rybelsus®
+      and compounded oral GLP-1s.
+    </p>
+    <div class="mt-8 flex flex-wrap justify-center gap-3">
+      <a href="#waitlist" class="rounded-full bg-white px-7 py-3.5 font-bold text-deep hover:bg-white/90">Join the waitlist</a>
+      <a href="https://www.instagram.com/glpillapp/" target="_blank" rel="noopener" class="rounded-full border-2 border-white/70 px-7 py-3.5 font-bold text-white hover:bg-white/10">Follow @glpillapp</a>
+    </div>
+  </section>
+
+  <!-- Features -->
+  <section class="mx-auto max-w-5xl px-5 py-16">
+    <h2 class="text-center text-2xl font-bold text-deep">One tap a day. Everything else is handled.</h2>
+    <div class="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+      {features.map((f) => (
+        <div class="rounded-2xl bg-white p-6 shadow-sm">
+          <div class="text-3xl">{f.emoji}</div>
+          <h3 class="mt-3 font-bold text-deep">{f.h}</h3>
+          <p class="mt-1.5 text-sm text-muted">{f.p}</p>
+        </div>
+      ))}
+    </div>
+  </section>
+
+  <!-- Which pill / guides -->
+  <section class="mx-auto max-w-3xl px-5 py-8 text-center">
+    <h2 class="text-2xl font-bold text-deep">New to the pill? Start here</h2>
+    <p class="mx-auto mt-3 max-w-xl text-muted">
+      Plain-language, source-backed guides to taking Rybelsus, the Foundayo (orforglipron) dosing schedule,
+      protein, side effects, and building a routine that sticks.
+    </p>
+    <a href="/blog/" class="mt-5 inline-block rounded-full bg-teal px-7 py-3 font-bold text-white hover:bg-deep">Read the GLP-1 pill guides →</a>
+  </section>
+
+  <!-- Screenshots -->
+  <section class="mx-auto max-w-5xl px-5 py-16">
+    <h2 class="text-center text-2xl font-bold text-deep">Built for the pill routine — not adapted from injections</h2>
+    <div class="mt-8 flex flex-wrap justify-center gap-6">
+      <img src="/shot-today.png" alt="GLPill Today screen with dose logged, 30-minute timer and streak" class="w-[min(280px,80vw)] rounded-[28px] shadow-2xl" />
+      <img src="/shot-progress.png" alt="GLPill Progress screen with weight trend" class="w-[min(280px,80vw)] rounded-[28px] shadow-2xl" />
+    </div>
+  </section>
+
+  <!-- Waitlist -->
+  <section id="waitlist" class="mx-auto max-w-3xl px-5 py-16">
+    <div class="rounded-3xl bg-white p-8 text-center shadow-md sm:p-10">
+      <h2 class="text-2xl font-bold text-deep">Be first in line</h2>
+      <p class="mx-auto mt-3 max-w-lg text-muted">Launching on the App Store soon. Join the waitlist and we'll send exactly one email — the link, on launch day.</p>
+      <form id="wl-form" class="mx-auto mt-5 flex max-w-md flex-wrap justify-center gap-2.5">
+        <input id="wl-email" type="email" name="email" required placeholder="you@email.com" aria-label="Email address"
+          class="min-w-[240px] flex-1 rounded-full border border-teal/30 px-5 py-3 outline-none focus:border-teal focus:ring-2 focus:ring-teal/20" />
+        <button id="wl-btn" type="submit" class="rounded-full bg-teal px-6 py-3 font-bold text-white hover:bg-deep">Notify me</button>
+      </form>
+      <p id="wl-msg" role="status" aria-live="polite" class="mt-3 min-h-[1.4em] font-semibold text-teal"></p>
+      <p class="mt-4 text-sm text-muted">Or just follow <a href="https://www.instagram.com/glpillapp/" target="_blank" rel="noopener" class="font-bold text-teal">@glpillapp</a> — launch day will be loud.</p>
+      <p class="mt-3 text-xs text-muted">One email at launch, nothing else. Address never shared or sold.</p>
+    </div>
+  </section>
+
+  <script is:inline>
+    (function () {
+      var form = document.getElementById('wl-form');
+      var email = document.getElementById('wl-email');
+      var btn = document.getElementById('wl-btn');
+      var msg = document.getElementById('wl-msg');
+      if (!form) return;
+      form.addEventListener('submit', function (e) {
+        e.preventDefault();
+        msg.style.color = '#0E7C7B';
+        msg.textContent = '';
+        btn.disabled = true;
+        btn.textContent = 'Adding you…';
+        fetch('/api/waitlist', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: email.value, source: 'landing' }),
+        })
+          .then(function (r) { return r.json().then(function (d) { return { ok: r.ok, d: d }; }); })
+          .then(function (res) {
+            if (res.ok) {
+              if (typeof gtag === 'function') { gtag('event', 'waitlist_signup', { method: 'landing' }); }
+              form.style.display = 'none';
+              msg.textContent = "You're on the list. We'll email you the moment it's live. 💊";
+            } else {
+              msg.innerHTML = 'The fastest way in: follow <a href="https://www.instagram.com/glpillapp/" target="_blank" rel="noopener" style="color:#0E7C7B;font-weight:700;">@glpillapp</a> — launch day will be loud. 💊';
+              btn.disabled = false;
+              btn.textContent = 'Notify me';
+            }
+          })
+          .catch(function () {
+            msg.style.color = '#c0392b';
+            msg.textContent = 'Network hiccup — please try again, or follow @glpillapp.';
+            btn.disabled = false;
+            btn.textContent = 'Notify me';
+          });
+      });
+    })();
+  </script>
+</Layout>
