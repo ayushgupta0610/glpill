@@ -1,0 +1,62 @@
+---
+interface Props {
+  /** Passed to the API + the GA event so we can attribute signups per page. */
+  source: string;
+}
+const { source } = Astro.props;
+---
+
+<section id="waitlist" class="mx-auto max-w-3xl px-5 py-16">
+  <div class="rounded-3xl bg-white p-8 text-center shadow-md sm:p-10">
+    <h2 class="text-2xl font-bold text-deep">Be first in line</h2>
+    <p class="mx-auto mt-3 max-w-lg text-muted">Launching on the App Store soon. Join the waitlist and we'll send exactly one email — the link, on launch day.</p>
+    <form id="wl-form" class="mx-auto mt-5 flex max-w-md flex-wrap justify-center gap-2.5">
+      <input id="wl-email" type="email" name="email" required placeholder="you@email.com" aria-label="Email address"
+        class="min-w-[240px] flex-1 rounded-full border border-teal/30 px-5 py-3 outline-none focus:border-teal focus:ring-2 focus:ring-teal/20" />
+      <button id="wl-btn" type="submit" class="rounded-full bg-teal px-6 py-3 font-bold text-white hover:bg-deep">Notify me</button>
+    </form>
+    <p id="wl-msg" role="status" aria-live="polite" class="mt-3 min-h-[1.4em] font-semibold text-teal"></p>
+    <p class="mt-4 text-sm text-muted">Or follow <a href="https://www.instagram.com/glpillapp/" target="_blank" rel="noopener" class="font-bold text-teal">@glpillapp</a> — launch day will be loud.</p>
+    <p class="mt-3 text-xs text-muted">One email at launch, nothing else. Address never shared or sold.</p>
+  </div>
+</section>
+
+<script define:vars={{ source }}>
+  (function () {
+    var form = document.getElementById('wl-form');
+    var email = document.getElementById('wl-email');
+    var btn = document.getElementById('wl-btn');
+    var msg = document.getElementById('wl-msg');
+    if (!form) return;
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      msg.style.color = '#0E7C7B';
+      msg.textContent = '';
+      btn.disabled = true;
+      btn.textContent = 'Adding you…';
+      fetch('/api/waitlist', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email.value, source: source }),
+      })
+        .then(function (r) { return r.json().then(function (d) { return { ok: r.ok, d: d }; }); })
+        .then(function (res) {
+          if (res.ok) {
+            if (typeof gtag === 'function') { gtag('event', 'waitlist_signup', { method: source }); }
+            form.style.display = 'none';
+            msg.textContent = "You're on the list. We'll email you the moment it's live. 💊";
+          } else {
+            msg.innerHTML = 'The fastest way in: follow <a href="https://www.instagram.com/glpillapp/" target="_blank" rel="noopener" style="color:#0E7C7B;font-weight:700;">@glpillapp</a> — launch day will be loud. 💊';
+            btn.disabled = false;
+            btn.textContent = 'Notify me';
+          }
+        })
+        .catch(function () {
+          msg.style.color = '#c0392b';
+          msg.textContent = 'Network hiccup — please try again, or follow @glpillapp.';
+          btn.disabled = false;
+          btn.textContent = 'Notify me';
+        });
+    });
+  })();
+</script>

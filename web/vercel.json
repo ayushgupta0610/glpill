@@ -8,6 +8,8 @@
     { "source": "/blog/orforglipron-side-effects.html", "destination": "/blog/orforglipron-side-effects/", "permanent": true },
     { "source": "/blog/protein-on-glp1.html", "destination": "/blog/protein-on-glp1/", "permanent": true },
     { "source": "/blog/track-glp1-pill-routine.html", "destination": "/blog/track-glp1-pill-routine/", "permanent": true },
+    { "source": "/foundayo-tracker.html", "destination": "/foundayo-tracker/", "permanent": true },
+    { "source": "/rybelsus-tracker.html", "destination": "/rybelsus-tracker/", "permanent": true },
     { "source": "/sitemap.xml", "destination": "/sitemap-index.xml", "permanent": true }
   ]
 }

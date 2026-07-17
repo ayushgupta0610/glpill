@@ -10,13 +10,5 @@ export default defineConfig({
   vite: {
     plugins: [tailwindcss()],
   },
-  integrations: [
-    sitemap({
-      // Static app-intent pages kept from the old site (not Astro-generated) — keep them in the sitemap.
-      customPages: [
-        'https://glpillapp.com/foundayo-tracker.html',
-        'https://glpillapp.com/rybelsus-tracker.html',
-      ],
-    }),
-  ],
+  integrations: [sitemap()],
 });

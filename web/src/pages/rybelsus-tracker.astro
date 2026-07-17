@@ -1,0 +1,110 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Waitlist from '../components/Waitlist.astro';
+
+const title = 'Rybelsus Tracker with the 30-Minute Timer — GLPill';
+const description =
+  'GLPill is the iPhone tracker built for Rybelsus® (oral semaglutide) — with an automatic 30-minute empty-stomach timer that tells you the exact minute you can eat. One-tap streaks, weight trends, doctor-ready reports. Private by design.';
+const url = 'https://glpillapp.com/rybelsus-tracker/';
+
+const features = [
+  { emoji: '⏱️', h: 'Automatic 30-minute timer', p: 'Log your dose and GLPill counts down the empty-stomach window, then notifies you the moment you can eat. No watching the clock.' },
+  { emoji: '💊', h: 'One-tap dose streaks', p: 'Rybelsus is daily. Log it in one tap and build a streak — consistency is the whole game with an oral GLP-1.' },
+  { emoji: '📉', h: 'Weight trends', p: 'Weigh-ins become a trend line with milestones — plus protein and water targets to protect your muscle.' },
+  { emoji: '🩺', h: 'Doctor-ready reports', p: 'Adherence, dose steps, weight change and side effects in one summary for your next appointment.' },
+  { emoji: '🔒', h: 'Private by design', p: 'No account. No servers. No analytics. Your data lives on your iPhone and syncs only through your own iCloud.' },
+  { emoji: '☁️', h: 'Never lose your journey', p: 'Your history follows you to a new phone and survives a reinstall, synced privately through your own iCloud.' },
+];
+
+const steps = [
+  { h: 'First thing, empty stomach', p: 'Take it after waking, before eating or drinking anything else.' },
+  { h: 'A small sip of water', p: 'Swallow the tablet whole with no more than ~4 oz of plain water. Don’t split, crush or chew it.' },
+  { h: 'Wait 30 minutes', p: 'Wait at least 30 minutes before eating, drinking anything else, or taking other oral medicines. GLPill runs this timer and tells you the exact minute you can eat.' },
+  { h: 'Then have breakfast', p: 'After the wait, eat and drink normally. Always follow the exact instructions from your prescriber and pharmacist — GLPill tracks your routine, it doesn’t give medical advice.' },
+];
+
+const faqs = [
+  { q: 'Is there an app to track Rybelsus?', a: 'Yes. GLPill is built for Rybelsus (oral semaglutide). Log your daily dose in one tap, run the automatic 30-minute empty-stomach timer, track your weight trend and side effects, and build a doctor-ready report.' },
+  { q: 'What is the Rybelsus 30-minute rule?', a: 'Rybelsus is taken first thing on an empty stomach with no more than ~4 oz of plain water, and you wait at least 30 minutes before eating, drinking anything else, or taking other oral medicines. GLPill times this for you.' },
+  { q: 'Does GLPill tell me when I can eat?', a: 'Yes. When you log your dose, GLPill starts a 30-minute timer and notifies you the moment the empty-stomach window is over.' },
+  { q: 'Is my data private?', a: 'Yes. No accounts, no servers, no analytics, no tracking. Your data stays on your iPhone and syncs only through your own private iCloud — the App Store label is “Data Not Collected.”' },
+];
+
+const appLd = {
+  '@context': 'https://schema.org', '@type': 'SoftwareApplication',
+  name: 'GLPill — Rybelsus Tracker', applicationCategory: 'HealthApplication', operatingSystem: 'iOS 17+',
+  description: 'An iPhone tracker built for Rybelsus (oral semaglutide) with an automatic 30-minute empty-stomach timer, daily dose streaks, weight trends and doctor-ready reports. Private by design — data stays on your device and syncs through your own iCloud.',
+  offers: { '@type': 'Offer', price: '39.99', priceCurrency: 'USD' },
+  publisher: { '@type': 'Organization', name: 'GLPill', url: 'https://glpillapp.com' },
+};
+const howToLd = {
+  '@context': 'https://schema.org', '@type': 'HowTo', name: 'How to take Rybelsus (the 30-minute rule)',
+  description: 'The empty-stomach routine for taking Rybelsus (oral semaglutide) correctly each morning.',
+  step: steps.map((s, i) => ({ '@type': 'HowToStep', position: i + 1, name: s.h, text: s.p })),
+};
+const faqLd = { '@context': 'https://schema.org', '@type': 'FAQPage', mainEntity: faqs.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })) };
+const crumbLd = { '@context': 'https://schema.org', '@type': 'BreadcrumbList', itemListElement: [
+  { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://glpillapp.com/' },
+  { '@type': 'ListItem', position: 2, name: 'Rybelsus tracker', item: url },
+] };
+---
+
+<Layout title={title} description={description} path="/rybelsus-tracker/">
+  <Fragment slot="head">
+    <script type="application/ld+json" set:html={JSON.stringify(appLd)} />
+    <script type="application/ld+json" set:html={JSON.stringify(howToLd)} />
+    <script type="application/ld+json" set:html={JSON.stringify(faqLd)} />
+    <script type="application/ld+json" set:html={JSON.stringify(crumbLd)} />
+  </Fragment>
+
+  <section class="bg-gradient-to-br from-teal to-mint px-5 py-20 text-center text-white">
+    <img src="/icon.png" alt="GLPill app icon" width="96" height="96" class="mx-auto h-24 w-24 rounded-[22px] shadow-2xl" />
+    <div class="mt-6"><span class="inline-block rounded-full border border-white/35 bg-white/15 px-4 py-1.5 text-sm font-semibold">Coming soon to the App Store</span></div>
+    <h1 class="mx-auto mt-5 max-w-3xl text-3xl font-bold tracking-tight sm:text-5xl">The Rybelsus tracker with a built-in 30-minute timer</h1>
+    <p class="mx-auto mt-4 max-w-2xl text-lg text-white/90">Take your Rybelsus®, tap once, and GLPill times the empty-stomach wait for you — then tells you the exact minute you can eat. Plus one-tap streaks, weight trends and doctor-ready reports.</p>
+    <div class="mt-8 flex flex-wrap justify-center gap-3">
+      <a href="#waitlist" class="rounded-full bg-white px-7 py-3.5 font-bold text-deep hover:bg-white/90">Join the waitlist</a>
+      <a href="https://www.instagram.com/glpillapp/" target="_blank" rel="noopener" class="rounded-full border-2 border-white/70 px-7 py-3.5 font-bold text-white hover:bg-white/10">Follow @glpillapp</a>
+    </div>
+  </section>
+
+  <nav class="mx-auto max-w-5xl px-5 pt-5 text-sm text-muted" aria-label="Breadcrumb">
+    <a class="hover:text-teal" href="/">Home</a> <span aria-hidden="true">›</span> <span class="text-ink">Rybelsus tracker</span>
+  </nav>
+
+  <section class="mx-auto max-w-5xl px-5 py-14">
+    <h2 class="text-center text-2xl font-bold text-deep">The only tracker that runs your 30-minute wait</h2>
+    <div class="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+      {features.map((f) => (
+        <div class="rounded-2xl bg-white p-6 shadow-sm"><div class="text-3xl">{f.emoji}</div><h3 class="mt-3 font-bold text-deep">{f.h}</h3><p class="mt-1.5 text-sm text-muted">{f.p}</p></div>
+      ))}
+    </div>
+  </section>
+
+  <section class="mx-auto max-w-2xl px-5 py-8">
+    <h2 class="text-center text-2xl font-bold text-deep">The Rybelsus 30-minute rule, made easy</h2>
+    <ol class="mt-6 space-y-3">
+      {steps.map((s, i) => (
+        <li class="relative rounded-xl border border-teal/15 bg-white p-4 pl-14">
+          <span class="absolute left-4 top-4 grid h-7 w-7 place-items-center rounded-full bg-teal text-sm font-bold text-white">{i + 1}</span>
+          <h3 class="font-semibold text-deep">{s.h}</h3><p class="mt-1 text-sm text-muted">{s.p}</p>
+        </li>
+      ))}
+    </ol>
+    <p class="mt-4 text-center text-sm text-muted">Full walkthrough: <a class="text-teal hover:underline" href="/blog/how-to-take-rybelsus/">How to take Rybelsus correctly</a>.</p>
+  </section>
+
+  <section class="mx-auto max-w-2xl px-5 py-8">
+    <h2 class="text-center text-2xl font-bold text-deep">Rybelsus tracker — questions</h2>
+    <div class="mt-6 space-y-3">
+      {faqs.map((f, i) => (
+        <details class="group rounded-xl border border-teal/15 bg-white p-4" open={i === 0}>
+          <summary class="cursor-pointer list-none font-semibold text-deep marker:hidden">{f.q}</summary>
+          <p class="mt-2 text-sm text-muted">{f.a}</p>
+        </details>
+      ))}
+    </div>
+  </section>
+
+  <Waitlist source="rybelsus-tracker" />
+</Layout>

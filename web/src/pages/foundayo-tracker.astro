@@ -1,0 +1,93 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Waitlist from '../components/Waitlist.astro';
+
+const title = 'Foundayo (Orforglipron) Tracker App — GLPill';
+const description =
+  'GLPill is the iPhone tracker built for Foundayo® (orforglipron) — the daily GLP-1 pill. One-tap dose streaks, weight trends, and doctor-ready reports. Private by design, synced through your own iCloud. Not an injection app in disguise.';
+const url = 'https://glpillapp.com/foundayo-tracker/';
+
+const features = [
+  { emoji: '💊', h: 'One-tap dose streaks', p: 'Foundayo is daily — consistency is the whole game. Log today’s pill in one tap and watch the streak grow.' },
+  { emoji: '🕰️', h: 'Any-time reminder', p: 'Foundayo can be taken any time of day, with or without food. Set the reminder for whenever fits your life and never miss a day.' },
+  { emoji: '📉', h: 'Weight trends', p: 'Weigh-ins become a trend line with milestones — plus protein and water targets to help protect your muscle.' },
+  { emoji: '🩺', h: 'Doctor-ready reports', p: 'Adherence, dose steps, weight change and side effects in one summary you can share at your next appointment.' },
+  { emoji: '🔒', h: 'Private by design', p: 'No account. No analytics. No servers. Your data lives on your iPhone and syncs only through your own iCloud — we never see it.' },
+  { emoji: '☁️', h: 'Never lose your journey', p: 'Your history follows you to a new phone and survives a reinstall, synced privately through your own iCloud.' },
+];
+
+const faqs = [
+  { q: 'Is there an app to track Foundayo (orforglipron)?', a: 'Yes. GLPill is built specifically for daily oral GLP-1 pills like Foundayo. Log the pill in one tap, build a streak, track your weight trend and side effects, and generate a doctor-ready summary — around a daily-pill routine, not a weekly shot.' },
+  { q: 'Can Foundayo be taken any time of day?', a: 'Foundayo (orforglipron) is the first oral GLP-1 for weight loss that can be taken any time of day, with or without food or water restrictions — unlike Rybelsus, which needs an empty stomach and a 30-minute wait. Always follow the exact instructions your prescriber gave you. GLPill tracks your routine; it doesn’t give medical advice.' },
+  { q: 'How is GLPill different from injection tracker apps?', a: 'Injection trackers are built around shot days, injection sites and a weekly cadence. Foundayo is a daily pill, so consistency and streaks matter more. GLPill is built around the daily-pill routine.' },
+  { q: 'Is my data private?', a: 'Yes. No accounts, no servers, no analytics, no tracking. Your data is stored on your iPhone and synced only through your own private iCloud — the App Store privacy label is “Data Not Collected.”' },
+  { q: 'Does my history sync to a new phone?', a: 'Yes. It syncs privately across your devices through your own iCloud, so it survives a reinstall or a new phone.' },
+];
+
+const appLd = {
+  '@context': 'https://schema.org', '@type': 'SoftwareApplication',
+  name: 'GLPill — Foundayo (Orforglipron) Tracker', applicationCategory: 'HealthApplication', operatingSystem: 'iOS 17+',
+  description: 'An iPhone tracker built for Foundayo (orforglipron), the daily oral GLP-1. Daily dose streaks, weight trends, side-effect log, and doctor-ready reports. Private by design — data stays on your device and syncs through your own iCloud.',
+  offers: { '@type': 'Offer', price: '39.99', priceCurrency: 'USD' },
+  publisher: { '@type': 'Organization', name: 'GLPill', url: 'https://glpillapp.com' },
+};
+const faqLd = { '@context': 'https://schema.org', '@type': 'FAQPage', mainEntity: faqs.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })) };
+const crumbLd = { '@context': 'https://schema.org', '@type': 'BreadcrumbList', itemListElement: [
+  { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://glpillapp.com/' },
+  { '@type': 'ListItem', position: 2, name: 'Foundayo tracker', item: url },
+] };
+---
+
+<Layout title={title} description={description} path="/foundayo-tracker/">
+  <Fragment slot="head">
+    <script type="application/ld+json" set:html={JSON.stringify(appLd)} />
+    <script type="application/ld+json" set:html={JSON.stringify(faqLd)} />
+    <script type="application/ld+json" set:html={JSON.stringify(crumbLd)} />
+  </Fragment>
+
+  <section class="bg-gradient-to-br from-teal to-mint px-5 py-20 text-center text-white">
+    <img src="/icon.png" alt="GLPill app icon" width="96" height="96" class="mx-auto h-24 w-24 rounded-[22px] shadow-2xl" />
+    <div class="mt-6"><span class="inline-block rounded-full border border-white/35 bg-white/15 px-4 py-1.5 text-sm font-semibold">Coming soon to the App Store</span></div>
+    <h1 class="mx-auto mt-5 max-w-3xl text-3xl font-bold tracking-tight sm:text-5xl">The Foundayo (orforglipron) tracker, built for the pill</h1>
+    <p class="mx-auto mt-4 max-w-2xl text-lg text-white/90">Foundayo is a daily pill, not a weekly shot — so your app shouldn’t be an injection tracker in disguise. GLPill logs your dose in one tap, builds a streak, and keeps every weigh-in and side effect in one private place.</p>
+    <div class="mt-8 flex flex-wrap justify-center gap-3">
+      <a href="#waitlist" class="rounded-full bg-white px-7 py-3.5 font-bold text-deep hover:bg-white/90">Join the waitlist</a>
+      <a href="https://www.instagram.com/glpillapp/" target="_blank" rel="noopener" class="rounded-full border-2 border-white/70 px-7 py-3.5 font-bold text-white hover:bg-white/10">Follow @glpillapp</a>
+    </div>
+  </section>
+
+  <nav class="mx-auto max-w-5xl px-5 pt-5 text-sm text-muted" aria-label="Breadcrumb">
+    <a class="hover:text-teal" href="/">Home</a> <span aria-hidden="true">›</span> <span class="text-ink">Foundayo tracker</span>
+  </nav>
+
+  <section class="mx-auto max-w-5xl px-5 py-14">
+    <h2 class="text-center text-2xl font-bold text-deep">Made for a daily pill routine</h2>
+    <div class="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+      {features.map((f) => (
+        <div class="rounded-2xl bg-white p-6 shadow-sm"><div class="text-3xl">{f.emoji}</div><h3 class="mt-3 font-bold text-deep">{f.h}</h3><p class="mt-1.5 text-sm text-muted">{f.p}</p></div>
+      ))}
+    </div>
+  </section>
+
+  <section class="mx-auto max-w-2xl px-5 py-8">
+    <h2 class="text-center text-2xl font-bold text-deep">Foundayo vs. the injection apps</h2>
+    <div class="mt-6 space-y-4 text-muted">
+      <p>Foundayo® (orforglipron) was approved in 2026 as the first oral GLP-1 for weight loss that can be taken any time of day — no empty-stomach window, no injection sites, no weekly shot day. It’s a genuinely different routine.</p>
+      <p>Almost every GLP-1 tracker was built for weekly injections and then adapted. GLPill was built the other way around: for the person who takes a pill every single day and wants the streak, the trend, and the report — without handing their health data to a server. You enter the dose plan your prescriber gave you; GLPill never suggests doses. New to the drug? Read the <a class="text-teal hover:underline" href="/blog/foundayo-orforglipron-guide/">Foundayo guide</a> and <a class="text-teal hover:underline" href="/blog/orforglipron-side-effects/">side effects</a>.</p>
+    </div>
+  </section>
+
+  <section class="mx-auto max-w-2xl px-5 py-8">
+    <h2 class="text-center text-2xl font-bold text-deep">Foundayo tracker — questions</h2>
+    <div class="mt-6 space-y-3">
+      {faqs.map((f, i) => (
+        <details class="group rounded-xl border border-teal/15 bg-white p-4" open={i === 0}>
+          <summary class="cursor-pointer list-none font-semibold text-deep marker:hidden">{f.q}</summary>
+          <p class="mt-2 text-sm text-muted">{f.a}</p>
+        </details>
+      ))}
+    </div>
+  </section>
+
+  <Waitlist source="foundayo-tracker" />
+</Layout>
