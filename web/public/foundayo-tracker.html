@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-3WKYBWQRFP"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-3WKYBWQRFP');
+  </script>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Foundayo (Orforglipron) Tracker App — GLPill</title>
+  <meta name="description" content="GLPill is the iPhone tracker built for Foundayo® (orforglipron) — the daily GLP-1 pill. One-tap dose streaks, weight trends, and doctor-ready reports. Private by design, synced through your own iCloud. Not an injection app in disguise.">
+  <meta property="og:title" content="Foundayo (Orforglipron) Tracker — built for the pill">
+  <meta property="og:description" content="One-tap streaks, weight trends & doctor-ready reports for your daily Foundayo pill. Private by design.">
+  <meta property="og:image" content="/icon.png">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://glpillapp.com/foundayo-tracker.html">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" href="/icon.png">
+  <link rel="canonical" href="https://glpillapp.com/foundayo-tracker.html">
+  <script type="application/ld+json">
+  {"@context":"https://schema.org","@type":"SoftwareApplication","name":"GLPill — Foundayo (Orforglipron) Tracker","applicationCategory":"HealthApplication","operatingSystem":"iOS 17+","description":"An iPhone tracker built for Foundayo (orforglipron), the daily oral GLP-1. Daily dose streaks, weight trends, side-effect log, and doctor-ready reports. Private by design — data stays on your device and syncs through your own iCloud.","offers":{"@type":"Offer","price":"39.99","priceCurrency":"USD"},"publisher":{"@type":"Organization","name":"GLPill","url":"https://glpillapp.com"}}
+  </script>
+  <script type="application/ld+json">
+  {"@context":"https://schema.org","@type":"FAQPage","mainEntity":[
+    {"@type":"Question","name":"Is there an app to track Foundayo (orforglipron)?","acceptedAnswer":{"@type":"Answer","text":"Yes. GLPill is an iPhone app built specifically for daily oral GLP-1 pills like Foundayo (orforglipron). You log the pill in one tap, build a streak, track your weight trend and side effects, and generate a doctor-ready summary. Unlike apps designed for weekly injections, it's built around a daily pill routine."}},
+    {"@type":"Question","name":"Can Foundayo be taken any time of day?","acceptedAnswer":{"@type":"Answer","text":"Foundayo (orforglipron) is the first oral GLP-1 for weight loss that can be taken any time of day, with or without food or water restrictions. That's different from Rybelsus, which must be taken on an empty stomach with a 30-minute wait. Always follow the exact instructions your prescriber gave you — GLPill tracks your routine, it does not give medical advice."}},
+    {"@type":"Question","name":"How is GLPill different from injection tracker apps?","acceptedAnswer":{"@type":"Answer","text":"Most GLP-1 trackers were built for weekly injections — shot days, injection sites, weekly cadence. Foundayo is a daily pill, so consistency and streaks matter more than a weekly shot reminder. GLPill is built around the daily-pill routine, with dose streaks and a reminder tuned for taking a pill every day."}},
+    {"@type":"Question","name":"Is my Foundayo tracking data private?","acceptedAnswer":{"@type":"Answer","text":"Yes. There are no accounts and no servers. Your data is stored on your iPhone and synced only through your own private iCloud, which the developer cannot access. There's no analytics and no tracking — the App Store privacy label is 'Data Not Collected.'"}},
+    {"@type":"Question","name":"Does my history sync to a new phone?","acceptedAnswer":{"@type":"Answer","text":"Yes. Your history syncs privately across your devices through your own iCloud, so it survives a reinstall or a new phone — months of progress can't just vanish."}}
+  ]}
+  </script>
+  <style>
+    :root { --teal: #0E7C7B; --deep: #085453; --mint: #6BC7AB; --cream: #F7FAF9; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: #16302f; background: var(--cream); line-height: 1.6; }
+    .hero { background: linear-gradient(135deg, var(--teal), var(--mint)); color: #fff; text-align: center; padding: 72px 20px 88px; }
+    .hero img.icon { width: 96px; height: 96px; border-radius: 22px; box-shadow: 0 12px 40px rgba(0,0,0,.25); }
+    .hero h1 { font-size: clamp(1.9rem, 5.5vw, 3rem); margin: 24px 0 12px; letter-spacing: -0.02em; }
+    .hero p.sub { font-size: clamp(1rem, 2.5vw, 1.25rem); opacity: .92; max-width: 600px; margin: 0 auto 32px; }
+    .badge { display: inline-block; background: rgba(255,255,255,.18); border: 1px solid rgba(255,255,255,.35); border-radius: 999px; padding: 6px 16px; font-size: .85rem; font-weight: 600; margin-bottom: 20px; }
+    .cta-row { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+    .btn { display: inline-block; padding: 14px 28px; border-radius: 999px; font-weight: 700; text-decoration: none; font-size: 1rem; }
+    .btn-primary { background: #fff; color: var(--deep); }
+    .btn-ghost { border: 2px solid rgba(255,255,255,.7); color: #fff; }
+    section { max-width: 960px; margin: 0 auto; padding: 56px 20px; }
+    h2 { font-size: 1.6rem; color: var(--deep); margin-bottom: 28px; text-align: center; }
+    .features { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; }
+    .card { background: #fff; border-radius: 16px; padding: 24px; box-shadow: 0 4px 16px rgba(8,84,83,.07); }
+    .card .emoji { font-size: 1.8rem; }
+    .card h3 { margin: 10px 0 6px; font-size: 1.05rem; color: var(--deep); }
+    .card p { font-size: .92rem; color: #4a615f; }
+    .lead { max-width: 680px; margin: 0 auto; color: #38524f; font-size: 1.02rem; }
+    .lead p { margin-bottom: 16px; }
+    .faq { max-width: 720px; margin: 0 auto; }
+    .faq details { background: #fff; border-radius: 14px; padding: 18px 22px; margin-bottom: 12px; box-shadow: 0 4px 16px rgba(8,84,83,.06); }
+    .faq summary { font-weight: 700; color: var(--deep); cursor: pointer; }
+    .faq p { margin-top: 10px; color: #4a615f; font-size: .95rem; }
+    .waitlist { background: #fff; border-radius: 20px; padding: 40px 28px; text-align: center; box-shadow: 0 8px 32px rgba(8,84,83,.08); }
+    .waitlist form { display: flex; gap: 10px; max-width: 440px; margin: 20px auto 0; flex-wrap: wrap; justify-content: center; }
+    .waitlist input { flex: 1 1 240px; padding: 13px 18px; border: 1.5px solid #cfe3e0; border-radius: 999px; font-size: 1rem; }
+    .waitlist button { padding: 13px 26px; border: none; border-radius: 999px; background: var(--teal); color: #fff; font-weight: 700; font-size: 1rem; cursor: pointer; }
+    .waitlist .ig { margin-top: 16px; font-size: .95rem; }
+    .waitlist .ig a { color: var(--teal); font-weight: 700; text-decoration: none; }
+    .privacy-note { font-size: .8rem; color: #6b8280; margin-top: 12px; }
+    footer { text-align: center; padding: 40px 20px 60px; font-size: .8rem; color: #6b8280; max-width: 720px; margin: 0 auto; }
+    footer a { color: var(--teal); }
+    .crumbs { max-width: 960px; margin: 0 auto; padding: 16px 20px 0; font-size: .85rem; color: #6b8280; }
+    .crumbs a { color: var(--teal); text-decoration: none; }
+  </style>
+</head>
+<body>
+  <div class="hero">
+    <img class="icon" src="/icon.png" alt="GLPill app icon">
+    <div><span class="badge">Coming soon to the App Store</span></div>
+    <h1>The Foundayo (orforglipron) tracker, built for the pill</h1>
+    <p class="sub">Foundayo is a daily pill, not a weekly shot — so your app shouldn't be an injection tracker in disguise. GLPill logs your dose in one tap, builds a streak, and keeps every weigh-in and side effect in one private place.</p>
+    <div class="cta-row">
+      <a class="btn btn-primary" href="#waitlist">Join the waitlist</a>
+      <a class="btn btn-ghost" href="https://www.instagram.com/glpillapp/" target="_blank" rel="noopener">Follow @glpillapp</a>
+    </div>
+  </div>
+
+  <nav class="crumbs"><a href="/">Home</a> › Foundayo tracker</nav>
+
+  <section>
+    <h2>Made for a daily pill routine</h2>
+    <div class="features">
+      <div class="card"><div class="emoji">💊</div><h3>One-tap dose streaks</h3><p>Foundayo is daily — consistency is the whole game. Log today's pill in one tap and watch the streak grow.</p></div>
+      <div class="card"><div class="emoji">🕰️</div><h3>Any-time reminder</h3><p>Foundayo can be taken any time of day, with or without food. Set the reminder for whenever fits your life and never miss a day.</p></div>
+      <div class="card"><div class="emoji">📉</div><h3>Weight trends</h3><p>Weigh-ins become a trend line with milestones — plus protein and water targets to help protect your muscle.</p></div>
+      <div class="card"><div class="emoji">🩺</div><h3>Doctor-ready reports</h3><p>Adherence, dose steps, weight change and side effects in one summary you can share at your next appointment.</p></div>
+      <div class="card"><div class="emoji">🔒</div><h3>Private by design</h3><p>No account. No analytics. No servers. Your data lives on your iPhone and syncs only through your own iCloud — we never see it.</p></div>
+      <div class="card"><div class="emoji">☁️</div><h3>Never lose your journey</h3><p>Your history follows you to a new phone and survives a reinstall, synced privately through your own iCloud.</p></div>
+    </div>
+  </section>
+
+  <section style="padding-top:8px;">
+    <h2>Foundayo vs. the injection apps</h2>
+    <div class="lead">
+      <p>Foundayo® (orforglipron) was approved in 2026 as the first oral GLP-1 for weight loss that can be taken any time of day — no empty-stomach window, no injection sites, no weekly shot day. It's a genuinely different routine.</p>
+      <p>Almost every GLP-1 tracker was built for weekly injections and then adapted. GLPill was built the other way around: for the person who takes a pill every single day and wants the streak, the trend, and the report — without handing their health data to a server. You enter the dose plan your prescriber gave you; GLPill never suggests doses.</p>
+    </div>
+  </section>
+
+  <section style="padding-top:8px;">
+    <h2>Foundayo tracker — questions</h2>
+    <div class="faq">
+      <details open><summary>Is there an app to track Foundayo (orforglipron)?</summary><p>Yes. GLPill is built specifically for daily oral GLP-1 pills like Foundayo. Log the pill in one tap, build a streak, track your weight trend and side effects, and generate a doctor-ready summary — around a daily-pill routine, not a weekly shot.</p></details>
+      <details><summary>Can Foundayo be taken any time of day?</summary><p>Foundayo (orforglipron) is the first oral GLP-1 for weight loss that can be taken any time of day, with or without food or water restrictions — unlike Rybelsus, which needs an empty stomach and a 30-minute wait. Always follow the exact instructions your prescriber gave you. GLPill tracks your routine; it doesn't give medical advice.</p></details>
+      <details><summary>How is GLPill different from injection tracker apps?</summary><p>Injection trackers are built around shot days, injection sites and a weekly cadence. Foundayo is a daily pill, so consistency and streaks matter more. GLPill is built around the daily-pill routine.</p></details>
+      <details><summary>Is my data private?</summary><p>Yes. No accounts, no servers, no analytics, no tracking. Your data is stored on your iPhone and synced only through your own private iCloud — the App Store privacy label is "Data Not Collected."</p></details>
+      <details><summary>Does my history sync to a new phone?</summary><p>Yes. It syncs privately across your devices through your own iCloud, so it survives a reinstall or a new phone.</p></details>
+    </div>
+  </section>
+
+  <section id="waitlist">
+    <div class="waitlist">
+      <h2>Be first in line</h2>
+      <p>Launching on the App Store soon. Join the waitlist and we'll send exactly one email — the link, on launch day.</p>
+      <form id="wl-form">
+        <input id="wl-email" type="email" name="email" required placeholder="you@email.com" aria-label="Email address">
+        <button id="wl-btn" type="submit">Notify me</button>
+      </form>
+      <p id="wl-msg" role="status" aria-live="polite" style="min-height:1.4em;margin-top:12px;font-weight:600;"></p>
+      <p class="ig">Or follow <a href="https://www.instagram.com/glpillapp/" target="_blank" rel="noopener">@glpillapp</a> — launch day will be loud.</p>
+      <p class="privacy-note">One email at launch, nothing else. Address never shared or sold.</p>
+    </div>
+  </section>
+
+  <footer>
+    <p>GLPill is a tracking tool, not medical advice. Always follow your prescriber's instructions. Foundayo® is a trademark of Eli Lilly and Company. Rybelsus® is a trademark of Novo Nordisk A/S. GLPill is not affiliated with or endorsed by either company.</p>
+    <p style="margin-top:10px"><a href="/">Home</a> · <a href="/rybelsus-tracker.html">Rybelsus tracker</a> · <a href="/blog/">Blog</a> · <a href="/privacy.html">Privacy policy</a> · © 2026 GLPill</p>
+  </footer>
+
+  <script>
+    (function () {
+      var form = document.getElementById("wl-form");
+      var email = document.getElementById("wl-email");
+      var btn = document.getElementById("wl-btn");
+      var msg = document.getElementById("wl-msg");
+      form.addEventListener("submit", function (e) {
+        e.preventDefault();
+        msg.style.color = "#0E7C7B";
+        msg.textContent = "";
+        btn.disabled = true;
+        btn.textContent = "Adding you…";
+        fetch("/api/waitlist", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: email.value, source: "foundayo-tracker" })
+        })
+          .then(function (r) { return r.json().then(function (d) { return { ok: r.ok, d: d }; }); })
+          .then(function (res) {
+            if (res.ok) {
+              if (typeof gtag === "function") { gtag("event", "waitlist_signup", { method: "foundayo-tracker" }); }
+              form.style.display = "none";
+              msg.textContent = "You're on the list. We'll email you the moment it's live. 💊";
+            } else {
+              msg.style.color = "#0E7C7B";
+              msg.innerHTML = 'The fastest way in: follow <a href="https://www.instagram.com/glpillapp/" target="_blank" rel="noopener" style="color:#0E7C7B;font-weight:700;">@glpillapp</a> — launch day will be loud. 💊';
+              btn.disabled = false;
+              btn.textContent = "Notify me";
+            }
+          })
+          .catch(function () {
+            msg.style.color = "#c0392b";
+            msg.textContent = "Network hiccup — please try again, or follow @glpillapp.";
+            btn.disabled = false;
+            btn.textContent = "Notify me";
+          });
+      });
+    })();
+  </script>
+</body>
+</html>

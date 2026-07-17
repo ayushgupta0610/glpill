@@ -1,0 +1,13 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "redirects": [
+    { "source": "/blog/foundayo-orforglipron-guide.html", "destination": "/blog/foundayo-orforglipron-guide/", "permanent": true },
+    { "source": "/blog/glp1-and-muscle-loss.html", "destination": "/blog/glp1-and-muscle-loss/", "permanent": true },
+    { "source": "/blog/glp1-pill-vs-injection.html", "destination": "/blog/glp1-pill-vs-injection/", "permanent": true },
+    { "source": "/blog/how-to-take-rybelsus.html", "destination": "/blog/how-to-take-rybelsus/", "permanent": true },
+    { "source": "/blog/orforglipron-side-effects.html", "destination": "/blog/orforglipron-side-effects/", "permanent": true },
+    { "source": "/blog/protein-on-glp1.html", "destination": "/blog/protein-on-glp1/", "permanent": true },
+    { "source": "/blog/track-glp1-pill-routine.html", "destination": "/blog/track-glp1-pill-routine/", "permanent": true },
+    { "source": "/sitemap.xml", "destination": "/sitemap-index.xml", "permanent": true }
+  ]
+}
