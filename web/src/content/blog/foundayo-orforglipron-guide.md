@@ -15,7 +15,13 @@ faqs:
     a: "The most common side effects are gastrointestinal — nausea most of all, sometimes vomiting, constipation, or diarrhea. They tend to appear when starting or stepping up a dose and usually ease as your body adjusts."
   - q: "How is Foundayo different from Rybelsus?"
     a: "Foundayo (orforglipron) is a small-molecule pill taken any time with or without food. Rybelsus is oral semaglutide with strict empty-stomach, water, and 30-minute-wait rules. Both are daily oral GLP-1s."
-sources: []
+sources:
+  - label: "FOUNDAYO (orforglipron) tablets — FDA-approved label (DailyMed)"
+    url: "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=8ac446c5-feba-474f-a103-23facb9b5c62"
+  - label: "FDA Approves First New Molecular Entity Under National Priority Voucher Program (FDA)"
+    url: "https://www.fda.gov/news-events/press-announcements/fda-approves-first-new-molecular-entity-under-national-priority-voucher-program"
+  - label: "Orforglipron for Maintenance of Body Weight Reduction — ClinicalTrials.gov (NCT06584916)"
+    url: "https://clinicaltrials.gov/study/NCT06584916"
 ---
 
 Foundayo (orforglipron) is a milestone: the first daily GLP-1 pill for weight management that you can take any time of day, with or without food. If you've only known GLP-1s as weekly injections, the pill changes the routine completely. Here's a plain-language guide to what it is and how it's taken.
