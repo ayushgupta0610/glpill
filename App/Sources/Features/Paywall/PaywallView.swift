@@ -88,20 +88,21 @@ struct PaywallView: View {
     private var planPicker: some View {
         if subscriptions.products.isEmpty {
             VStack(spacing: 12) {
-                if subscriptions.lastError != nil {
-                    Text("Couldn't reach the App Store.")
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
-                    Button("Try again") {
-                        Task { await subscriptions.loadProducts() }
-                    }
-                    .buttonStyle(.bordered)
-                } else {
+                if !subscriptions.productsLoaded {
                     ProgressView()
                         .padding(.vertical, 12)
                     Text("Loading plans…")
                         .font(.caption)
                         .foregroundStyle(.secondary)
+                } else {
+                    Text("Subscription plans couldn't be loaded right now. Please check your connection and try again.")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
+                    Button("Try again") {
+                        Task { await subscriptions.loadProducts() }
+                    }
+                    .buttonStyle(.bordered)
                 }
             }
             .frame(maxWidth: .infinity)

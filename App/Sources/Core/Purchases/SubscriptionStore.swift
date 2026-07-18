@@ -12,6 +12,7 @@ final class SubscriptionStore {
     private let provider: EntitlementProviding
     private(set) var state: EntitlementState = .unknown
     private(set) var products: [Product] = []
+    private(set) var productsLoaded = false
     private(set) var restoring = false
     var lastError: String?
 
@@ -37,9 +38,14 @@ final class SubscriptionStore {
         do {
             products = try await Product.products(for: Self.productIds)
                 .sorted { $0.price < $1.price }
+            lastError = nil
         } catch {
             lastError = "Could not load subscription options. Check your connection and try again."
         }
+        // Set even when the fetch succeeds but returns nothing (products not yet
+        // available on the App Store) so the paywall can stop showing an infinite
+        // spinner and offer a retry instead of trapping the user.
+        productsLoaded = true
     }
 
     func purchase(_ product: Product) async {
