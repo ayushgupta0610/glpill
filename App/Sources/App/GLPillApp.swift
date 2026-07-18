@@ -39,6 +39,9 @@ struct GLPillApp: App {
                     if ProcessInfo.processInfo.arguments.contains("-exportCards") {
                         ShareCardExporter.exportSamples()
                     }
+                    if ProcessInfo.processInfo.arguments.contains("-exportPaywall") {
+                        PaywallShotExporter.export()
+                    }
                     #endif
                     await subscriptions.refresh()
                     await subscriptions.loadProducts()
