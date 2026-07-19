@@ -46,7 +46,7 @@ WALK INTO APPOINTMENTS PREPARED
 PRIVATE BY DESIGN
 • No account. No servers. No analytics. Every data point stays on your iPhone.
 
-GLPill Pro: $6.99/month or $39.99/year with a 3-day free trial. Subscriptions renew automatically until cancelled in Settings.
+GLPill Pro: $6.99/month or $39.99/year with a 7-day free trial. Subscriptions renew automatically until cancelled in Settings.
 
 GLPill is a tracking tool, not medical advice. Always follow your prescriber's instructions. Foundayo® is a trademark of Eli Lilly and Company. Rybelsus® is a trademark of Novo Nordisk A/S. GLPill is not affiliated with or endorsed by either company.
 ```
@@ -62,7 +62,7 @@ Built for the new GLP-1 pills. Daily streaks, the Rybelsus 30-minute timer, weig
 1. Create subscription group: **GLPill Pro**
 2. Products (IDs must match exactly — they're hardcoded in `SubscriptionStore.swift`):
    - `glpill.pro.monthly` — $6.99/month
-   - `glpill.pro.yearly` — $39.99/year + **3-day free trial** introductory offer
+   - `glpill.pro.yearly` — $39.99/year + **7-day free trial** introductory offer
 3. Localization (en-US): display name "GLPill Pro Monthly" / "GLPill Pro Yearly", description "Unlimited tracking, reports and reminders."
 4. Attach both products to the app version before submitting (missing this is the #1 rejection cause for subscription apps).
 5. App Store Connect → App Privacy: answer **"Data Not Collected"** (accurate: no accounts, no analytics, local-only storage).
