@@ -32,6 +32,7 @@ final class OnboardingStore {
     var usesMetric = false
     var displayWeight: Double?
     var displayGoal: Double?
+    var morningMeds: [String] = []
     var reminderHour = 9
     var reminderMinute = 0
 
@@ -64,7 +65,8 @@ final class OnboardingStore {
             startKilograms: startKg,
             reminderHour: reminderHour,
             reminderMinute: reminderMinute,
-            startDate: now
+            startDate: now,
+            morningMeds: MorningMeds.normalize(morningMeds)
         ))
 
         if let startKg {

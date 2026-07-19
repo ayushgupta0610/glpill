@@ -94,6 +94,21 @@ final class OnboardingStoreTests: XCTestCase {
         XCTAssertEqual(step.durationWeeks, 52)
     }
 
+    @MainActor
+    func testCompletePersistsNormalizedMorningMeds() throws {
+        let container = try makeContainer()
+        let context = container.mainContext
+        let store = OnboardingStore()
+        store.kind = .rybelsus
+        store.displayWeight = 180
+        store.morningMeds = ["  Thyroid ", "thyroid", ""]
+
+        try store.complete(in: context)
+
+        let settings = try XCTUnwrap(try context.fetch(FetchDescriptor<UserSettings>()).first)
+        XCTAssertEqual(settings.morningMeds, ["Thyroid"])
+    }
+
     func testDoseValidationBounds() {
         XCTAssertTrue(UnitFormat.isValidDose(mg: 0.05))
         XCTAssertTrue(UnitFormat.isValidDose(mg: 36))
