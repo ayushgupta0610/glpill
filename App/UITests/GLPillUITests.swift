@@ -75,6 +75,11 @@ final class GLPillUITests: XCTestCase {
         }
         app.buttons["Continue"].tap()
 
+        // Morning meds step — optional, skip it in tests
+        let skipMorningMeds = app.buttons["Skip for now"]
+        XCTAssertTrue(skipMorningMeds.waitForExistence(timeout: 5))
+        skipMorningMeds.tap()
+
         // Reminder step
         let finish = app.buttons["Finish setup"]
         XCTAssertTrue(finish.waitForExistence(timeout: 5))
