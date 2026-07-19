@@ -3,11 +3,20 @@ import SwiftUI
 import UIKit
 import Charts
 
-/// DEBUG-only: renders the five App Store screenshots (6.9" = 1290×2796) to PNGs in
-/// the app's Documents directory. Triggered by the `-exportScreenshots` launch argument.
-/// Each screen reuses the real app components (Card / StatBadge / Theme) with attractive
-/// sample data so the shots match the shipping UI. Pull them with:
+/// DEBUG-only: renders the five App Store screenshots to PNGs in the app's Documents
+/// directory. Triggered by the `-exportScreenshots` launch argument. Each screen reuses
+/// the real app components (Card / StatBadge / Theme) with attractive sample data so the
+/// shots match the shipping UI. Pull them with:
 ///   xcrun simctl get_app_container booted com.ayushgupta.glpill data
+///
+/// Size: 428×926 pt @ 3× = **1284×2778 px** — this app record's iPhone slot is the 6.5"
+/// display (accepts 1242×2688 or 1284×2778), NOT 6.9"/1290×2796.
+///
+/// ⚠️ REQUIRED POST-PROCESS: `UIImage.pngData()` always writes an alpha channel, and the
+/// App Store REJECTS screenshots that have one (the error misleadingly says "dimensions
+/// are wrong"). After exporting, strip alpha losslessly before uploading:
+///   magick shot.png -background white -alpha remove -alpha off -strip shot.png
+/// (in-Swift opaque re-draw does NOT help — pngData re-encodes RGBA regardless.)
 @MainActor
 enum ScreenshotExporter {
     static func export() {
@@ -20,7 +29,7 @@ enum ScreenshotExporter {
         ]
         let dir = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
         for (name, view) in shots {
-            let renderer = ImageRenderer(content: view.frame(width: 430, height: 932))
+            let renderer = ImageRenderer(content: view.frame(width: 428, height: 926))
             renderer.scale = 3
             guard let image = renderer.uiImage, let data = image.pngData() else { continue }
             try? data.write(to: dir.appendingPathComponent("\(name).png"))
@@ -62,7 +71,7 @@ private struct ScreenshotFrame<Content: View>: View {
             Spacer(minLength: 40)
             Spacer(minLength: 40)
         }
-        .frame(width: 430, height: 932)
+        .frame(width: 428, height: 926)
         .background(
             LinearGradient(
                 colors: [Theme.mint.opacity(0.18), Color(red: 0.97, green: 0.98, blue: 0.97)],
