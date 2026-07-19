@@ -26,4 +26,21 @@ final class UnitFormatTests: XCTestCase {
         XCTAssertFalse(UnitFormat.isValidWeight(kilograms: 500.1))
         XCTAssertFalse(UnitFormat.isValidWeight(kilograms: 0))
     }
+
+    func testValidWeightBoundaries() {
+        XCTAssertFalse(UnitFormat.isValidWeight(kilograms: 0))
+        XCTAssertFalse(UnitFormat.isValidWeight(kilograms: 24.9))
+        XCTAssertTrue(UnitFormat.isValidWeight(kilograms: 25))
+        XCTAssertTrue(UnitFormat.isValidWeight(kilograms: 500))
+        XCTAssertFalse(UnitFormat.isValidWeight(kilograms: 500.1))
+        XCTAssertFalse(UnitFormat.isValidWeight(kilograms: -70))
+    }
+
+    func testValidDoseBoundaries() {
+        XCTAssertFalse(UnitFormat.isValidDose(mg: 0))
+        XCTAssertFalse(UnitFormat.isValidDose(mg: 0.04))
+        XCTAssertTrue(UnitFormat.isValidDose(mg: 0.05))
+        XCTAssertTrue(UnitFormat.isValidDose(mg: 50))
+        XCTAssertFalse(UnitFormat.isValidDose(mg: 50.1))
+    }
 }
