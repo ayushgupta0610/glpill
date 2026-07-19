@@ -44,7 +44,7 @@ struct RitualCard: View {
                 }
 
             case let .clear(meds, hadWindow):
-                Label(hadWindow ? "You're clear — you can eat now" : "Logged for today ✓",
+                Label(RitualState.clearMessage(hadWindow: hadWindow),
                       systemImage: "checkmark.circle.fill")
                     .font(.headline)
                     .foregroundStyle(Theme.primary)

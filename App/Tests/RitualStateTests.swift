@@ -26,4 +26,8 @@ final class RitualStateTests: XCTestCase {
     func testLoggedRybelsusWithNoWindowEndFallsBackToClear() {
         XCTAssertEqual(RitualState.make(todayLogged: true, requiresEmptyStomach: true, windowEnd: nil, meds: [], now: now), .clear(meds: [], hadWindow: false))
     }
+    func testClearMessageKeepsOrforglipronContrast() {
+        XCTAssertEqual(RitualState.clearMessage(hadWindow: true), "You're clear — you can eat now")
+        XCTAssertEqual(RitualState.clearMessage(hadWindow: false), "Logged — no empty-stomach window")
+    }
 }
