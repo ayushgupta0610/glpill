@@ -73,7 +73,7 @@ private struct WelcomeStep: View {
             Text("Make every pill count")
                 .font(.largeTitle.bold())
                 .multilineTextAlignment(.center)
-            Text("Built for Foundayo®, Rybelsus® and daily GLP-1 pills — not injections.")
+            Text("The app built for the GLP-1 pill — Foundayo®, Rybelsus® and daily oral GLP-1s. We time your empty-stomach window; injections had their apps, your pill gets one too.")
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)

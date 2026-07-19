@@ -1,10 +1,8 @@
 import SwiftUI
-import SwiftData
 import StoreKit
 
 struct PaywallView: View {
     @Environment(SubscriptionStore.self) private var subscriptions
-    @Query private var medications: [Medication]
     @State private var selectedId = SubscriptionStore.yearlyId
     @State private var purchasing = false
     @State private var showPrivacy = false
@@ -35,7 +33,7 @@ struct PaywallView: View {
                 .frame(width: 84, height: 84)
                 .background(Theme.heroGradient, in: RoundedRectangle(cornerRadius: 22))
                 .shadow(color: Theme.primary.opacity(0.35), radius: 14, y: 6)
-            Text(heroTitle)
+            Text("Never mistime your pill again")
                 .font(.system(.largeTitle, design: .rounded).bold())
                 .multilineTextAlignment(.center)
             Text("Stay consistent, watch the scale move, and never lose your history — it syncs privately across your devices.")
@@ -46,21 +44,13 @@ struct PaywallView: View {
         .padding(.top, 28)
     }
 
-    private var heroTitle: String {
-        if let med = medications.first {
-            let shortName = med.displayName.components(separatedBy: " (").first ?? med.displayName
-            return "Your \(shortName) plan is ready"
-        }
-        return "Make every pill count"
-    }
-
     private var featureList: some View {
         VStack(alignment: .leading, spacing: 14) {
-            feature("pills.fill", "Never miss a dose", "One-tap logging, streaks and a daily reminder")
-            feature("clock.fill", "Rybelsus® timer", "30-minute empty-stomach countdown, automatic")
-            feature("icloud.fill", "Never lose your history", "Syncs privately across your devices — new phone or reinstall, it's all still there")
-            feature("chart.line.uptrend.xyaxis", "Watch it work", "Weight trend, milestones and share-ready cards")
-            feature("doc.text.fill", "Doctor-ready reports", "Adherence, doses and side effects in one summary")
+            feature("clock.fill", "Time the empty-stomach window", "Log your pill and we count the 30 minutes; we tell you the exact minute you can eat and take your other morning meds.")
+            feature("pills.fill", "Never miss a dose", "One-tap logging, streaks and a daily reminder.")
+            feature("icloud.fill", "Never lose your history", "Syncs privately across your devices.")
+            feature("chart.line.uptrend.xyaxis", "Watch it work", "Weight trend, milestones and share-ready cards.")
+            feature("doc.text.fill", "Doctor-ready reports", "Adherence, doses and side effects in one summary.")
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(20)
