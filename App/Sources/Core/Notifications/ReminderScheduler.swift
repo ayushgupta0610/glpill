@@ -26,13 +26,14 @@ enum ReminderScheduler {
         )
     }
 
-    static func scheduleEatTimer(using scheduler: NotificationScheduling) {
-        scheduler.add(
-            id: eatTimerId,
-            title: "You can eat now ✅",
-            body: "30 minutes are up — enjoy your meal.",
-            trigger: .once(after: 30 * 60)
-        )
+    static func eatTimerBody(meds: [String]) -> String {
+        let base = "30 minutes are up — enjoy your meal."
+        guard !meds.isEmpty else { return base }
+        return base + " You can also take your \(meds.joined(separator: ", ")) now."
+    }
+
+    static func scheduleEatTimer(using scheduler: NotificationScheduling, meds: [String] = []) {
+        scheduler.add(id: eatTimerId, title: "You can eat now ✅", body: eatTimerBody(meds: meds), trigger: .once(after: 30 * 60))
     }
 }
 
