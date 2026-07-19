@@ -29,8 +29,10 @@ final class GLPillUITests: XCTestCase {
         attach(app, name: "today-before-dose")
 
         takeButton.tap()
-        let taken = app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH 'Taken at'")).firstMatch
-        XCTAssertTrue(taken.waitForExistence(timeout: 5))
+        // Rybelsus requires an empty stomach, so logging the dose starts the
+        // 30-min eat-timer window rather than showing a plain "Taken at" state.
+        let eatTimer = app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH 'You can eat'")).firstMatch
+        XCTAssertTrue(eatTimer.waitForExistence(timeout: 5))
         attach(app, name: "today-after-dose")
 
         app.tabBars.buttons["Progress"].tap()
