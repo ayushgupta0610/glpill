@@ -63,6 +63,7 @@ Built for the new GLP-1 pills. Daily streaks, the Rybelsus 30-minute timer, weig
 2. Products (IDs must match exactly — they're hardcoded in `SubscriptionStore.swift`):
    - `glpill.pro.monthly` — $6.99/month
    - `glpill.pro.yearly` — $39.99/year + **7-day free trial** introductory offer
+   - glpill.pro.monthly ALSO gets a 7-day free introductory offer — configure it in App Store Connect (Subscriptions → Pro Monthly → Subscription Prices → Introductory Offer: Free, 1 week) before submitting.
 3. Localization (en-US): display name "GLPill Pro Monthly" / "GLPill Pro Yearly", description "Unlimited tracking, reports and reminders."
 4. Attach both products to the app version before submitting (missing this is the #1 rejection cause for subscription apps).
 5. App Store Connect → App Privacy: answer **"Data Not Collected"** (accurate: no accounts, no analytics, local-only storage).

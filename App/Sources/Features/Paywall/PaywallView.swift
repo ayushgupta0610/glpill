@@ -118,7 +118,7 @@ struct PaywallView: View {
                     HStack(spacing: 8) {
                         Text(isYearly ? "Yearly" : "Monthly")
                             .font(.headline)
-                        if isYearly {
+                        if hasFreeTrial(product) {
                             Text(trialBadge(product))
                                 .font(.caption2.weight(.bold))
                                 .padding(.horizontal, 8)
@@ -146,6 +146,11 @@ struct PaywallView: View {
         .buttonStyle(.plain)
     }
 
+    private func hasFreeTrial(_ product: Product) -> Bool {
+        guard let offer = product.subscription?.introductoryOffer else { return false }
+        return offer.paymentMode == .freeTrial
+    }
+
     private func trialBadge(_ product: Product) -> String {
         if let offer = product.subscription?.introductoryOffer, offer.paymentMode == .freeTrial {
             return "\(offer.period.value)-DAY FREE TRIAL"
@@ -161,6 +166,9 @@ struct PaywallView: View {
                 return "\(product.displayPrice)/year — \(weeklyString)/week · Save \(savings)%"
             }
             return "\(product.displayPrice)/year — just \(weeklyString) a week"
+        }
+        if hasFreeTrial(product) {
+            return "\(product.displayPrice)/month after trial, flexible"
         }
         return "\(product.displayPrice)/month, flexible"
     }
@@ -225,8 +233,7 @@ struct PaywallView: View {
 
     private var ctaTitle: String {
         guard let product = selectedProduct else { return "Continue" }
-        if product.id == SubscriptionStore.yearlyId,
-           let offer = product.subscription?.introductoryOffer, offer.paymentMode == .freeTrial {
+        if hasFreeTrial(product) {
             return "Start my free trial"
         }
         return "Continue — \(product.displayPrice)/mo"
@@ -234,9 +241,9 @@ struct PaywallView: View {
 
     private var ctaSubtext: String {
         guard let product = selectedProduct else { return "" }
-        if product.id == SubscriptionStore.yearlyId,
-           let offer = product.subscription?.introductoryOffer, offer.paymentMode == .freeTrial {
-            return "No payment now. \(offer.period.value) days free, then \(product.displayPrice)/year. Cancel anytime."
+        if let offer = product.subscription?.introductoryOffer, offer.paymentMode == .freeTrial {
+            let period = product.id == SubscriptionStore.yearlyId ? "year" : "month"
+            return "No payment now. \(offer.period.value) days free, then \(product.displayPrice)/\(period). Cancel anytime."
         }
         return "Billed monthly. Cancel anytime."
     }
