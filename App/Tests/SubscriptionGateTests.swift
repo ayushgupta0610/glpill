@@ -21,6 +21,25 @@ private struct NeverResolvingProvider: EntitlementProviding {
     }
 }
 
+/// Simulates a provider that ignores cancellation entirely — ie. a real hang,
+/// not just a long `Task.sleep` (which IS cooperatively cancellable and would
+/// pass even a naive timeout implementation). This never checks
+/// `Task.isCancelled` and never awaits a cancellable suspension point, so a
+/// `refresh()` implementation that structurally awaits this call (e.g. via a
+/// bare `withTaskGroup`, which implicitly awaits its losing child before
+/// returning) would hang forever. Only an implementation where the timeout
+/// path never awaits this provider at all can win the race.
+private struct NonCancellableStallProvider: EntitlementProviding {
+    func currentState() async -> EntitlementState {
+        let deadline = Date().addingTimeInterval(3600)
+        while Date() < deadline {
+            // Busy-poll instead of Task.sleep so cancellation is never observed.
+            await Task.yield()
+        }
+        return .active
+    }
+}
+
 final class SubscriptionGateTests: XCTestCase {
     @MainActor
     func testInitialStateIsUnknownAndLocked() {
@@ -104,5 +123,25 @@ final class SubscriptionGateTests: XCTestCase {
         await store.refresh()
         XCTAssertEqual(store.state, .active)
         XCTAssertTrue(store.isUnlocked)
+    }
+
+    // CRITICAL: reproduces the case where the provider doesn't just take a long
+    // time — it ignores cancellation outright (a busy-poll loop, never checking
+    // `Task.isCancelled` or awaiting a cancellable suspension point). A `refresh()`
+    // built on a bare `withTaskGroup` would implicitly await this hung child at
+    // group-exit and never return. `refresh()` must still return, and fail closed
+    // to `.locked`, within (approximately) `refreshTimeout` regardless.
+    @MainActor
+    func testNonCancellableStallProviderStillReturnsAndFailsClosed() async throws {
+        let store = SubscriptionStore(provider: NonCancellableStallProvider(), refreshTimeout: .milliseconds(50))
+
+        let clock = ContinuousClock()
+        let start = clock.now
+        await store.refresh()
+        let elapsed = start.duration(to: clock.now)
+
+        XCTAssertEqual(store.state, .locked)
+        XCTAssertFalse(store.isUnlocked)
+        XCTAssertLessThan(elapsed, .seconds(2), "refresh() must return promptly even when the provider ignores cancellation")
     }
 }

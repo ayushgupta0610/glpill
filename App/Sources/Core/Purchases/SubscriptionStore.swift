@@ -28,31 +28,70 @@ final class SubscriptionStore {
     /// If the provider hasn't answered in time and state is still `.unknown`,
     /// fails CLOSED to `.locked` so the user always reaches the paywall instead
     /// of being stuck on the loading splash forever (never fail open).
+    ///
+    /// `refresh()` itself only ever awaits one thing: a single `CheckedContinuation`
+    /// that is resumed EXACTLY ONCE by whichever of two fully independent,
+    /// unstructured background tasks finishes first — a provider task or a sleep
+    /// task. This deliberately avoids `TaskGroup`/`withTaskGroup`: a task group
+    /// implicitly awaits every child (including the race's loser) before it can
+    /// return, so if the real provider (`Transaction.currentEntitlements`) hangs
+    /// and ignores cancellation, that implicit teardown await would hang too and
+    /// `refresh()` would never return. Here, if the provider hangs, the sleep task
+    /// resumes the continuation on its own — `refresh()` never waits on the
+    /// provider task at all, so the timeout wins definitively regardless of what
+    /// the provider does afterwards. The provider task is left running in the
+    /// background in that case; its late result is applied only if `state` is
+    /// still `.unknown` when it lands, i.e. only if the timeout hasn't already
+    /// committed a fail-closed value.
     func refresh() async {
         let previous = state
-        let next = await withTaskGroup(of: EntitlementState?.self) { group in
-            group.addTask { await self.provider.currentState() }
-            group.addTask {
-                try? await Task.sleep(for: self.refreshTimeout)
-                return nil
-            }
-            defer { group.cancelAll() }
-            for await result in group {
-                if let result {
-                    return result
-                }
-                // Timeout fired first with no provider answer yet.
-                return previous == .unknown ? .locked : previous
-            }
-            return previous == .unknown ? .locked : previous
+        let providerTask = Task.detached { [provider] in
+            await provider.currentState()
         }
-        state = next
+
+        let resumed = ResumeOnce<EntitlementState?>()
+
+        // Forwards the provider's result the moment it arrives — but only takes
+        // effect if the sleep task below hasn't already resumed first.
+        Task { [weak self] in
+            let result = await providerTask.value
+            await resumed.resume(with: result)
+            await self?.recordLateProviderResult(result)
+        }
+
+        // Independent timer: resumes with `nil` ("timed out") if the provider
+        // hasn't answered first. This task never awaits the provider, so it is
+        // guaranteed to fire on schedule even if the provider is hung.
+        Task {
+            try? await Task.sleep(for: refreshTimeout)
+            await resumed.resume(with: nil)
+        }
+
+        let raceResult = await resumed.wait()
+
+        if let raceResult {
+            state = raceResult
+        } else if state == .unknown {
+            // Timeout fired first with no provider answer yet.
+            providerTask.cancel()
+            state = previous == .unknown ? .locked : previous
+        }
+
         // A live downgrade (refund / expiry / lapse) arrives via the transaction
         // listener. Explain it so being sent to the paywall doesn't look like the
         // app reset or lost data.
-        if previous == .active && next != .active {
+        if previous == .active && state != .active {
             lastError = "Your subscription has ended. Renew to keep using GLPill."
         }
+    }
+
+    /// Applies a provider result that arrived after `refresh()` already returned
+    /// (a late/background resolution). Only takes effect while `state` is still
+    /// `.unknown` — once the timeout (or a normal fast resolution) has committed
+    /// a value, a late result must never overwrite it.
+    private func recordLateProviderResult(_ result: EntitlementState) {
+        guard state == .unknown else { return }
+        state = result
     }
 
     func loadProducts() async {
@@ -134,6 +173,47 @@ final class SubscriptionStore {
                 }
                 await self?.refresh()
             }
+        }
+    }
+}
+
+/// A one-shot resumable value, resumed by whichever of two independent racing
+/// tasks calls `resume(with:)` first — later calls are silently dropped. Used
+/// by `SubscriptionStore.refresh()` so the awaiting caller (`wait()`) is never
+/// itself awaiting the potentially-hung provider task; it only awaits this
+/// actor's continuation, which the timer task can resume on schedule
+/// regardless of what the provider task does.
+private actor ResumeOnce<Value: Sendable> {
+    private enum State {
+        case waiting(CheckedContinuation<Value, Never>)
+        case resumed
+        case notAwaitedYet
+    }
+
+    private var state: State = .notAwaitedYet
+    private var pendingValue: Value?
+
+    func resume(with value: Value) {
+        switch state {
+        case .waiting(let continuation):
+            state = .resumed
+            continuation.resume(returning: value)
+        case .notAwaitedYet:
+            // wait() hasn't been called yet — stash the value so it's delivered
+            // immediately once it is.
+            state = .resumed
+            pendingValue = value
+        case .resumed:
+            break
+        }
+    }
+
+    func wait() async -> Value {
+        if case .resumed = state, let pendingValue {
+            return pendingValue
+        }
+        return await withCheckedContinuation { continuation in
+            state = .waiting(continuation)
         }
     }
 }
