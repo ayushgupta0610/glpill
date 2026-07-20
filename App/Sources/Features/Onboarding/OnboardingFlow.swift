@@ -73,7 +73,7 @@ private struct WelcomeStep: View {
             Text("Make every pill count")
                 .font(.largeTitle.bold())
                 .multilineTextAlignment(.center)
-            Text("The app built for the GLP-1 pill — Foundayo®, Rybelsus® and daily oral GLP-1s. We time your empty-stomach window; injections had their apps, your pill gets one too.")
+            Text("The private tracker built for the GLP-1 pill — Foundayo®, Rybelsus® and daily oral GLP-1s. Injections had their apps; your daily pill finally gets one that's actually built for it.")
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
@@ -83,6 +83,7 @@ private struct WelcomeStep: View {
                 bullet("chart.line.uptrend.xyaxis", "Weight trend and milestones")
                 bullet("clock.fill", "Empty-stomach timer for Rybelsus®")
                 bullet("doc.text.fill", "A summary your doctor will love")
+                bullet("lock.fill", "Private by design — no account, no servers")
             }
             .padding(.horizontal)
             Spacer()
