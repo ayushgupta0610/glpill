@@ -35,11 +35,46 @@ struct RootView: View {
     }
 
     private var loadingSplash: some View {
+        LoadingSplashView()
+    }
+}
+
+private struct LoadingSplashView: View {
+    @Environment(SubscriptionStore.self) private var subscriptions
+    @State private var showRetry = false
+
+    var body: some View {
         VStack(spacing: 16) {
             Image(systemName: "pills.fill")
                 .font(.system(size: 56))
                 .foregroundStyle(Theme.heroGradient)
             ProgressView()
+            if showRetry {
+                VStack(spacing: 8) {
+                    Text("Taking longer than expected")
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                    Button("Tap to retry") {
+                        retry()
+                    }
+                    .buttonStyle(.bordered)
+                }
+                .transition(.opacity)
+            }
+        }
+        .task {
+            try? await Task.sleep(for: .seconds(4))
+            guard !Task.isCancelled else { return }
+            showRetry = true
+        }
+    }
+
+    private func retry() {
+        showRetry = false
+        Task {
+            async let refreshTask: Void = subscriptions.refresh()
+            async let productsTask: Void = subscriptions.loadProducts()
+            _ = await (refreshTask, productsTask)
         }
     }
 }
