@@ -62,6 +62,7 @@ enum RecapBuilder {
         context: ModelContext,
         now: Date = .now,
         calendar: Calendar = .current,
+        startDate: Date,
         includeWeight: Bool = false,
         nonScaleVictory: String? = nil,
         firstName: String? = nil
@@ -71,7 +72,7 @@ enum RecapBuilder {
         let monthDoseDays = allDoseDays.filter { monthInterval?.contains($0) ?? false }
 
         let daysLogged = Set(monthDoseDays.map { calendar.startOfDay(for: $0) }).count
-        let daysElapsed = calendar.component(.day, from: now)
+        let daysElapsed = Self.daysElapsed(now: now, startDate: startDate, calendar: calendar, monthInterval: monthInterval)
         let currentStreak = StreakCalculator.currentStreak(doseDays: allDoseDays, today: now, calendar: calendar)
         let bestStreakThisMonth = StreakCalculator.longestStreak(doseDays: monthDoseDays, calendar: calendar)
         let longestAll = StreakCalculator.longestStreak(doseDays: allDoseDays, calendar: calendar)
@@ -101,5 +102,18 @@ enum RecapBuilder {
             nonScaleVictory: nonScaleVictory,
             weightChangeKg: weightChangeKg
         )
+    }
+
+    /// Number of days the user could plausibly have logged this month: from
+    /// `max(startOfMonth, startOfDay(startDate))` to `startOfDay(now)`, inclusive.
+    /// Using the day-of-month of `now` (e.g. 31) as the denominator understates a
+    /// user's consistency when they onboarded partway through the month.
+    private static func daysElapsed(now: Date, startDate: Date, calendar: Calendar, monthInterval: DateInterval?) -> Int {
+        let startOfToday = calendar.startOfDay(for: now)
+        let startOfUserStart = calendar.startOfDay(for: startDate)
+        let startOfMonth = monthInterval.map { calendar.startOfDay(for: $0.start) } ?? startOfUserStart
+        let denominatorStart = max(startOfMonth, startOfUserStart)
+        let days = calendar.dateComponents([.day], from: denominatorStart, to: startOfToday).day ?? 0
+        return max(1, days + 1)
     }
 }

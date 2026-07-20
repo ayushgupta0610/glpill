@@ -14,6 +14,9 @@ struct RecapView: View {
     @State private var nonScaleVictory: String?
     @State private var name = ""
 
+    /// Caps the name so it can't overflow the fixed-size rasterized share card.
+    private static let maxNameLength = 20
+
     private let victories = ["More energy", "Clothes fit better", "Food noise quiet", "Slept better", "Feeling stronger"]
 
     private var metric: Bool { settingsList.first?.usesMetric ?? false }
@@ -26,6 +29,7 @@ struct RecapView: View {
     private var recap: MonthlyRecap {
         RecapBuilder.build(
             context: context,
+            startDate: settingsList.first?.startDate ?? .now,
             includeWeight: includeWeight,
             nonScaleVictory: nonScaleVictory,
             firstName: name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? nil : name
@@ -79,7 +83,13 @@ struct RecapView: View {
             .navigationTitle("My Month")
             .navigationBarTitleDisplayMode(.inline)
             .onAppear { name = settingsList.first?.firstName ?? "" }
-            .onChange(of: name) { _, newValue in persist(name: newValue) }
+            .onChange(of: name) { _, newValue in
+                if newValue.count > Self.maxNameLength {
+                    name = String(newValue.prefix(Self.maxNameLength))
+                    return
+                }
+                persist(name: newValue)
+            }
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Done") { dismiss() }
