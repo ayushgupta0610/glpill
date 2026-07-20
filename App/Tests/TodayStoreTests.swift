@@ -208,7 +208,7 @@ final class TodayStoreTests: XCTestCase {
     // MARK: - logDose timezone dup-guard
 
     @MainActor
-    func testLogDoseBlocksSecondLogWithin20HoursAcrossDayBoundary() throws {
+    func testLogDoseBlocksSecondLogWithin1HourAcrossDayBoundary() throws {
         let container = try makeContainer(kind: .foundayo)
         let context = container.mainContext
         let store = TodayStore(context: context)
@@ -217,7 +217,7 @@ final class TodayStoreTests: XCTestCase {
         _ = try store.logDose(now: first)
 
         // 1 hour later — still a duplicate even if the calendar day changed
-        // (e.g. due to a timezone shift), since it's within the 20h window.
+        // (e.g. due to a timezone shift), since it's within the 6h window.
         let oneHourLater = first.addingTimeInterval(60 * 60)
         XCTAssertFalse(try store.logDose(now: oneHourLater))
 
@@ -225,8 +225,42 @@ final class TodayStoreTests: XCTestCase {
         XCTAssertEqual(logs.count, 1)
     }
 
+    /// A real next-day dose taken on a shifted schedule (e.g. 10pm Monday, then
+    /// 8am Tuesday — two distinct calendar days, ~7h apart) must NOT be blocked
+    /// by the dup-guard. Only re-taps/timezone-travel duplicates minutes-to-a-
+    /// couple-hours apart should be caught.
     @MainActor
-    func testLogDoseAllowsLogAfter20Hours() throws {
+    func testLogDoseAllowsSevenHourCrossMidnightDose() throws {
+        let container = try makeContainer(kind: .foundayo)
+        let context = container.mainContext
+        let store = TodayStore(context: context)
+
+        var mondayNight = DateComponents()
+        mondayNight.year = 2026
+        mondayNight.month = 3
+        mondayNight.day = 2
+        mondayNight.hour = 22
+        let first = try XCTUnwrap(store.calendar.date(from: mondayNight))
+
+        var tuesdayMorning = DateComponents()
+        tuesdayMorning.year = 2026
+        tuesdayMorning.month = 3
+        tuesdayMorning.day = 3
+        tuesdayMorning.hour = 5
+        let second = try XCTUnwrap(store.calendar.date(from: tuesdayMorning))
+
+        XCTAssertEqual(second.timeIntervalSince(first), 7 * 60 * 60)
+        XCTAssertNotEqual(store.calendar.startOfDay(for: first), store.calendar.startOfDay(for: second))
+
+        _ = try store.logDose(now: first)
+        _ = try store.logDose(now: second)
+
+        let logs = try context.fetch(FetchDescriptor<DoseLog>())
+        XCTAssertEqual(logs.count, 2, "a dose 7h later on a new calendar day should be inserted, not blocked as a duplicate")
+    }
+
+    @MainActor
+    func testLogDoseAllowsLogAfter25Hours() throws {
         let container = try makeContainer(kind: .foundayo)
         let context = container.mainContext
         let store = TodayStore(context: context)

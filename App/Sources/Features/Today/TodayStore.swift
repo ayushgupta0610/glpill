@@ -8,9 +8,11 @@ struct TodayStore {
     let context: ModelContext
     var calendar = Calendar.current
 
-    /// A once-daily pill can't legitimately be re-taken within this window, even if
-    /// a timezone change causes "today" to recompute to a different calendar day.
-    private static let minHoursBetweenDoses: TimeInterval = 20 * 60 * 60
+    /// Catches a re-tap / timezone-travel duplicate log of the same real dose
+    /// (minutes to a couple hours apart), without blocking a legitimate next-day
+    /// dose taken on a shifted schedule (e.g. 10pm one day, 8am the next — ~10h
+    /// apart, different calendar day).
+    private static let minHoursBetweenDoses: TimeInterval = 6 * 60 * 60
 
     /// Logs today's dose once. Returns true when the empty-stomach eat timer
     /// should start (first log of the day for a medication that requires it).
