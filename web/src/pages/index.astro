@@ -1,9 +1,9 @@
 ---
 import Layout from '../layouts/Layout.astro';
 
-const title = 'GLPill — The app for GLP-1 pills';
+const title = 'GLPill — The private tracker for GLP-1 pills';
 const description =
-  'GLPill is the iPhone app built for GLP-1 pills — Foundayo® (orforglipron), Rybelsus® and compounded orals. Daily streaks, the 30-minute meal timer, weight trends, doctor-ready reports. Private by design — synced through your own iCloud, we never see your data.';
+  "Every GLP-1 app wants your data — GLPill can't even see it. The private, pill-native iPhone tracker for Foundayo® (orforglipron), Rybelsus® and compounded orals: daily streaks, the 30-minute meal timer, weight trends, doctor-ready reports. No account, no servers — your data never leaves your device.";
 
 const appJsonLd = {
   '@context': 'https://schema.org',
@@ -12,7 +12,7 @@ const appJsonLd = {
   applicationCategory: 'HealthApplication',
   operatingSystem: 'iOS',
   description:
-    'The iPhone app built for GLP-1 pills — Foundayo (orforglipron), Rybelsus and compounded oral GLP-1s. Daily dose streaks, the 30-minute meal timer, weight trends and doctor-ready reports. All data stays on your device.',
+    "The private, pill-native iPhone tracker for GLP-1 pills — Foundayo (orforglipron), Rybelsus and compounded oral GLP-1s. Daily dose streaks, the 30-minute meal timer, weight trends and doctor-ready reports. No account, no servers — all data stays on your device.",
   offers: { '@type': 'Offer', price: '39.99', priceCurrency: 'USD' },
   publisher: { '@type': 'Organization', name: 'GLPill', url: 'https://glpillapp.com' },
 };
@@ -37,10 +37,13 @@ const features = [
     <div class="mt-6">
       <span class="inline-block rounded-full border border-white/35 bg-white/15 px-4 py-1.5 text-sm font-semibold">Coming soon to the App Store</span>
     </div>
-    <h1 class="mx-auto mt-5 max-w-3xl text-4xl font-bold tracking-tight sm:text-5xl">The app for GLP-1 pills</h1>
-    <p class="mx-auto mt-4 max-w-xl text-lg text-white/90">
-      Injections had their apps. Your daily pill deserves one too. Built for Foundayo® (orforglipron), Rybelsus®
-      and compounded oral GLP-1s.
+    <h1 class="mx-auto mt-5 max-w-3xl text-4xl font-bold tracking-tight sm:text-5xl">The private tracker for GLP-1 pills</h1>
+    <p class="mx-auto mt-4 max-w-2xl text-xl font-semibold text-white">
+      Every GLP-1 app wants your data. This one can't even see it.
+    </p>
+    <p class="mx-auto mt-3 max-w-xl text-lg text-white/90">
+      The pill-native tracker for Foundayo® (orforglipron), Rybelsus® and compounded oral GLP-1s — the streak,
+      the 30-minute timer, doctor-ready reports. All on your iPhone, never our servers.
     </p>
     <div class="mt-8 flex flex-wrap justify-center gap-3">
       <a href="#waitlist" class="rounded-full bg-white px-7 py-3.5 font-bold text-deep hover:bg-white/90">Join the waitlist</a>

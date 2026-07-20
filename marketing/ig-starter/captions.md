@@ -38,6 +38,13 @@ Post 1 image per day, 9–11am ET. Don't post all at once — a grid that appear
 >
 > #glp1 #glp1community #doctorvisit #rybelsus #foundayo
 
+## Bio (paste — canonical in `../MESSAGING.md`)
+```
+💊 The GLP-1 pill tracker that can't see your data
+🔒 No account · no servers · Foundayo & Rybelsus
+📲 glpillapp.com
+```
+
 ## Notes
 - Reply to every single comment in the first hour after posting.
 - After these 4, switch to the reel pipeline (faceless demos, tip slideshows) at ~1/day.

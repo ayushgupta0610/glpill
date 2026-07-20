@@ -1,6 +1,6 @@
 # GLPill — Launch posts & YouTube pack (channels beyond IG)
 
-Positioning through-line for everything below: **the app built for GLP-1 pills · syncs across devices so you never lose your journey · private by design.** Lead with the differentiators, not the feature list.
+Positioning through-line for everything below (canonical: `MESSAGING.md`): **the private, pill-native GLP-1 tracker — no account, no servers, built for the daily pill, not the needle.** The twist line to close on: *"Every GLP-1 app wants your data. GLPill can't even see it."* Lead with the privacy/pill differentiators, not the feature list.
 
 ---
 
@@ -13,12 +13,12 @@ Upload the `marketing/reels/` files as Shorts (accessible from India, no warmup 
 |---|---|---|
 | day1-dose-demo | "The 4-second GLP-1 pill routine" | The whole morning: take the pill, one tap, done — streak alive, timer running. Built for GLP-1 pills (Foundayo, Rybelsus). Coming to the App Store → glpillapp.com  #glp1 #rybelsus #foundayo #weightloss #shorts |
 | day4-rybelsus-morning | "How to take Rybelsus (the 30-minute rule)" | The empty-stomach window is the whole game. GLPill times it and tells you the exact minute you can eat. #rybelsus #glp1 #semaglutide #shorts |
-| wk3-premium-morning-demo | "Your GLP-1 pill deserves a real routine" | Take it, tap it, timer runs itself. The app made for GLP-1 pills. glpillapp.com #glp1 #foundayo #rybelsus #morningroutine #shorts |
+| wk3-premium-morning-demo | "Your GLP-1 pill deserves a real routine" | Take it, tap it, timer runs itself. The private, pill-native GLP-1 tracker — and it never leaves your phone. glpillapp.com #glp1 #foundayo #rybelsus #morningroutine #shorts |
 | day2-food-noise | "The day the food noise went quiet" | If you're on a GLP-1, you know the feeling. #glp1 #foodnoise #weightlossjourney #shorts |
 | wk3-premium-protein | "Protein is how you keep the muscle on a GLP-1" | Small appetite makes it hard — lead with protein, track it. #glp1 #protein #musclepreservation #shorts |
 | day6-doctor-report | "Walk into your GLP-1 appointment prepared" | Adherence, weight trend, side effects — one tap to share with your doctor. #glp1 #doctorvisit #shorts |
 
-**Channel setup:** @glpillapp, banner = the brand gradient + "The app for GLP-1 pills", link glpillapp.com. Also post the carousels as community posts / or turn top ones into 20-sec Shorts.
+**Channel setup:** @glpillapp, banner = the brand gradient + "The private tracker for GLP-1 pills", link glpillapp.com. Also post the carousels as community posts / or turn top ones into 20-sec Shorts.
 
 **Build-in-public long video (top-of-funnel + press bait), 4–7 min:** "I built an app for the new GLP-1 *pills* — here's why." Beats: the Foundayo approval moment → why every tracker is injection-first → the wedge → a demo → the privacy/sync philosophy → call for early testers (glpillapp.com). This ranks for "GLP-1 pill app" and doubles as a creator/press asset.
 
