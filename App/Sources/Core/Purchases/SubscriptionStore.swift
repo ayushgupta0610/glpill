@@ -10,6 +10,7 @@ final class SubscriptionStore {
     static let productIds: Set<String> = [monthlyId, yearlyId]
 
     private let provider: EntitlementProviding
+    private let refreshTimeout: Duration
     private(set) var state: EntitlementState = .unknown
     private(set) var products: [Product] = []
     private(set) var productsLoaded = false
@@ -18,13 +19,33 @@ final class SubscriptionStore {
 
     var isUnlocked: Bool { state == .active }
 
-    init(provider: EntitlementProviding = StoreKitEntitlementProvider()) {
+    init(provider: EntitlementProviding = StoreKitEntitlementProvider(), refreshTimeout: Duration = .seconds(5)) {
         self.provider = provider
+        self.refreshTimeout = refreshTimeout
     }
 
+    /// Resolves entitlement state, racing the provider against `refreshTimeout`.
+    /// If the provider hasn't answered in time and state is still `.unknown`,
+    /// fails CLOSED to `.locked` so the user always reaches the paywall instead
+    /// of being stuck on the loading splash forever (never fail open).
     func refresh() async {
         let previous = state
-        let next = await provider.currentState()
+        let next = await withTaskGroup(of: EntitlementState?.self) { group in
+            group.addTask { await self.provider.currentState() }
+            group.addTask {
+                try? await Task.sleep(for: self.refreshTimeout)
+                return nil
+            }
+            defer { group.cancelAll() }
+            for await result in group {
+                if let result {
+                    return result
+                }
+                // Timeout fired first with no provider answer yet.
+                return previous == .unknown ? .locked : previous
+            }
+            return previous == .unknown ? .locked : previous
+        }
         state = next
         // A live downgrade (refund / expiry / lapse) arrives via the transaction
         // listener. Explain it so being sent to the paywall doesn't look like the

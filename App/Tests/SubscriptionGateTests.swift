@@ -12,6 +12,15 @@ private final class MutableProvider: EntitlementProviding, @unchecked Sendable {
     func currentState() async -> EntitlementState { current }
 }
 
+/// Simulates a stalled entitlement lookup (cold storekitd, no network) that
+/// never returns within the test's lifetime.
+private struct NeverResolvingProvider: EntitlementProviding {
+    func currentState() async -> EntitlementState {
+        try? await Task.sleep(for: .seconds(3600))
+        return .active
+    }
+}
+
 final class SubscriptionGateTests: XCTestCase {
     @MainActor
     func testInitialStateIsUnknownAndLocked() {
@@ -73,5 +82,27 @@ final class SubscriptionGateTests: XCTestCase {
         let store = SubscriptionStore(provider: MutableProvider(.locked))
         await store.refresh()                 // unknown -> locked (not a downgrade)
         XCTAssertNil(store.lastError)
+    }
+
+    // CRITICAL: reproduces "the paywall didn't come." If the entitlement
+    // provider stalls (cold storekitd, no network), refresh() must still fail
+    // CLOSED to .locked within the timeout instead of leaving state .unknown
+    // forever, which would trap the user on the loading splash.
+    @MainActor
+    func testStalledProviderFailsClosedToLockedAfterTimeout() async {
+        let store = SubscriptionStore(provider: NeverResolvingProvider(), refreshTimeout: .milliseconds(50))
+        await store.refresh()
+        XCTAssertEqual(store.state, .locked)
+        XCTAssertFalse(store.isUnlocked)
+    }
+
+    // Regression: a normally-resolving provider that answers well within the
+    // timeout must still yield the correct (non-forced) state.
+    @MainActor
+    func testFastResolvingProviderIsUnaffectedByTimeout() async {
+        let store = SubscriptionStore(provider: MockProvider(state: .active), refreshTimeout: .milliseconds(50))
+        await store.refresh()
+        XCTAssertEqual(store.state, .active)
+        XCTAssertTrue(store.isUnlocked)
     }
 }
