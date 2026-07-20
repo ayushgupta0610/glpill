@@ -11,7 +11,7 @@ struct TitrationEditor: View {
             Section {
                 ForEach(steps) { step in
                     HStack {
-                        TextField("Dose", value: clampedDose(step), format: .number)
+                        TextField("Dose", value: doseBinding(step), format: .number)
                             .keyboardType(.decimalPad)
                             .frame(width: 64)
                         Text("mg")
@@ -47,14 +47,17 @@ struct TitrationEditor: View {
         }
     }
 
-    /// Binding that keeps user-typed doses inside the plausible range.
-    private func clampedDose(_ step: TitrationStep) -> Binding<Double> {
+    /// Binding that accepts the raw typed dose and validates on commit —
+    /// out-of-range values surface an error instead of being silently clamped.
+    private func doseBinding(_ step: TitrationStep) -> Binding<Double> {
         Binding(
             get: { step.doseMg },
             set: { newValue in
-                step.doseMg = UnitFormat.isValidDose(mg: newValue)
-                    ? newValue
-                    : min(max(newValue, 0.05), 50)
+                guard UnitFormat.isValidDose(mg: newValue) else {
+                    errorMessage = "Dose steps must be between 0.05 and 50 mg."
+                    return
+                }
+                step.doseMg = newValue
                 saveOrReport()
             }
         )
