@@ -32,6 +32,7 @@ struct IntakeCountersView: View {
                 value: today?.proteinGrams ?? 0,
                 target: proteinTarget,
                 display: { "\($0) g" },
+                decrements: [(10, "−10"), (25, "−25")],
                 increments: [(10, "+10"), (25, "+25")],
                 unitName: "grams of protein",
                 action: onProtein
@@ -42,6 +43,7 @@ struct IntakeCountersView: View {
                 value: today?.waterMl ?? 0,
                 target: waterTarget,
                 display: { metric ? "\($0) ml" : "\(Int((Double($0) / Self.mlPerOz).rounded())) oz" },
+                decrements: metric ? [(250, "−250"), (500, "−500")] : [(237, "−8 oz"), (473, "−16 oz")],
                 increments: metric ? [(250, "+250"), (500, "+500")] : [(237, "+8 oz"), (473, "+16 oz")],
                 unitName: metric ? "milliliters of water" : "ounces of water",
                 action: onWater
@@ -56,6 +58,7 @@ struct IntakeCountersView: View {
         value: Int,
         target: Int,
         display: (Int) -> String,
+        decrements: [(amount: Int, label: String)],
         increments: [(amount: Int, label: String)],
         unitName: String,
         action: @escaping (Int) -> Void
@@ -72,6 +75,18 @@ struct IntakeCountersView: View {
                     Text("Target hit")
                         .font(.caption2.weight(.semibold))
                         .foregroundStyle(tint)
+                }
+            }
+            HStack {
+                ForEach(decrements, id: \.amount) { decrement in
+                    Button(decrement.label) {
+                        tapPulse.toggle()
+                        action(-decrement.amount)
+                    }
+                    .font(.caption.weight(.semibold))
+                    .buttonStyle(.bordered)
+                    .tint(.secondary)
+                    .accessibilityLabel("Subtract \(decrement.label.dropFirst()) \(unitName)")
                 }
                 Spacer()
                 ForEach(increments, id: \.amount) { increment in
