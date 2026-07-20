@@ -40,7 +40,7 @@ final class StoreKitConfigTests: XCTestCase {
         let yearly = try XCTUnwrap(store.products.first { $0.id == SubscriptionStore.yearlyId })
         let offer = try XCTUnwrap(yearly.subscription?.introductoryOffer)
         XCTAssertEqual(offer.paymentMode, .freeTrial)
-        XCTAssertEqual(offer.period.value, 3)
+        XCTAssertEqual(offer.period.value, 7)
         XCTAssertEqual(offer.period.unit, .day)
     }
 
