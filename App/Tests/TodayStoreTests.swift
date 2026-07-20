@@ -77,4 +77,167 @@ final class TodayStoreTests: XCTestCase {
         XCTAssertEqual(effects.first?.kind, .nausea)
         XCTAssertEqual(effects.first?.severity, 2)
     }
+
+    // MARK: - deleteDose
+
+    @MainActor
+    func testDeleteDoseRemovesLogAndUndosesDay() throws {
+        let container = try makeContainer(kind: .foundayo)
+        let context = container.mainContext
+        let store = TodayStore(context: context)
+
+        _ = try store.logDose()
+        let logged = try context.fetch(FetchDescriptor<DoseLog>())
+        XCTAssertEqual(logged.count, 1)
+
+        try store.deleteDose(logged[0])
+
+        let remaining = try context.fetch(FetchDescriptor<DoseLog>())
+        XCTAssertTrue(remaining.isEmpty)
+
+        // Day should no longer be considered "dosed": logging again should succeed.
+        XCTAssertNotNil(try? store.logDose())
+        let relogged = try context.fetch(FetchDescriptor<DoseLog>())
+        XCTAssertEqual(relogged.count, 1)
+    }
+
+    // MARK: - deleteSideEffect
+
+    @MainActor
+    func testDeleteSideEffectRemovesLog() throws {
+        let container = try makeContainer(kind: .foundayo)
+        let context = container.mainContext
+        let store = TodayStore(context: context)
+
+        try store.logSideEffect(.nausea, severity: 2, note: "after breakfast")
+        let logged = try context.fetch(FetchDescriptor<SideEffectLog>())
+        XCTAssertEqual(logged.count, 1)
+
+        try store.deleteSideEffect(logged[0])
+
+        let remaining = try context.fetch(FetchDescriptor<SideEffectLog>())
+        XCTAssertTrue(remaining.isEmpty)
+    }
+
+    // MARK: - updateSideEffect
+
+    @MainActor
+    func testUpdateSideEffectMutatesSameObject() throws {
+        let container = try makeContainer(kind: .foundayo)
+        let context = container.mainContext
+        let store = TodayStore(context: context)
+
+        try store.logSideEffect(.nausea, severity: 3, note: "severe")
+        let logged = try context.fetch(FetchDescriptor<SideEffectLog>())
+        XCTAssertEqual(logged.count, 1)
+        let objectID = logged[0].persistentModelID
+
+        try store.updateSideEffect(logged[0], kind: .fatigue, severity: 1, note: "mild now")
+
+        let effects = try context.fetch(FetchDescriptor<SideEffectLog>())
+        XCTAssertEqual(effects.count, 1, "update must not create a duplicate")
+        XCTAssertEqual(effects.first?.persistentModelID, objectID)
+        XCTAssertEqual(effects.first?.kind, .fatigue)
+        XCTAssertEqual(effects.first?.severity, 1)
+        XCTAssertEqual(effects.first?.note, "mild now")
+    }
+
+    @MainActor
+    func testUpdateSideEffectClampsSeverity() throws {
+        let container = try makeContainer(kind: .foundayo)
+        let context = container.mainContext
+        let store = TodayStore(context: context)
+
+        try store.logSideEffect(.nausea, severity: 2)
+        let logged = try context.fetch(FetchDescriptor<SideEffectLog>())
+
+        try store.updateSideEffect(logged[0], kind: .nausea, severity: 99, note: nil)
+        XCTAssertEqual(try context.fetch(FetchDescriptor<SideEffectLog>()).first?.severity, 3)
+
+        try store.updateSideEffect(logged[0], kind: .nausea, severity: -5, note: nil)
+        XCTAssertEqual(try context.fetch(FetchDescriptor<SideEffectLog>()).first?.severity, 1)
+    }
+
+    // MARK: - Protein/water clamp at 0
+
+    @MainActor
+    func testAddProteinClampsAtZeroOnDecrement() throws {
+        let container = try makeContainer(kind: .foundayo)
+        let context = container.mainContext
+        let store = TodayStore(context: context)
+
+        try store.addProtein(25)
+        try store.addProtein(-10)
+        XCTAssertEqual(try context.fetch(FetchDescriptor<IntakeDay>()).first?.proteinGrams, 15)
+
+        try store.addProtein(10)
+        try store.addProtein(-50)
+        XCTAssertEqual(try context.fetch(FetchDescriptor<IntakeDay>()).first?.proteinGrams, 0)
+    }
+
+    @MainActor
+    func testAddWaterClampsAtZeroOnDecrement() throws {
+        let container = try makeContainer(kind: .foundayo)
+        let context = container.mainContext
+        let store = TodayStore(context: context)
+
+        try store.addWater(250)
+        try store.addWater(-100)
+        XCTAssertEqual(try context.fetch(FetchDescriptor<IntakeDay>()).first?.waterMl, 150)
+
+        try store.addWater(100)
+        try store.addWater(-500)
+        XCTAssertEqual(try context.fetch(FetchDescriptor<IntakeDay>()).first?.waterMl, 0)
+    }
+
+    // MARK: - SideEffectLog date normalization
+
+    @MainActor
+    func testLogSideEffectNormalizesDateToStartOfDay() throws {
+        let container = try makeContainer(kind: .foundayo)
+        let context = container.mainContext
+        let store = TodayStore(context: context)
+        let now = Date.now
+
+        try store.logSideEffect(.nausea, severity: 2, on: now)
+
+        let effect = try context.fetch(FetchDescriptor<SideEffectLog>()).first
+        XCTAssertEqual(effect?.date, store.calendar.startOfDay(for: now))
+    }
+
+    // MARK: - logDose timezone dup-guard
+
+    @MainActor
+    func testLogDoseBlocksSecondLogWithin20HoursAcrossDayBoundary() throws {
+        let container = try makeContainer(kind: .foundayo)
+        let context = container.mainContext
+        let store = TodayStore(context: context)
+
+        let first = Date.now
+        _ = try store.logDose(now: first)
+
+        // 1 hour later — still a duplicate even if the calendar day changed
+        // (e.g. due to a timezone shift), since it's within the 20h window.
+        let oneHourLater = first.addingTimeInterval(60 * 60)
+        XCTAssertFalse(try store.logDose(now: oneHourLater))
+
+        let logs = try context.fetch(FetchDescriptor<DoseLog>())
+        XCTAssertEqual(logs.count, 1)
+    }
+
+    @MainActor
+    func testLogDoseAllowsLogAfter20Hours() throws {
+        let container = try makeContainer(kind: .foundayo)
+        let context = container.mainContext
+        let store = TodayStore(context: context)
+
+        let first = Date.now
+        _ = try store.logDose(now: first)
+
+        let twentyFiveHoursLater = first.addingTimeInterval(25 * 60 * 60)
+        _ = try store.logDose(now: twentyFiveHoursLater)
+
+        let logs = try context.fetch(FetchDescriptor<DoseLog>())
+        XCTAssertEqual(logs.count, 2, "a dose 25h later is a new day's dose and should be inserted")
+    }
 }
