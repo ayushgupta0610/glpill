@@ -3,6 +3,7 @@ import SwiftData
 
 struct WeightEntrySheet: View {
     let metric: Bool
+    var entry: WeightEntry? = nil
     @Environment(\.modelContext) private var context
     @Environment(\.dismiss) private var dismiss
     @State private var displayValue: Double?
@@ -24,7 +25,7 @@ struct WeightEntrySheet: View {
                         .foregroundStyle(.red)
                 }
             }
-            .navigationTitle("Add weigh-in")
+            .navigationTitle(entry == nil ? "Add weigh-in" : "Edit weigh-in")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
@@ -33,6 +34,11 @@ struct WeightEntrySheet: View {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel", role: .cancel) { dismiss() }
                 }
+            }
+            .onAppear {
+                guard let entry else { return }
+                displayValue = metric ? entry.kilograms : entry.kilograms / UnitFormat.kgPerLb
+                date = entry.date
             }
         }
     }
@@ -47,7 +53,12 @@ struct WeightEntrySheet: View {
             errorMessage = "Please enter a weight between 55–1100 lb (25–500 kg)."
             return
         }
-        context.insert(WeightEntry(date: date, kilograms: kilograms))
+        if let entry {
+            entry.kilograms = kilograms
+            entry.date = date
+        } else {
+            context.insert(WeightEntry(date: date, kilograms: kilograms))
+        }
         do {
             try context.save()
             dismiss()

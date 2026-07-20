@@ -3,11 +3,13 @@ import SwiftData
 import Charts
 
 struct ProgressScreen: View {
+    @Environment(\.modelContext) private var context
     @Query(sort: \WeightEntry.date) private var entries: [WeightEntry]
     @Query private var settingsList: [UserSettings]
     @Query(sort: \DoseLog.date) private var doseLogs: [DoseLog]
     @State private var showEntrySheet = false
     @State private var showRecap = false
+    @State private var editingEntry: WeightEntry?
 
     private var metric: Bool { settingsList.first?.usesMetric ?? false }
 
@@ -22,6 +24,9 @@ struct ProgressScreen: View {
                         statsCard
                     }
                     chartCard
+                    if !entries.isEmpty {
+                        weighInsCard
+                    }
                     shareCard
                 }
                 .padding()
@@ -41,10 +46,53 @@ struct ProgressScreen: View {
                 WeightEntrySheet(metric: metric)
                     .presentationDetents([.medium])
             }
+            .sheet(item: $editingEntry, onDismiss: { editingEntry = nil }) { entry in
+                WeightEntrySheet(metric: metric, entry: entry)
+                    .presentationDetents([.medium])
+            }
             .sheet(isPresented: $showRecap) {
                 RecapView()
             }
         }
+    }
+
+    private var sortedEntries: [WeightEntry] {
+        entries.sorted { $0.date > $1.date }
+    }
+
+    private var weighInsCard: some View {
+        Card {
+            SectionHeader(title: "Weigh-ins")
+            List {
+                ForEach(sortedEntries) { entry in
+                    Button {
+                        editingEntry = entry
+                    } label: {
+                        HStack {
+                            Text(entry.date.formatted(date: .abbreviated, time: .omitted))
+                                .foregroundStyle(.primary)
+                            Spacer()
+                            Text(UnitFormat.weightString(kilograms: entry.kilograms, metric: metric))
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                    .buttonStyle(.plain)
+                    .listRowInsets(EdgeInsets(top: 8, leading: 0, bottom: 8, trailing: 0))
+                    .listRowBackground(Color.clear)
+                }
+                .onDelete(perform: deleteEntries)
+            }
+            .listStyle(.plain)
+            .scrollDisabled(true)
+            .frame(height: CGFloat(sortedEntries.count) * 44)
+        }
+    }
+
+    private func deleteEntries(at offsets: IndexSet) {
+        for index in offsets {
+            context.delete(sortedEntries[index])
+        }
+        try? context.save()
     }
 
     private var monthCard: some View {
