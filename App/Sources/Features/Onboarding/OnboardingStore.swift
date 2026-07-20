@@ -11,9 +11,10 @@ final class OnboardingStore {
         var durationWeeks: Int
     }
 
-    enum OnboardingError: LocalizedError {
+    enum OnboardingError: LocalizedError, Equatable {
         case invalidWeight
         case invalidDose
+        case goalAboveCurrentWeight
 
         var errorDescription: String? {
             switch self {
@@ -21,6 +22,8 @@ final class OnboardingStore {
                 return "Please enter a weight between 55–1100 lb (25–500 kg)."
             case .invalidDose:
                 return "Dose steps must be between 0.05 and 50 mg. Double-check your prescriber's plan."
+            case .goalAboveCurrentWeight:
+                return "Goal weight should be below your current weight."
             }
         }
     }
@@ -42,6 +45,10 @@ final class OnboardingStore {
 
         for kg in [startKg, goalKg].compactMap({ $0 }) where !UnitFormat.isValidWeight(kilograms: kg) {
             throw OnboardingError.invalidWeight
+        }
+
+        if let startKg, let goalKg, goalKg >= startKg {
+            throw OnboardingError.goalAboveCurrentWeight
         }
 
         let medication = Medication(kind: kind, customName: kind == .custom ? customName : nil, createdAt: now)
