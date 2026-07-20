@@ -20,8 +20,9 @@ struct MorningMedsEditor: View {
 
             if let settings = settingsList.first, !settings.morningMeds.isEmpty {
                 Section {
-                    ForEach(settings.morningMeds, id: \.self) { med in
-                        Text(med)
+                    ForEach(Array(settings.morningMeds.enumerated()), id: \.offset) { index, _ in
+                        TextField("Medication", text: editBinding(settings: settings, index: index))
+                            .onSubmit { commitEdit(settings: settings) }
                     }
                     .onDelete { offsets in
                         var meds = settings.morningMeds
@@ -39,5 +40,30 @@ struct MorningMedsEditor: View {
         guard let settings = settingsList.first else { return }
         settings.morningMeds = MorningMeds.normalize(settings.morningMeds + [entry])
         entry = ""
+    }
+
+    /// Binding for editing an existing entry in place. Writes the raw typed
+    /// text straight through while the user is typing (normalizing on every
+    /// keystroke would dedupe/reindex mid-word); `commitEdit` re-normalizes
+    /// once editing finishes.
+    private func editBinding(settings: UserSettings, index: Int) -> Binding<String> {
+        Binding(
+            get: {
+                guard settings.morningMeds.indices.contains(index) else { return "" }
+                return settings.morningMeds[index]
+            },
+            set: { newValue in
+                var meds = settings.morningMeds
+                guard meds.indices.contains(index) else { return }
+                meds[index] = newValue
+                settings.morningMeds = meds
+            }
+        )
+    }
+
+    /// Re-normalizes (trim/dedupe) the list once an in-place edit is done,
+    /// same as `add()` does for new entries.
+    private func commitEdit(settings: UserSettings) {
+        settings.morningMeds = MorningMeds.normalize(settings.morningMeds)
     }
 }
