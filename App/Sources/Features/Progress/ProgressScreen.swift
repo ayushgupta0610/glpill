@@ -63,35 +63,39 @@ struct ProgressScreen: View {
     private var weighInsCard: some View {
         Card {
             SectionHeader(title: "Weigh-ins")
-            List {
+            VStack(spacing: 0) {
                 ForEach(sortedEntries) { entry in
-                    Button {
-                        editingEntry = entry
-                    } label: {
-                        HStack {
-                            Text(entry.date.formatted(date: .abbreviated, time: .omitted))
-                                .foregroundStyle(.primary)
-                            Spacer()
-                            Text(UnitFormat.weightString(kilograms: entry.kilograms, metric: metric))
-                                .foregroundStyle(.secondary)
+                    HStack {
+                        Button {
+                            editingEntry = entry
+                        } label: {
+                            HStack {
+                                Text(entry.date.formatted(date: .abbreviated, time: .omitted))
+                                    .foregroundStyle(.primary)
+                                Spacer()
+                                Text(UnitFormat.weightString(kilograms: entry.kilograms, metric: metric))
+                                    .foregroundStyle(.secondary)
+                            }
                         }
+                        .buttonStyle(.plain)
+
+                        Button {
+                            deleteEntry(entry)
+                        } label: {
+                            Image(systemName: "trash")
+                                .foregroundStyle(.red)
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityLabel("Delete weigh-in")
                     }
-                    .buttonStyle(.plain)
-                    .listRowInsets(EdgeInsets(top: 8, leading: 0, bottom: 8, trailing: 0))
-                    .listRowBackground(Color.clear)
+                    .padding(.vertical, 8)
                 }
-                .onDelete(perform: deleteEntries)
             }
-            .listStyle(.plain)
-            .scrollDisabled(true)
-            .frame(height: CGFloat(sortedEntries.count) * 44)
         }
     }
 
-    private func deleteEntries(at offsets: IndexSet) {
-        for index in offsets {
-            context.delete(sortedEntries[index])
-        }
+    private func deleteEntry(_ entry: WeightEntry) {
+        context.delete(entry)
         try? context.save()
     }
 
