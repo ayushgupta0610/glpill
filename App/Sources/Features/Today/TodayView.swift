@@ -86,7 +86,8 @@ struct TodayView: View {
                 medName: medications.first?.displayName ?? "Your GLP-1 pill",
                 doseSubtitle: doseSubtitle,
                 state: ritualState,
-                takePill: takePill
+                takePill: takePill,
+                undo: todayLog != nil ? undoDose : nil
             )
         }
     }
@@ -177,6 +178,17 @@ struct TodayView: View {
         settings.lastCelebratedMilestone = milestone
         try? context.save()
         celebratingMilestone = milestone
+    }
+
+    /// Undoes today's dose log — only meaningful same-day. Clears the eat timer,
+    /// cancels its pending notification, and returns the card to `.notTaken`.
+    private func undoDose() {
+        guard let todayLog else { return }
+        withErrorHandling {
+            try store.deleteDose(todayLog)
+            eatTimerEnd = 0
+            UNNotificationScheduler().removePending(ids: [ReminderScheduler.eatTimerId])
+        }
     }
 
     private func withErrorHandling(_ work: () throws -> Void) {
