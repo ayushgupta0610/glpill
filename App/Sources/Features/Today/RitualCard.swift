@@ -43,6 +43,12 @@ struct RitualCard: View {
                           systemImage: "clock.badge.checkmark")
                         .font(.caption).foregroundStyle(.secondary)
                 }
+                if let undo {
+                    Button("Undo", role: .destructive, action: undo)
+                        .font(.caption.weight(.medium))
+                        .buttonStyle(.plain)
+                        .foregroundStyle(.secondary)
+                }
 
             case let .clear(meds, hadWindow):
                 Label(RitualState.clearMessage(hadWindow: hadWindow),
