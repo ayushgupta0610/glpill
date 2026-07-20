@@ -1,11 +1,19 @@
 import SwiftUI
 import SwiftData
 
+/// Scoped `Identifiable` wrapper for the day selected in the calendar grid.
+/// Deliberately not a global `Date: Identifiable` extension — that conformance
+/// is an app-wide footgun (any `Date?` binding elsewhere would silently pick it up).
+private struct HistoryDay: Identifiable {
+    let date: Date
+    var id: TimeInterval { date.timeIntervalSince1970 }
+}
+
 struct HistoryView: View {
     @Query(sort: \DoseLog.date) private var doseLogs: [DoseLog]
     @Query(sort: \SideEffectLog.date) private var sideEffects: [SideEffectLog]
     @State private var monthAnchor = Calendar.current.startOfDay(for: .now)
-    @State private var selectedDay: Date?
+    @State private var selectedDay: HistoryDay?
 
     private var calendar: Calendar { .current }
 
@@ -36,8 +44,8 @@ struct HistoryView: View {
             }
             .background(Color(.systemGroupedBackground))
             .navigationTitle("History")
-            .sheet(item: $selectedDay) { day in
-                DayDetailSheet(day: day)
+            .sheet(item: $selectedDay, onDismiss: { selectedDay = nil }) { day in
+                DayDetailSheet(day: day.date)
                     .presentationDetents([.medium])
             }
         }
@@ -87,7 +95,7 @@ struct HistoryView: View {
         let isFuture = day > calendar.startOfDay(for: .now)
 
         return Button {
-            selectedDay = day
+            selectedDay = HistoryDay(date: day)
         } label: {
             VStack(spacing: 2) {
                 Text("\(calendar.component(.day, from: day))")
@@ -134,19 +142,19 @@ struct HistoryView: View {
     }
 }
 
-extension Date: Identifiable {
-    public var id: TimeInterval { timeIntervalSince1970 }
-}
-
 private struct DayDetailSheet: View {
     let day: Date
+    @Environment(\.modelContext) private var context
     @Query private var doseLogs: [DoseLog]
     @Query private var sideEffects: [SideEffectLog]
     @Query private var intakeDays: [IntakeDay]
     @Query private var settingsList: [UserSettings]
+    @State private var editingEffect: SideEffectLog?
+    @State private var errorMessage: String?
 
     private var calendar: Calendar { .current }
     private var metric: Bool { settingsList.first?.usesMetric ?? false }
+    private var store: TodayStore { TodayStore(context: context) }
 
     var body: some View {
         NavigationStack {
@@ -163,6 +171,9 @@ private struct DayDetailSheet: View {
                             systemImage: "pills.fill"
                         )
                     }
+                    .onDelete { offsets in
+                        deleteDoses(logs, at: offsets)
+                    }
                 }
                 Section("Side effects") {
                     let effects = sideEffects.filter { calendar.isDate($0.date, inSameDayAs: day) }
@@ -171,12 +182,21 @@ private struct DayDetailSheet: View {
                             .foregroundStyle(.secondary)
                     }
                     ForEach(effects) { effect in
-                        HStack {
-                            Text("\(effect.kind.emoji) \(effect.kind.label)")
-                            Spacer()
-                            Text(severityLabel(effect.severity))
-                                .foregroundStyle(.secondary)
+                        Button {
+                            editingEffect = effect
+                        } label: {
+                            HStack {
+                                Text("\(effect.kind.emoji) \(effect.kind.label)")
+                                    .foregroundStyle(.primary)
+                                Spacer()
+                                Text(severityLabel(effect.severity))
+                                    .foregroundStyle(.secondary)
+                            }
                         }
+                        .buttonStyle(.plain)
+                    }
+                    .onDelete { offsets in
+                        deleteEffects(effects, at: offsets)
                     }
                 }
                 Section("Intake") {
@@ -193,6 +213,20 @@ private struct DayDetailSheet: View {
             }
             .navigationTitle(day.formatted(date: .abbreviated, time: .omitted))
             .navigationBarTitleDisplayMode(.inline)
+            .sheet(item: $editingEffect, onDismiss: { editingEffect = nil }) { effect in
+                SideEffectSheet(existing: effect) { kind, severity, note in
+                    updateEffect(effect, kind: kind, severity: severity, note: note)
+                }
+                .presentationDetents([.medium])
+            }
+            .alert("Couldn't save", isPresented: .init(
+                get: { errorMessage != nil },
+                set: { if !$0 { errorMessage = nil } }
+            )) {
+                Button("OK", role: .cancel) {}
+            } message: {
+                Text(errorMessage ?? "")
+            }
         }
     }
 
@@ -201,6 +235,34 @@ private struct DayDetailSheet: View {
         case 1: return "Mild"
         case 2: return "Moderate"
         default: return "Severe"
+        }
+    }
+
+    private func deleteDoses(_ logs: [DoseLog], at offsets: IndexSet) {
+        for index in offsets {
+            do {
+                try store.deleteDose(logs[index])
+            } catch {
+                errorMessage = "Your change couldn't be saved. Please try again."
+            }
+        }
+    }
+
+    private func deleteEffects(_ effects: [SideEffectLog], at offsets: IndexSet) {
+        for index in offsets {
+            do {
+                try store.deleteSideEffect(effects[index])
+            } catch {
+                errorMessage = "Your change couldn't be saved. Please try again."
+            }
+        }
+    }
+
+    private func updateEffect(_ effect: SideEffectLog, kind: SideEffectKind, severity: Int, note: String?) {
+        do {
+            try store.updateSideEffect(effect, kind: kind, severity: severity, note: note)
+        } catch {
+            errorMessage = "Your change couldn't be saved. Please try again."
         }
     }
 }
