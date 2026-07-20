@@ -160,8 +160,9 @@ struct ProgressScreen: View {
     private var toGoalString: String {
         guard let current = entries.last?.kilograms, let goal = settingsList.first?.goalKilograms else { return "—" }
         let remaining = WeightStats.toGoal(current: current, goal: goal)
+        guard remaining > 0 else { return "Goal reached 🎉" }
         let display = metric ? remaining : remaining / UnitFormat.kgPerLb
-        return String(format: "%.1f %@", max(0, display), metric ? "kg" : "lb")
+        return String(format: "%.1f %@", display, metric ? "kg" : "lb")
     }
 
     private var chartCard: some View {
@@ -243,7 +244,8 @@ struct ProgressScreen: View {
             changeText: change.map {
                 String(format: "%+.1f %@", metric ? $0 : $0 / UnitFormat.kgPerLb, metric ? "kg" : "lb")
             } ?? "Just started",
-            weeks: weeks
+            weeks: weeks,
+            isGain: (change ?? 0) > 0
         )
         let renderer = ImageRenderer(content: card)
         renderer.scale = 3
