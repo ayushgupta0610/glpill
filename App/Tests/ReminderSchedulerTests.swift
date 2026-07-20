@@ -32,4 +32,16 @@ final class ReminderSchedulerTests: XCTestCase {
         XCTAssertEqual(spy.added[0].id, ReminderScheduler.eatTimerId)
         XCTAssertEqual(spy.added[0].trigger, .once(after: 1800))
     }
+
+    func testEatTimerBodyGenericWhenNoMeds() {
+        XCTAssertEqual(ReminderScheduler.eatTimerBody(meds: []), "30 minutes are up — enjoy your meal.")
+    }
+    func testEatTimerBodyMentionsMedsWhenPresent() {
+        XCTAssertEqual(ReminderScheduler.eatTimerBody(meds: ["Thyroid", "BP med"]), "30 minutes are up — enjoy your meal. You can also take your Thyroid, BP med now.")
+    }
+    func testEatTimerPassesMedsBodyToScheduler() {
+        let spy = SpyScheduler()
+        ReminderScheduler.scheduleEatTimer(using: spy, meds: ["Thyroid"])
+        XCTAssertEqual(spy.added.first?.body, "30 minutes are up — enjoy your meal. You can also take your Thyroid now.")
+    }
 }

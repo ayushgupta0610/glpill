@@ -18,6 +18,9 @@ final class UserSettings {
     /// Highest streak milestone (7/30/100/365) already celebrated, so the Trophy
     /// Card fires once per milestone rather than on every dose log.
     var lastCelebratedMilestone: Int = 0
+    /// Optional list of the user's OTHER morning medications (names only). Used to
+    /// tell them when their empty-stomach window is clear. Timing metadata, not advice.
+    var morningMeds: [String] = []
 
     init(
         onboardingComplete: Bool = false,
@@ -30,7 +33,8 @@ final class UserSettings {
         proteinTargetGrams: Int = 100,
         waterTargetMl: Int = 2000,
         startDate: Date = .now,
-        lastCelebratedMilestone: Int = 0
+        lastCelebratedMilestone: Int = 0,
+        morningMeds: [String] = []
     ) {
         self.onboardingComplete = onboardingComplete
         self.usesMetric = usesMetric
@@ -43,5 +47,6 @@ final class UserSettings {
         self.waterTargetMl = waterTargetMl
         self.startDate = startDate
         self.lastCelebratedMilestone = lastCelebratedMilestone
+        self.morningMeds = morningMeds
     }
 }

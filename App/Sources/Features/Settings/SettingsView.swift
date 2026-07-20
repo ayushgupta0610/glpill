@@ -18,6 +18,9 @@ struct SettingsView: View {
                     NavigationLink("Dose plan") {
                         TitrationEditor()
                     }
+                    NavigationLink("Morning meds") {
+                        MorningMedsEditor()
+                    }
                 }
 
                 if let settings = settingsList.first {

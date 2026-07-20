@@ -24,11 +24,6 @@ struct TodayView: View {
         StreakCalculator.currentStreak(doseDays: doseLogs.map(\.date), today: .now, calendar: calendar)
     }
 
-    private var eatTimerActive: Bool {
-        // Keep the card visible ~15 min past the end so users see "you can eat now".
-        Date(timeIntervalSince1970: eatTimerEnd + 15 * 60) > .now && eatTimerEnd > 0
-    }
-
     var body: some View {
         NavigationStack {
             ScrollView {
@@ -37,10 +32,7 @@ struct TodayView: View {
                         .font(.subheadline.weight(.medium))
                         .foregroundStyle(.secondary)
                         .frame(maxWidth: .infinity, alignment: .leading)
-                    doseCard
-                    if eatTimerActive {
-                        EatTimerView(end: Date(timeIntervalSince1970: eatTimerEnd))
-                    }
+                    ritualCard
                     streakCard
                     IntakeCountersView(
                         onProtein: { grams in withErrorHandling { try store.addProtein(grams) } },
@@ -78,32 +70,24 @@ struct TodayView: View {
         }
     }
 
-    private var doseCard: some View {
-        Card {
-            HStack {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(medications.first?.displayName ?? "Your GLP-1 pill")
-                        .font(.headline)
-                    Text(doseSubtitle)
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
-                }
-                Spacer()
-            }
+    private var ritualState: RitualState {
+        RitualState.make(
+            todayLogged: todayLog != nil,
+            requiresEmptyStomach: medications.first?.requiresEmptyStomach ?? false,
+            windowEnd: eatTimerEnd > 0 ? Date(timeIntervalSince1970: eatTimerEnd) : nil,
+            meds: settingsList.first?.morningMeds ?? [],
+            now: .now
+        )
+    }
 
-            if let log = todayLog {
-                Label("Taken at \(log.takenAt.formatted(date: .omitted, time: .shortened))", systemImage: "checkmark.circle.fill")
-                    .font(.headline)
-                    .foregroundStyle(Theme.primary)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 16)
-                    .background(Theme.primary.opacity(0.12), in: RoundedRectangle(cornerRadius: 12))
-                    .symbolEffect(.bounce, value: doseJustLogged)
-            } else {
-                PillCTAButton(title: "Take today's pill", systemImage: "pills.fill") {
-                    takePill()
-                }
-            }
+    private var ritualCard: some View {
+        TimelineView(.periodic(from: .now, by: 1)) { _ in
+            RitualCard(
+                medName: medications.first?.displayName ?? "Your GLP-1 pill",
+                doseSubtitle: doseSubtitle,
+                state: ritualState,
+                takePill: takePill
+            )
         }
     }
 
@@ -171,7 +155,10 @@ struct TodayView: View {
             doseJustLogged.toggle()
             if startTimer {
                 eatTimerEnd = Date().addingTimeInterval(30 * 60).timeIntervalSince1970
-                ReminderScheduler.scheduleEatTimer(using: UNNotificationScheduler())
+                ReminderScheduler.scheduleEatTimer(
+                    using: UNNotificationScheduler(),
+                    meds: settingsList.first?.morningMeds ?? []
+                )
             }
         }
         if !wasAlreadyLogged { celebrateMilestoneIfReached() }

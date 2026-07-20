@@ -16,7 +16,11 @@ struct ProgressScreen: View {
             ScrollView {
                 VStack(spacing: 16) {
                     monthCard
-                    statsCard
+                    if entries.isEmpty {
+                        baselineNudge
+                    } else {
+                        statsCard
+                    }
                     chartCard
                     shareCard
                 }
@@ -65,6 +69,23 @@ struct ProgressScreen: View {
             .background(Theme.heroGradient, in: RoundedRectangle(cornerRadius: Theme.cardCornerRadius))
         }
         .buttonStyle(.plain)
+    }
+
+    private var baselineNudge: some View {
+        Card {
+            SectionHeader(title: "Start tracking your progress")
+            Text("Add your starting weight so GLPill can show your trend, total change, and milestones.")
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+            Button {
+                showEntrySheet = true
+            } label: {
+                Label("Add starting weight", systemImage: "plus.circle.fill")
+                    .font(.subheadline.weight(.semibold))
+            }
+            .buttonStyle(.bordered)
+            .tint(Theme.primary)
+        }
     }
 
     private var statsCard: some View {

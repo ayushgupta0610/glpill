@@ -40,7 +40,7 @@ final class StoreKitConfigTests: XCTestCase {
         let yearly = try XCTUnwrap(store.products.first { $0.id == SubscriptionStore.yearlyId })
         let offer = try XCTUnwrap(yearly.subscription?.introductoryOffer)
         XCTAssertEqual(offer.paymentMode, .freeTrial)
-        XCTAssertEqual(offer.period.value, 3)
+        XCTAssertEqual(offer.period.value, 7)
         XCTAssertEqual(offer.period.unit, .day)
     }
 
@@ -53,5 +53,25 @@ final class StoreKitConfigTests: XCTestCase {
         await store.purchase(yearly)
 
         XCTAssertTrue(store.isUnlocked, "purchase should activate entitlement (error: \(store.lastError ?? "none"))")
+    }
+
+    /// Parses the .storekit JSON directly rather than going through StoreKit's
+    /// `Product` APIs, which don't reliably serve products in a headless
+    /// xcodebuild run (see `loadProductsWithRetry`). Deterministic regardless
+    /// of environment.
+    func testMonthlyHasSevenDayFreeIntroductoryOffer() throws {
+        let url = try XCTUnwrap(
+            Bundle(for: StoreKitConfigTests.self).url(forResource: "GLPill", withExtension: "storekit"),
+            "GLPill.storekit missing from test bundle"
+        )
+        let data = try Data(contentsOf: url)
+        let json = try XCTUnwrap(JSONSerialization.jsonObject(with: data) as? [String: Any])
+        let groups = try XCTUnwrap(json["subscriptionGroups"] as? [[String: Any]])
+        let subscriptions = groups.flatMap { $0["subscriptions"] as? [[String: Any]] ?? [] }
+        let monthly = try XCTUnwrap(subscriptions.first { $0["productID"] as? String == "glpill.pro.monthly" })
+        let offer = try XCTUnwrap(monthly["introductoryOffer"] as? [String: Any], "monthly plan should have a free introductory offer")
+
+        XCTAssertEqual(offer["paymentMode"] as? String, "free")
+        XCTAssertEqual(offer["subscriptionPeriod"] as? String, "P7D")
     }
 }

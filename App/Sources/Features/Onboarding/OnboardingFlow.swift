@@ -7,7 +7,7 @@ struct OnboardingFlow: View {
     @State private var step = 0
     @State private var errorMessage: String?
 
-    private let totalSteps = 5
+    private let totalSteps = 6
 
     var body: some View {
         VStack(spacing: 0) {
@@ -23,6 +23,7 @@ struct OnboardingFlow: View {
             case 1: MedicationStep(store: store, next: advance)
             case 2: TitrationSetupStep(store: store, next: advance)
             case 3: WeightStep(store: store, next: advance)
+            case 4: MorningMedsStep(store: store, next: advance)
             default: ReminderStep(store: store, finish: complete)
             }
         }
@@ -72,7 +73,7 @@ private struct WelcomeStep: View {
             Text("Make every pill count")
                 .font(.largeTitle.bold())
                 .multilineTextAlignment(.center)
-            Text("Built for Foundayo®, Rybelsus® and daily GLP-1 pills — not injections.")
+            Text("The app built for the GLP-1 pill — Foundayo®, Rybelsus® and daily oral GLP-1s. We time your empty-stomach window; injections had their apps, your pill gets one too.")
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
@@ -260,6 +261,54 @@ private struct WeightStep: View {
         }
         .padding(.horizontal)
         .background(Color(.systemGroupedBackground))
+    }
+}
+
+private struct MorningMedsStep: View {
+    @Bindable var store: OnboardingStore
+    let next: () -> Void
+    @State private var entry = ""
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Text("Other morning meds?")
+                .font(.title.bold())
+                .padding(.top, 24)
+            Text("Optional. Add anything else you take in the morning (thyroid, blood pressure, birth control). We'll tell you when your empty-stomach window is clear so you know when to take them. Names only — stored privately on your device.")
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+
+            HStack {
+                TextField("Add a medication", text: $entry)
+                    .textFieldStyle(.roundedBorder)
+                    .onSubmit(add)
+                Button("Add", action: add)
+                    .buttonStyle(.bordered)
+                    .disabled(entry.trimmingCharacters(in: .whitespaces).isEmpty)
+            }
+
+            ForEach(store.morningMeds, id: \.self) { med in
+                HStack {
+                    Text(med)
+                    Spacer()
+                    Button {
+                        store.morningMeds.removeAll { $0 == med }
+                    } label: { Image(systemName: "minus.circle.fill").foregroundStyle(.secondary) }
+                }
+            }
+
+            Spacer()
+            PillCTAButton(title: store.morningMeds.isEmpty ? "Skip for now" : "Continue",
+                          systemImage: "arrow.right") { next() }
+                .padding(.bottom, 24)
+        }
+        .padding(.horizontal)
+        .background(Color(.systemGroupedBackground))
+    }
+
+    private func add() {
+        store.morningMeds = MorningMeds.normalize(store.morningMeds + [entry])
+        entry = ""
     }
 }
 
