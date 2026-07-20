@@ -1,11 +1,14 @@
 import SwiftUI
 
 struct SideEffectSheet: View {
+    var existing: SideEffectLog? = nil
     let onSave: (SideEffectKind, Int, String?) -> Void
     @Environment(\.dismiss) private var dismiss
     @State private var kind: SideEffectKind = .nausea
     @State private var severity = 1
     @State private var note = ""
+
+    private static let noteCharacterLimit = 280
 
     var body: some View {
         NavigationStack {
@@ -22,8 +25,13 @@ struct SideEffectSheet: View {
                 }
                 .pickerStyle(.segmented)
                 TextField("Note (optional)", text: $note)
+                    .onChange(of: note) { _, newValue in
+                        if newValue.count > Self.noteCharacterLimit {
+                            note = String(newValue.prefix(Self.noteCharacterLimit))
+                        }
+                    }
             }
-            .navigationTitle("Log side effect")
+            .navigationTitle(existing == nil ? "Log side effect" : "Edit side effect")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
@@ -35,6 +43,12 @@ struct SideEffectSheet: View {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel", role: .cancel) { dismiss() }
                 }
+            }
+            .onAppear {
+                guard let existing else { return }
+                kind = existing.kind
+                severity = existing.severity
+                note = existing.note ?? ""
             }
         }
     }

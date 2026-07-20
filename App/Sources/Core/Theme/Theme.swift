@@ -12,5 +12,13 @@ enum Theme {
         endPoint: .bottomTrailing
     )
 
+    /// Muted, non-celebratory gradient for share cards when the underlying
+    /// data (e.g. a weight gain) shouldn't be framed as a win.
+    static let neutralGradient = LinearGradient(
+        colors: [Color(white: 0.35), Color(white: 0.22)],
+        startPoint: .topLeading,
+        endPoint: .bottomTrailing
+    )
+
     static let cardCornerRadius: CGFloat = 16
 }

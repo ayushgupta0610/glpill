@@ -8,13 +8,22 @@ struct TodayStore {
     let context: ModelContext
     var calendar = Calendar.current
 
+    /// Catches a re-tap / timezone-travel duplicate log of the same real dose
+    /// (minutes to a couple hours apart), without blocking a legitimate next-day
+    /// dose taken on a shifted schedule (e.g. 10pm one day, 8am the next — ~10h
+    /// apart, different calendar day).
+    private static let minHoursBetweenDoses: TimeInterval = 6 * 60 * 60
+
     /// Logs today's dose once. Returns true when the empty-stomach eat timer
     /// should start (first log of the day for a medication that requires it).
     @discardableResult
     func logDose(now: Date = .now) throws -> Bool {
         let day = calendar.startOfDay(for: now)
-        let existing = try context.fetch(FetchDescriptor<DoseLog>()).first { $0.date == day }
-        guard existing == nil else { return false }
+        let existingLogs = try context.fetch(FetchDescriptor<DoseLog>())
+        let isDuplicate = existingLogs.contains {
+            $0.date == day || abs($0.takenAt.timeIntervalSince(now)) < Self.minHoursBetweenDoses
+        }
+        guard !isDuplicate else { return false }
 
         context.insert(DoseLog(date: day, takenAt: now, doseMg: currentDoseMg(on: now)))
         try context.save()
@@ -22,6 +31,13 @@ struct TodayStore {
 
         let medication = try context.fetch(FetchDescriptor<Medication>()).first
         return medication?.requiresEmptyStomach ?? false
+    }
+
+    /// Deletes a logged dose (user correction) and refreshes the widget snapshot.
+    func deleteDose(_ log: DoseLog, now: Date = .now) throws {
+        context.delete(log)
+        try context.save()
+        WidgetSnapshotBuilder.refresh(context: context, now: now, calendar: calendar)
     }
 
     func currentDoseMg(on date: Date = .now) -> Double {
@@ -36,18 +52,32 @@ struct TodayStore {
 
     func addProtein(_ grams: Int, on date: Date = .now) throws {
         let day = try intakeDay(for: date)
-        day.proteinGrams += grams
+        day.proteinGrams = max(0, day.proteinGrams + grams)
         try context.save()
     }
 
     func addWater(_ ml: Int, on date: Date = .now) throws {
         let day = try intakeDay(for: date)
-        day.waterMl += ml
+        day.waterMl = max(0, day.waterMl + ml)
         try context.save()
     }
 
     func logSideEffect(_ kind: SideEffectKind, severity: Int, note: String? = nil, on date: Date = .now) throws {
-        context.insert(SideEffectLog(date: date, kind: kind, severity: severity, note: note))
+        context.insert(SideEffectLog(date: calendar.startOfDay(for: date), kind: kind, severity: severity, note: note))
+        try context.save()
+    }
+
+    /// Deletes a logged side effect (user correction).
+    func deleteSideEffect(_ log: SideEffectLog) throws {
+        context.delete(log)
+        try context.save()
+    }
+
+    /// Updates a logged side effect in place (user correction) — no duplicate is created.
+    func updateSideEffect(_ log: SideEffectLog, kind: SideEffectKind, severity: Int, note: String?) throws {
+        log.kindRaw = kind.rawValue
+        log.severity = min(max(severity, 1), 3)
+        log.note = note
         try context.save()
     }
 

@@ -46,8 +46,9 @@ struct GLPillApp: App {
                         ScreenshotExporter.export()
                     }
                     #endif
-                    await subscriptions.refresh()
-                    await subscriptions.loadProducts()
+                    async let refreshTask: Void = subscriptions.refresh()
+                    async let productsTask: Void = subscriptions.loadProducts()
+                    _ = await (refreshTask, productsTask)
                 }
         }
         .modelContainer(container)

@@ -3,11 +3,13 @@ import SwiftData
 import Charts
 
 struct ProgressScreen: View {
+    @Environment(\.modelContext) private var context
     @Query(sort: \WeightEntry.date) private var entries: [WeightEntry]
     @Query private var settingsList: [UserSettings]
     @Query(sort: \DoseLog.date) private var doseLogs: [DoseLog]
     @State private var showEntrySheet = false
     @State private var showRecap = false
+    @State private var editingEntry: WeightEntry?
 
     private var metric: Bool { settingsList.first?.usesMetric ?? false }
 
@@ -22,6 +24,9 @@ struct ProgressScreen: View {
                         statsCard
                     }
                     chartCard
+                    if !entries.isEmpty {
+                        weighInsCard
+                    }
                     shareCard
                 }
                 .padding()
@@ -41,10 +46,57 @@ struct ProgressScreen: View {
                 WeightEntrySheet(metric: metric)
                     .presentationDetents([.medium])
             }
+            .sheet(item: $editingEntry, onDismiss: { editingEntry = nil }) { entry in
+                WeightEntrySheet(metric: metric, entry: entry)
+                    .presentationDetents([.medium])
+            }
             .sheet(isPresented: $showRecap) {
                 RecapView()
             }
         }
+    }
+
+    private var sortedEntries: [WeightEntry] {
+        entries.sorted { $0.date > $1.date }
+    }
+
+    private var weighInsCard: some View {
+        Card {
+            SectionHeader(title: "Weigh-ins")
+            VStack(spacing: 0) {
+                ForEach(sortedEntries) { entry in
+                    HStack {
+                        Button {
+                            editingEntry = entry
+                        } label: {
+                            HStack {
+                                Text(entry.date.formatted(date: .abbreviated, time: .omitted))
+                                    .foregroundStyle(.primary)
+                                Spacer()
+                                Text(UnitFormat.weightString(kilograms: entry.kilograms, metric: metric))
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
+                        .buttonStyle(.plain)
+
+                        Button {
+                            deleteEntry(entry)
+                        } label: {
+                            Image(systemName: "trash")
+                                .foregroundStyle(.red)
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityLabel("Delete weigh-in")
+                    }
+                    .padding(.vertical, 8)
+                }
+            }
+        }
+    }
+
+    private func deleteEntry(_ entry: WeightEntry) {
+        context.delete(entry)
+        try? context.save()
     }
 
     private var monthCard: some View {
@@ -112,8 +164,9 @@ struct ProgressScreen: View {
     private var toGoalString: String {
         guard let current = entries.last?.kilograms, let goal = settingsList.first?.goalKilograms else { return "—" }
         let remaining = WeightStats.toGoal(current: current, goal: goal)
+        guard remaining > 0 else { return "Goal reached 🎉" }
         let display = metric ? remaining : remaining / UnitFormat.kgPerLb
-        return String(format: "%.1f %@", max(0, display), metric ? "kg" : "lb")
+        return String(format: "%.1f %@", display, metric ? "kg" : "lb")
     }
 
     private var chartCard: some View {
@@ -195,7 +248,8 @@ struct ProgressScreen: View {
             changeText: change.map {
                 String(format: "%+.1f %@", metric ? $0 : $0 / UnitFormat.kgPerLb, metric ? "kg" : "lb")
             } ?? "Just started",
-            weeks: weeks
+            weeks: weeks,
+            isGain: (change ?? 0) > 0
         )
         let renderer = ImageRenderer(content: card)
         renderer.scale = 3

@@ -6,6 +6,7 @@ struct RitualCard: View {
     let doseSubtitle: String
     let state: RitualState
     let takePill: () -> Void
+    var undo: (() -> Void)? = nil
     @State private var showExplainer = false
 
     var body: some View {
@@ -42,6 +43,12 @@ struct RitualCard: View {
                           systemImage: "clock.badge.checkmark")
                         .font(.caption).foregroundStyle(.secondary)
                 }
+                if let undo {
+                    Button("Undo", role: .destructive, action: undo)
+                        .font(.caption.weight(.medium))
+                        .buttonStyle(.plain)
+                        .foregroundStyle(.secondary)
+                }
 
             case let .clear(meds, hadWindow):
                 Label(RitualState.clearMessage(hadWindow: hadWindow),
@@ -56,6 +63,12 @@ struct RitualCard: View {
                          ? "You can take your \(meds.joined(separator: ", ")) now."
                          : "You can take your \(meds.joined(separator: ", ")) any time.")
                         .font(.caption).foregroundStyle(.secondary)
+                }
+                if let undo {
+                    Button("Undo", role: .destructive, action: undo)
+                        .font(.caption.weight(.medium))
+                        .buttonStyle(.plain)
+                        .foregroundStyle(.secondary)
                 }
             }
         }

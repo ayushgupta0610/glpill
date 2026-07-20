@@ -109,6 +109,61 @@ final class OnboardingStoreTests: XCTestCase {
         XCTAssertEqual(settings.morningMeds, ["Thyroid"])
     }
 
+    @MainActor
+    func testCompleteRejectsGoalAboveCurrentWeight() throws {
+        let container = try makeContainer()
+        let context = container.mainContext
+        let store = OnboardingStore()
+        store.displayWeight = 200
+        store.displayGoal = 210
+
+        XCTAssertThrowsError(try store.complete(in: context)) { error in
+            XCTAssertEqual(error as? OnboardingStore.OnboardingError, .goalAboveCurrentWeight)
+        }
+        XCTAssertTrue(try context.fetch(FetchDescriptor<UserSettings>()).isEmpty)
+    }
+
+    @MainActor
+    func testCompleteRejectsGoalEqualToCurrentWeight() throws {
+        let container = try makeContainer()
+        let context = container.mainContext
+        let store = OnboardingStore()
+        store.displayWeight = 200
+        store.displayGoal = 200
+
+        XCTAssertThrowsError(try store.complete(in: context)) { error in
+            XCTAssertEqual(error as? OnboardingStore.OnboardingError, .goalAboveCurrentWeight)
+        }
+    }
+
+    @MainActor
+    func testCompleteAllowsGoalBelowCurrentWeight() throws {
+        let container = try makeContainer()
+        let context = container.mainContext
+        let store = OnboardingStore()
+        store.displayWeight = 200
+        store.displayGoal = 180
+
+        try store.complete(in: context)
+
+        let settings = try XCTUnwrap(try context.fetch(FetchDescriptor<UserSettings>()).first)
+        XCTAssertEqual(settings.goalKilograms, UnitFormat.kilograms(fromDisplay: 180, metric: false))
+    }
+
+    @MainActor
+    func testCompleteAllowsGoalWhenCurrentWeightIsSkipped() throws {
+        let container = try makeContainer()
+        let context = container.mainContext
+        let store = OnboardingStore()
+        store.displayWeight = nil
+        store.displayGoal = 180
+
+        try store.complete(in: context)
+
+        let settings = try XCTUnwrap(try context.fetch(FetchDescriptor<UserSettings>()).first)
+        XCTAssertEqual(settings.goalKilograms, UnitFormat.kilograms(fromDisplay: 180, metric: false))
+    }
+
     func testDoseValidationBounds() {
         XCTAssertTrue(UnitFormat.isValidDose(mg: 0.05))
         XCTAssertTrue(UnitFormat.isValidDose(mg: 36))

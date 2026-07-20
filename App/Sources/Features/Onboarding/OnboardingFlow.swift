@@ -233,7 +233,7 @@ private struct WeightStep: View {
             }
             .pickerStyle(.segmented)
 
-            LabeledContent("Current weight") {
+            LabeledContent("Current weight (optional)") {
                 TextField("0", value: $store.displayWeight, format: .number)
                     .keyboardType(.decimalPad)
                     .multilineTextAlignment(.trailing)

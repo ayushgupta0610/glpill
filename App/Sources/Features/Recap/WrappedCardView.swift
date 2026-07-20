@@ -21,6 +21,8 @@ struct WrappedCardView: View {
                 .font(.subheadline.weight(.bold))
                 .tracking(2)
                 .foregroundStyle(.white.opacity(0.9))
+                .lineLimit(1)
+                .minimumScaleFactor(0.6)
                 .padding(.bottom, 4)
 
             Text(recap.archetype.emoji).font(.system(size: 68))

@@ -25,6 +25,10 @@ struct MedicationEditor: View {
                 }
 
                 Toggle("Empty stomach + 30-min wait", isOn: $medication.requiresEmptyStomach)
+                    .onChange(of: medication.requiresEmptyStomach) { _, requiresEmptyStomach in
+                        guard !requiresEmptyStomach else { return }
+                        UNNotificationScheduler().removePending(ids: [ReminderScheduler.eatTimerId])
+                    }
 
                 Text("Turn this on if your medication must be taken on an empty stomach (like Rybelsus®). GLPill will run a 30-minute timer after each dose.")
                     .font(.footnote)
