@@ -70,10 +70,10 @@ private struct WelcomeStep: View {
                 .foregroundStyle(.white)
                 .frame(width: 120, height: 120)
                 .background(Theme.heroGradient, in: RoundedRectangle(cornerRadius: 28))
-            Text("Make every pill count")
+            Text("The calm daily co-pilot for the GLP-1 pill")
                 .font(.largeTitle.bold())
                 .multilineTextAlignment(.center)
-            Text("The private tracker built for the GLP-1 pill — Foundayo®, Rybelsus® and daily oral GLP-1s. Injections had their apps; your daily pill finally gets one that's actually built for it.")
+            Text("Take it right, remember your other morning meds, and watch steady progress — without the weight-loss noise.")
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
@@ -128,6 +128,10 @@ private struct MedicationStep: View {
                                 .font(.headline)
                                 .foregroundStyle(.primary)
                             if kind == .rybelsus {
+                                Text("Empty stomach + 30-min wait — we'll time it for you")
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                            } else if kind == .wegovyPill {
                                 Text("Empty stomach + 30-min wait — we'll time it for you")
                                     .font(.caption)
                                     .foregroundStyle(.secondary)
