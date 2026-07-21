@@ -12,10 +12,20 @@ struct OnboardingFlow: View {
     var body: some View {
         VStack(spacing: 0) {
             if step > 0 {
+                HStack {
+                    Button(action: back) {
+                        Image(systemName: "chevron.left")
+                            .font(.headline)
+                            .foregroundStyle(Theme.primary)
+                            .frame(width: 44, height: 44)
+                    }
+                    .accessibilityLabel("Back")
+                    Spacer()
+                }
+                .padding(.horizontal, 4)
                 ProgressView(value: Double(step + 1), total: Double(totalSteps))
                     .tint(Theme.primary)
                     .padding(.horizontal)
-                    .padding(.top, 8)
             }
 
             switch step {
@@ -45,6 +55,10 @@ struct OnboardingFlow: View {
 
     private func advance() {
         if step == 4 && !store.requiresEmptyStomach { step += 2 } else { step += 1 }
+    }
+
+    private func back() {
+        if step == 6 && !store.requiresEmptyStomach { step -= 2 } else { step = max(0, step - 1) }
     }
 
     private func complete() {

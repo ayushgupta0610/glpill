@@ -28,4 +28,20 @@ struct MedicationLevelTests {
         #expect(MedicationLevel.halfLifeHours(for: .wegovyPill) == 168)
         #expect(MedicationLevel.halfLifeHours(for: .foundayo) == 40)
     }
+    @Test("hasEnoughData needs >=3 points spanning >=2 days")
+    func enough() {
+        let d0 = Date(timeIntervalSince1970: 0)
+        let sparse = [MedicationLevel.Point(date: d0, level: 1), MedicationLevel.Point(date: d0.addingTimeInterval(3600), level: 2)]
+        #expect(MedicationLevel.hasEnoughData(points: sparse) == false)
+        let enough = (0..<4).map { MedicationLevel.Point(date: d0.addingTimeInterval(Double($0)*86_400), level: Double($0)) }
+        #expect(MedicationLevel.hasEnoughData(points: enough) == true)
+    }
+    @Test("projection climbs for a positive daily dose and is empty for zero")
+    func projection() {
+        let start = Date(timeIntervalSince1970: 0)
+        let p = MedicationLevel.projection(dailyDoseMg: 7, halfLifeHours: 168, days: 7, samples: 14, startingFrom: start)
+        #expect(p.count == 14)
+        #expect(p.last!.level > p.first!.level)
+        #expect(MedicationLevel.projection(dailyDoseMg: 0, halfLifeHours: 168, days: 7, samples: 14, startingFrom: start).isEmpty)
+    }
 }

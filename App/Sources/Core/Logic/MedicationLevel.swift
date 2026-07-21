@@ -31,4 +31,17 @@ enum MedicationLevel {
             return Point(date: t, level: level)
         }
     }
+
+    /// True once the curve is worth showing as a real reading: ≥3 points spanning ≥2 days.
+    static func hasEnoughData(points: [Point]) -> Bool {
+        guard points.count >= 3, let first = points.first?.date, let last = points.last?.date else { return false }
+        return last.timeIntervalSince(first) >= 2 * 86_400
+    }
+
+    /// A forward "if you keep taking this daily dose" trajectory — dashed, illustrative.
+    static func projection(dailyDoseMg: Double, halfLifeHours: Double, days: Int, samples: Int, startingFrom start: Date) -> [Point] {
+        guard dailyDoseMg > 0, days > 0 else { return [] }
+        let doses = (0..<days).map { (date: start.addingTimeInterval(Double($0) * 86_400), mg: dailyDoseMg) }
+        return curve(doses: doses, halfLifeHours: halfLifeHours, samples: samples, now: start.addingTimeInterval(Double(days - 1) * 86_400))
+    }
 }
