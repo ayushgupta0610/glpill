@@ -31,13 +31,22 @@ final class OnboardingStore {
     var kind: MedicationKind = .foundayo
     var customName = ""
     var steps: [DraftStep] = [DraftStep(doseMg: 0.8, durationWeeks: 4)]
-    // US-first default: pounds
-    var usesMetric = false
+    // Default to the device's measurement system (weight step was removed from
+    // onboarding, so this is the only place units get inferred); user can still
+    // switch in Settings.
+    var usesMetric = Locale.current.measurementSystem == .metric
     var displayWeight: Double?
     var displayGoal: Double?
     var morningMeds: [String] = []
     var reminderHour = 9
     var reminderMinute = 0
+    var stage: String?
+    var waitWindowMinutes = 30
+    var concerns: [String] = []
+    var goals: [String] = []
+    var reminderStyle = "full"
+    /// Convenience for the conditional wait-window step.
+    var requiresEmptyStomach: Bool { kind.defaultRequiresEmptyStomach }
 
     func complete(in context: ModelContext, now: Date = .now) throws {
         let startKg = displayWeight.map { UnitFormat.kilograms(fromDisplay: $0, metric: usesMetric) }
@@ -51,7 +60,7 @@ final class OnboardingStore {
             throw OnboardingError.goalAboveCurrentWeight
         }
 
-        let medication = Medication(kind: kind, customName: kind == .custom ? customName : nil, createdAt: now)
+        let medication = Medication(kind: kind, customName: kind == .custom ? MedicationName.normalize(customName) : nil, createdAt: now)
         context.insert(medication)
 
         if steps.contains(where: { !UnitFormat.isValidDose(mg: $0.doseMg) }) {
@@ -73,7 +82,12 @@ final class OnboardingStore {
             reminderHour: reminderHour,
             reminderMinute: reminderMinute,
             startDate: now,
-            morningMeds: MorningMeds.normalize(morningMeds)
+            morningMeds: MorningMeds.normalize(morningMeds),
+            waitWindowMinutes: waitWindowMinutes,
+            onboardingStage: stage,
+            sideEffectConcerns: concerns,
+            goals: goals,
+            reminderStyle: reminderStyle
         ))
 
         if let startKg {

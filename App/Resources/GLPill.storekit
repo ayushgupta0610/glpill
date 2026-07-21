@@ -33,12 +33,6 @@
           "familyShareable" : false,
           "groupNumber" : 1,
           "internalID" : "1000000001",
-          "introductoryOffer" : {
-            "internalID" : "1000000004",
-            "numberOfPeriods" : 1,
-            "paymentMode" : "free",
-            "subscriptionPeriod" : "P7D"
-          },
           "localizations" : [
             {
               "description" : "Unlimited tracking, reports and reminders.",
@@ -66,12 +60,6 @@
           "familyShareable" : false,
           "groupNumber" : 1,
           "internalID" : "1000000002",
-          "introductoryOffer" : {
-            "internalID" : "1000000003",
-            "numberOfPeriods" : 1,
-            "paymentMode" : "free",
-            "subscriptionPeriod" : "P7D"
-          },
           "localizations" : [
             {
               "description" : "Unlimited tracking, reports and reminders.",

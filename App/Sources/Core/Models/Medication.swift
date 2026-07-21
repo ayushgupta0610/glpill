@@ -4,18 +4,20 @@ import SwiftData
 enum MedicationKind: String, Codable, CaseIterable {
     case foundayo
     case rybelsus
+    case wegovyPill
     case custom
 
     var defaultDisplayName: String {
         switch self {
         case .foundayo: return "Foundayo (orforglipron)"
         case .rybelsus: return "Rybelsus (semaglutide)"
+        case .wegovyPill: return "Wegovy pill (oral semaglutide)"
         case .custom: return "Custom medication"
         }
     }
 
     var defaultRequiresEmptyStomach: Bool {
-        self == .rybelsus
+        self == .rybelsus || self == .wegovyPill
     }
 }
 

@@ -8,10 +8,19 @@ struct TodayView: View {
     @Query(sort: \TitrationStep.order) private var titrationSteps: [TitrationStep]
     @Query private var settingsList: [UserSettings]
     @AppStorage("eatTimerEnd") private var eatTimerEnd: Double = 0
-    @State private var showSideEffectSheet = false
+    private enum ActiveSheet: Int, Identifiable { case log, weight, sideEffect; var id: Int { rawValue } }
+    @State private var activeSheet: ActiveSheet?
     @State private var errorMessage: String?
     @State private var doseJustLogged = false
     @State private var celebratingMilestone: Int?
+    @State private var undo: UndoAction?
+
+    private struct UndoAction: Equatable {
+        let id = UUID()
+        let label: String
+        let reverse: () -> Void
+        static func == (lhs: UndoAction, rhs: UndoAction) -> Bool { lhs.id == rhs.id }
+    }
 
     private var store: TodayStore { TodayStore(context: context) }
     private var calendar: Calendar { .current }
@@ -33,23 +42,60 @@ struct TodayView: View {
                         .foregroundStyle(.secondary)
                         .frame(maxWidth: .infinity, alignment: .leading)
                     ritualCard
+                    if medications.first?.requiresEmptyStomach == true || !(settingsList.first?.morningMeds ?? []).isEmpty {
+                        MorningSequenceCard(steps: morningSequence)
+                    }
+                    MedLevelPreviewCard(points: medLevelPoints, projection: medLevelProjection)
                     streakCard
                     IntakeCountersView(
                         onProtein: { grams in withErrorHandling { try store.addProtein(grams) } },
-                        onWater: { ml in withErrorHandling { try store.addWater(ml) } }
+                        onWater: { ml in withErrorHandling { try store.addWater(ml) } },
+                        onSetProtein: { grams in withErrorHandling { try store.setProtein(grams: grams) } },
+                        onSetWater: { ml in withErrorHandling { try store.setWater(ml: ml) } }
                     )
                     sideEffectCard
+                    Color.clear.frame(height: 76)
                 }
                 .padding()
             }
             .background(Color(.systemGroupedBackground))
+            .overlay(alignment: .bottomTrailing) {
+                Button { activeSheet = .log } label: {
+                    Image(systemName: "plus")
+                        .font(.title2.weight(.bold)).foregroundStyle(.white)
+                        .frame(width: 56, height: 56)
+                        .background(Theme.primary, in: Circle())
+                        .shadow(radius: 8, y: 4)
+                }
+                .padding()
+                .accessibilityLabel("Log something")
+            }
+            .overlay(alignment: .bottom) {
+                if let undo {
+                    undoSnackbar(undo)
+                }
+            }
+            .animation(.snappy, value: undo)
             .navigationTitle("Today")
             .sensoryFeedback(.success, trigger: doseJustLogged)
-            .sheet(isPresented: $showSideEffectSheet) {
-                SideEffectSheet { kind, severity, note in
-                    withErrorHandling { try store.logSideEffect(kind, severity: severity, note: note) }
+            .sheet(item: $activeSheet) { sheet in
+                switch sheet {
+                case .log:
+                    LogSheet(
+                        onPill: { activeSheet = nil; takePill() },
+                        onWeight: { swapSheet(to: .weight) },
+                        onWater: { activeSheet = nil; quickAddWater() },
+                        onProtein: { activeSheet = nil; quickAddProtein() },
+                        onSideEffect: { swapSheet(to: .sideEffect) }
+                    )
+                case .weight:
+                    WeightEntrySheet(metric: settingsList.first?.usesMetric ?? false)
+                case .sideEffect:
+                    SideEffectSheet { kind, severity, note in
+                        withErrorHandling { try store.logSideEffect(kind, severity: severity, note: note) }
+                    }
+                    .presentationDetents([.medium])
                 }
-                .presentationDetents([.medium])
             }
             .sheet(isPresented: .init(
                 get: { celebratingMilestone != nil },
@@ -70,6 +116,29 @@ struct TodayView: View {
         }
     }
 
+    private var medLevelPoints: [MedicationLevel.Point] {
+        let doses = doseLogs.map { (date: $0.takenAt, mg: $0.doseMg) }
+        let kind = medications.first?.kind ?? .custom
+        return MedicationLevel.curve(doses: doses, halfLifeHours: MedicationLevel.halfLifeHours(for: kind), samples: 40, now: .now)
+    }
+
+    private var medLevelProjection: [MedicationLevel.Point] {
+        let kind = medications.first?.kind ?? .custom
+        let dose = doseLogs.last?.doseMg ?? 0
+        return MedicationLevel.projection(dailyDoseMg: dose, halfLifeHours: MedicationLevel.halfLifeHours(for: kind), days: 7, samples: 40, startingFrom: doseLogs.first?.takenAt ?? .now)
+    }
+
+    private var morningSequence: [MorningSequence.Step] {
+        let clear = eatTimerEnd > 0 ? Date(timeIntervalSince1970: eatTimerEnd) : nil
+        return MorningSequence.make(
+            pillTaken: todayLog != nil,
+            pillName: medications.first?.displayName ?? "Your GLP-1 pill",
+            hadWindow: medications.first?.requiresEmptyStomach ?? false,
+            clearTime: clear,
+            meds: settingsList.first?.morningMeds ?? []
+        )
+    }
+
     private var ritualState: RitualState {
         RitualState.make(
             todayLogged: todayLog != nil,
@@ -86,6 +155,7 @@ struct TodayView: View {
                 medName: medications.first?.displayName ?? "Your GLP-1 pill",
                 doseSubtitle: doseSubtitle,
                 state: ritualState,
+                waitWindowMinutes: settingsList.first?.waitWindowMinutes ?? 30,
                 takePill: takePill,
                 undo: todayLog != nil ? undoDose : nil
             )
@@ -96,7 +166,7 @@ struct TodayView: View {
         let steps = titrationSteps.map { (doseMg: $0.doseMg, durationWeeks: $0.durationWeeks) }
         let planStart = settingsList.first?.startDate ?? .now
         guard let position = TitrationProgress.position(steps: steps, planStart: planStart, today: .now, calendar: calendar) else {
-            return "No dose plan — add one in Settings"
+            return "Dose not set — add in Settings"
         }
         let dose = steps[position.stepIndex].doseMg
         var text = String(format: "%g mg — step %d of %d", dose, position.stepIndex + 1, steps.count)
@@ -134,6 +204,44 @@ struct TodayView: View {
         }
     }
 
+    /// Quick-add one cup of water (237 ml / ~8 oz) from the log sheet, with an Undo bar.
+    private func quickAddWater() {
+        withErrorHandling { try store.addWater(237) }
+        let label = (settingsList.first?.usesMetric ?? false) ? "Added 237 ml" : "Added 8 oz"
+        undo = UndoAction(label: label, reverse: { withErrorHandling { try store.addWater(-237) } })
+    }
+
+    /// Quick-add 25 g protein from the log sheet, with an Undo bar.
+    private func quickAddProtein() {
+        withErrorHandling { try store.addProtein(25) }
+        undo = UndoAction(label: "Added 25 g", reverse: { withErrorHandling { try store.addProtein(-25) } })
+    }
+
+    private func undoSnackbar(_ action: UndoAction) -> some View {
+        HStack(spacing: 12) {
+            Text(action.label)
+                .font(.subheadline.weight(.medium))
+                .foregroundStyle(.white)
+            Spacer()
+            Button("Undo") {
+                action.reverse()
+                undo = nil
+            }
+            .font(.subheadline.weight(.semibold))
+            .foregroundStyle(Theme.primary)
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
+        .background(Color(.darkGray), in: Capsule())
+        .padding(.horizontal, 24)
+        .padding(.bottom, 12)
+        .transition(.move(edge: .bottom).combined(with: .opacity))
+        .task(id: action.id) {
+            try? await Task.sleep(for: .seconds(4))
+            if undo == action { undo = nil }
+        }
+    }
+
     private var sideEffectCard: some View {
         Card {
             SectionHeader(title: "Feeling off?")
@@ -141,12 +249,20 @@ struct TodayView: View {
                 .font(.caption)
                 .foregroundStyle(.secondary)
             Button {
-                showSideEffectSheet = true
+                activeSheet = .sideEffect
             } label: {
                 Label("Log a side effect", systemImage: "plus.circle.fill")
                     .font(.subheadline.weight(.semibold))
             }
         }
+    }
+
+    /// Swaps the presented sheet. Dismissing first and setting the next target on
+    /// the following runloop keeps `.sheet(item:)` reliable — a direct non-nil→non-nil
+    /// change can be missed by SwiftUI, leaving no sheet presented.
+    private func swapSheet(to next: ActiveSheet) {
+        activeSheet = nil
+        DispatchQueue.main.async { activeSheet = next }
     }
 
     private func takePill() {
@@ -155,7 +271,8 @@ struct TodayView: View {
             let startTimer = try store.logDose()
             doseJustLogged.toggle()
             if startTimer {
-                eatTimerEnd = Date().addingTimeInterval(30 * 60).timeIntervalSince1970
+                let minutes = settingsList.first?.waitWindowMinutes ?? 30
+                eatTimerEnd = Date().addingTimeInterval(Double(minutes) * 60).timeIntervalSince1970
                 ReminderScheduler.scheduleEatTimer(
                     using: UNNotificationScheduler(),
                     meds: settingsList.first?.morningMeds ?? []

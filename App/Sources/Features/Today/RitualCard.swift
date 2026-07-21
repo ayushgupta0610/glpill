@@ -5,6 +5,7 @@ struct RitualCard: View {
     let medName: String
     let doseSubtitle: String
     let state: RitualState
+    var waitWindowMinutes: Int = 30
     let takePill: () -> Void
     var undo: (() -> Void)? = nil
     @State private var showExplainer = false
@@ -23,12 +24,12 @@ struct RitualCard: View {
             case let .notTaken(requiresEmptyStomach):
                 if requiresEmptyStomach {
                     HStack(spacing: 6) {
-                        Text("Empty stomach · plain water · then wait 30 min")
+                        Text("Empty stomach · plain water · then wait \(waitWindowMinutes) min")
                             .font(.caption).foregroundStyle(.secondary)
                         Button { showExplainer = true } label: {
                             Image(systemName: "info.circle")
                         }
-                        .accessibilityLabel("Why the 30-minute window?")
+                        .accessibilityLabel("Why the wait window?")
                     }
                 } else {
                     Text("No timing rules — take it with or without food.")
@@ -37,7 +38,7 @@ struct RitualCard: View {
                 PillCTAButton(title: "Take today's pill", systemImage: "pills.fill", action: takePill)
 
             case let .windowRunning(end, meds):
-                EatTimerView(end: end)
+                EatTimerView(end: end, waitWindowMinutes: waitWindowMinutes)
                 if !meds.isEmpty {
                     Label("Other morning meds — after \(end.formatted(date: .omitted, time: .shortened))",
                           systemImage: "clock.badge.checkmark")
@@ -72,6 +73,6 @@ struct RitualCard: View {
                 }
             }
         }
-        .sheet(isPresented: $showExplainer) { RitualExplainerView() }
+        .sheet(isPresented: $showExplainer) { RitualExplainerView(waitWindowMinutes: waitWindowMinutes) }
     }
 }

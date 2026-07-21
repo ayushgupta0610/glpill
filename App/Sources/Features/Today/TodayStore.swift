@@ -62,6 +62,18 @@ struct TodayStore {
         try context.save()
     }
 
+    func setProtein(grams: Int, on date: Date = .now) throws {
+        let day = try intakeDay(for: date)
+        day.proteinGrams = max(0, grams)
+        try context.save()
+    }
+
+    func setWater(ml: Int, on date: Date = .now) throws {
+        let day = try intakeDay(for: date)
+        day.waterMl = max(0, ml)
+        try context.save()
+    }
+
     func logSideEffect(_ kind: SideEffectKind, severity: Int, note: String? = nil, on date: Date = .now) throws {
         context.insert(SideEffectLog(date: calendar.startOfDay(for: date), kind: kind, severity: severity, note: note))
         try context.save()

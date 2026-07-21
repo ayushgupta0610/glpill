@@ -141,6 +141,7 @@ final class OnboardingStoreTests: XCTestCase {
         let container = try makeContainer()
         let context = container.mainContext
         let store = OnboardingStore()
+        store.usesMetric = false
         store.displayWeight = 200
         store.displayGoal = 180
 
@@ -155,6 +156,7 @@ final class OnboardingStoreTests: XCTestCase {
         let container = try makeContainer()
         let context = container.mainContext
         let store = OnboardingStore()
+        store.usesMetric = false
         store.displayWeight = nil
         store.displayGoal = 180
 
@@ -162,6 +164,42 @@ final class OnboardingStoreTests: XCTestCase {
 
         let settings = try XCTUnwrap(try context.fetch(FetchDescriptor<UserSettings>()).first)
         XCTAssertEqual(settings.goalKilograms, UnitFormat.kilograms(fromDisplay: 180, metric: false))
+    }
+
+    @MainActor
+    func testCompletePersistsNewOnboardingAnswers() throws {
+        let container = try makeContainer()
+        let context = container.mainContext
+        let store = OnboardingStore()
+        store.kind = .wegovyPill
+        store.stage = "switchingFromInjections"
+        store.waitWindowMinutes = 45
+        store.concerns = ["nausea"]
+        store.goals = ["consistency"]
+        store.reminderStyle = "pillOnly"
+        store.steps = [OnboardingStore.DraftStep(doseMg: 1.5, durationWeeks: 4)]
+        try store.complete(in: context)
+        let s = try XCTUnwrap(try context.fetch(FetchDescriptor<UserSettings>()).first)
+        XCTAssertEqual(s.waitWindowMinutes, 45)
+        XCTAssertEqual(s.onboardingStage, "switchingFromInjections")
+        XCTAssertEqual(s.sideEffectConcerns, ["nausea"])
+        XCTAssertEqual(s.goals, ["consistency"])
+        XCTAssertEqual(s.reminderStyle, "pillOnly")
+    }
+
+    @MainActor
+    func testCompleteWithNoStepsInsertsNoTitrationSteps() throws {
+        let container = try makeContainer()
+        let context = container.mainContext
+        let store = OnboardingStore()
+        store.kind = .foundayo
+        store.steps = []
+
+        try store.complete(in: context)
+
+        XCTAssertEqual(try context.fetch(FetchDescriptor<TitrationStep>()).count, 0)
+        XCTAssertNotNil(try context.fetch(FetchDescriptor<UserSettings>()).first)
+        XCTAssertNotNil(try context.fetch(FetchDescriptor<Medication>()).first)
     }
 
     func testDoseValidationBounds() {

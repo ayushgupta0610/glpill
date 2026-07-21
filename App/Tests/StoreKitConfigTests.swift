@@ -37,11 +37,12 @@ final class StoreKitConfigTests: XCTestCase {
         try await loadProductsWithRetry(store)
 
         XCTAssertEqual(store.products.count, 2, "expected monthly + yearly products")
-        let yearly = try XCTUnwrap(store.products.first { $0.id == SubscriptionStore.yearlyId })
-        let offer = try XCTUnwrap(yearly.subscription?.introductoryOffer)
-        XCTAssertEqual(offer.paymentMode, .freeTrial)
-        XCTAssertEqual(offer.period.value, 7)
-        XCTAssertEqual(offer.period.unit, .day)
+        // Freemium: neither plan carries a free-trial introductory offer. The
+        // no-offer configuration is asserted deterministically (against the
+        // .storekit JSON) in `testProductsHaveNoIntroductoryOffer` — the live
+        // `Product` introspection here is unreliable in headless xcodebuild
+        // (StoreKitTest can serve stale/cached offer metadata), same class of
+        // environmental flake documented on `loadProductsWithRetry`.
     }
 
     @MainActor
@@ -59,7 +60,7 @@ final class StoreKitConfigTests: XCTestCase {
     /// `Product` APIs, which don't reliably serve products in a headless
     /// xcodebuild run (see `loadProductsWithRetry`). Deterministic regardless
     /// of environment.
-    func testMonthlyHasSevenDayFreeIntroductoryOffer() throws {
+    func testProductsHaveNoIntroductoryOffer() throws {
         let url = try XCTUnwrap(
             Bundle(for: StoreKitConfigTests.self).url(forResource: "GLPill", withExtension: "storekit"),
             "GLPill.storekit missing from test bundle"
@@ -68,10 +69,10 @@ final class StoreKitConfigTests: XCTestCase {
         let json = try XCTUnwrap(JSONSerialization.jsonObject(with: data) as? [String: Any])
         let groups = try XCTUnwrap(json["subscriptionGroups"] as? [[String: Any]])
         let subscriptions = groups.flatMap { $0["subscriptions"] as? [[String: Any]] ?? [] }
-        let monthly = try XCTUnwrap(subscriptions.first { $0["productID"] as? String == "glpill.pro.monthly" })
-        let offer = try XCTUnwrap(monthly["introductoryOffer"] as? [String: Any], "monthly plan should have a free introductory offer")
 
-        XCTAssertEqual(offer["paymentMode"] as? String, "free")
-        XCTAssertEqual(offer["subscriptionPeriod"] as? String, "P7D")
+        for productID in ["glpill.pro.monthly", "glpill.pro.yearly"] {
+            let product = try XCTUnwrap(subscriptions.first { $0["productID"] as? String == productID })
+            XCTAssertNil(product["introductoryOffer"], "\(productID) should have no introductory (trial) offer under freemium")
+        }
     }
 }

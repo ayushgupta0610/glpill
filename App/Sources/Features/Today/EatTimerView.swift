@@ -2,6 +2,7 @@ import SwiftUI
 
 struct EatTimerView: View {
     let end: Date
+    var waitWindowMinutes: Int = 30
 
     // Renders card-less; embedded inside RitualCard's Card (its only caller).
     var body: some View {
@@ -23,7 +24,7 @@ struct EatTimerView: View {
                     } else {
                         Text("You can eat now")
                             .font(.title3.bold())
-                        Text("30 minutes are up — enjoy your meal.")
+                        Text("Your \(waitWindowMinutes)-minute wait is up — enjoy your meal.")
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     }

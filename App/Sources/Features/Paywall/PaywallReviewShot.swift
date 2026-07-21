@@ -2,7 +2,7 @@
 import SwiftUI
 import UIKit
 
-/// DEBUG-only: renders a faithful still of the paywall (with the 7-day trial) to a
+/// DEBUG-only: renders a faithful still of the paywall to a
 /// PNG, for the App Store Connect subscription "Review Information" screenshot and
 /// marketing. Triggered by the `-exportPaywall` launch argument. Uses static copy
 /// so it renders without a live StoreKit session.
@@ -50,18 +50,18 @@ private struct PaywallReviewView: View {
             .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 16))
 
             VStack(spacing: 10) {
-                planCard(title: "Yearly", subtitle: "$39.99/year — just $0.77 a week · Save 52%", badge: "7-DAY FREE TRIAL", selected: true)
+                planCard(title: "Yearly", subtitle: "$39.99/year — just $0.77 a week · Save 52%", badge: "BEST VALUE", selected: true)
                 planCard(title: "Monthly", subtitle: "$6.99/month, flexible", badge: nil, selected: false)
             }
 
             VStack(spacing: 8) {
-                Text("Start my 7-day free trial")
+                Text("Continue — $39.99/yr")
                     .font(.headline)
                     .foregroundStyle(.white)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 15)
                     .background(Theme.primary, in: RoundedRectangle(cornerRadius: 14))
-                Text("No payment now. 7 days free, then $39.99/year. Cancel anytime.")
+                Text("Billed yearly. Cancel anytime.")
                     .font(.caption2)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
