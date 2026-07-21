@@ -8,7 +8,8 @@ struct TodayView: View {
     @Query(sort: \TitrationStep.order) private var titrationSteps: [TitrationStep]
     @Query private var settingsList: [UserSettings]
     @AppStorage("eatTimerEnd") private var eatTimerEnd: Double = 0
-    @State private var showSideEffectSheet = false
+    private enum ActiveSheet: Int, Identifiable { case log, weight, sideEffect; var id: Int { rawValue } }
+    @State private var activeSheet: ActiveSheet?
     @State private var errorMessage: String?
     @State private var doseJustLogged = false
     @State private var celebratingMilestone: Int?
@@ -46,13 +47,37 @@ struct TodayView: View {
                 .padding()
             }
             .background(Color(.systemGroupedBackground))
+            .overlay(alignment: .bottomTrailing) {
+                Button { activeSheet = .log } label: {
+                    Image(systemName: "plus")
+                        .font(.title2.weight(.bold)).foregroundStyle(.white)
+                        .frame(width: 56, height: 56)
+                        .background(Theme.primary, in: Circle())
+                        .shadow(radius: 8, y: 4)
+                }
+                .padding()
+                .accessibilityLabel("Log something")
+            }
             .navigationTitle("Today")
             .sensoryFeedback(.success, trigger: doseJustLogged)
-            .sheet(isPresented: $showSideEffectSheet) {
-                SideEffectSheet { kind, severity, note in
-                    withErrorHandling { try store.logSideEffect(kind, severity: severity, note: note) }
+            .sheet(item: $activeSheet) { sheet in
+                switch sheet {
+                case .log:
+                    LogSheet(
+                        onPill: { activeSheet = nil; takePill() },
+                        onWeight: { swapSheet(to: .weight) },
+                        onWater: { activeSheet = nil; withErrorHandling { try store.addWater(237) } },
+                        onProtein: { activeSheet = nil; withErrorHandling { try store.addProtein(25) } },
+                        onSideEffect: { swapSheet(to: .sideEffect) }
+                    )
+                case .weight:
+                    WeightEntrySheet(metric: settingsList.first?.usesMetric ?? false)
+                case .sideEffect:
+                    SideEffectSheet { kind, severity, note in
+                        withErrorHandling { try store.logSideEffect(kind, severity: severity, note: note) }
+                    }
+                    .presentationDetents([.medium])
                 }
-                .presentationDetents([.medium])
             }
             .sheet(isPresented: .init(
                 get: { celebratingMilestone != nil },
@@ -155,12 +180,20 @@ struct TodayView: View {
                 .font(.caption)
                 .foregroundStyle(.secondary)
             Button {
-                showSideEffectSheet = true
+                activeSheet = .sideEffect
             } label: {
                 Label("Log a side effect", systemImage: "plus.circle.fill")
                     .font(.subheadline.weight(.semibold))
             }
         }
+    }
+
+    /// Swaps the presented sheet. Dismissing first and setting the next target on
+    /// the following runloop keeps `.sheet(item:)` reliable — a direct non-nil→non-nil
+    /// change can be missed by SwiftUI, leaving no sheet presented.
+    private func swapSheet(to next: ActiveSheet) {
+        activeSheet = nil
+        DispatchQueue.main.async { activeSheet = next }
     }
 
     private func takePill() {
