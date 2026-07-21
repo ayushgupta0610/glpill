@@ -48,44 +48,68 @@ final class GLPillUITests: XCTestCase {
 
     @MainActor
     private func completeOnboarding(_ app: XCUIApplication) {
+        // 0 — Welcome
         let getStarted = app.buttons["Get started"]
         XCTAssertTrue(getStarted.waitForExistence(timeout: 10))
         getStarted.tap()
 
-        // Medication step — pick Rybelsus to exercise the eat-timer path
+        // 1 — Stage: pick an option, then continue
+        let stageOption = app.staticTexts["I'm about to start"]
+        XCTAssertTrue(stageOption.waitForExistence(timeout: 5))
+        stageOption.tap()
+        tapContinue(app)
+
+        // 2 — Medication: pick Rybelsus to exercise the empty-stomach / eat-timer path
         let rybelsus = app.staticTexts["Rybelsus (semaglutide)"]
         XCTAssertTrue(rybelsus.waitForExistence(timeout: 5))
         rybelsus.tap()
-        app.buttons["Continue"].tap()
+        tapContinue(app)
 
-        // Titration step — accept the default plan
-        XCTAssertTrue(app.buttons["Continue"].waitForExistence(timeout: 5))
-        app.buttons["Continue"].tap()
+        // 3 — Dose ladder: pick the first ladder dose
+        let firstDose = app.staticTexts["3 mg"]
+        XCTAssertTrue(firstDose.waitForExistence(timeout: 5))
+        firstDose.tap()
+        tapContinue(app)
 
-        // Weight step — typing depends on the simulator keyboard being attachable,
-        // so fall back to skipping the (optional) weight if focus never arrives.
-        let weightField = app.textFields.firstMatch
-        XCTAssertTrue(weightField.waitForExistence(timeout: 5))
-        weightField.tap()
-        if !app.keyboards.element.waitForExistence(timeout: 2) {
-            weightField.coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.5)).tap()
-        }
-        if app.keyboards.element.waitForExistence(timeout: 2) {
-            weightField.typeText("90")
-        }
-        app.buttons["Continue"].tap()
+        // 4 — Daily time: accept the default time
+        tapContinue(app)
 
-        // Morning meds step — optional, skip it in tests
+        // 5 — Wait window (Rybelsus requires empty stomach, so this screen shows)
+        let waitOption = app.staticTexts["30 minutes"]
+        XCTAssertTrue(waitOption.waitForExistence(timeout: 5))
+        waitOption.tap()
+        tapContinue(app)
+
+        // 6 — Morning meds: optional, skip it in tests
         let skipMorningMeds = app.buttons["Skip for now"]
         XCTAssertTrue(skipMorningMeds.waitForExistence(timeout: 5))
         skipMorningMeds.tap()
 
-        // Reminder step
-        let finish = app.buttons["Finish setup"]
-        XCTAssertTrue(finish.waitForExistence(timeout: 5))
-        finish.tap()
+        // 7 — Concerns: optional multi-select, just continue
+        tapContinue(app)
+
+        // 8 — Goals: optional multi-select, just continue
+        tapContinue(app)
+
+        // 9 — Reminder style: pick an option, then continue
+        let reminderOption = app.staticTexts["Just the pill reminder"]
+        XCTAssertTrue(reminderOption.waitForExistence(timeout: 5))
+        reminderOption.tap()
+        tapContinue(app)
+
+        // 10 — Plan reveal
+        let startDay = app.buttons["Start day 1"]
+        XCTAssertTrue(startDay.waitForExistence(timeout: 5))
+        startDay.tap()
 
         allowNotificationsIfAsked()
+    }
+
+    @MainActor
+    private func tapContinue(_ app: XCUIApplication) {
+        let cont = app.buttons["Continue"]
+        XCTAssertTrue(cont.waitForExistence(timeout: 5))
+        cont.tap()
     }
 
     @MainActor
