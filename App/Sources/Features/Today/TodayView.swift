@@ -13,6 +13,14 @@ struct TodayView: View {
     @State private var errorMessage: String?
     @State private var doseJustLogged = false
     @State private var celebratingMilestone: Int?
+    @State private var undo: UndoAction?
+
+    private struct UndoAction: Equatable {
+        let id = UUID()
+        let label: String
+        let reverse: () -> Void
+        static func == (lhs: UndoAction, rhs: UndoAction) -> Bool { lhs.id == rhs.id }
+    }
 
     private var store: TodayStore { TodayStore(context: context) }
     private var calendar: Calendar { .current }
@@ -41,9 +49,12 @@ struct TodayView: View {
                     streakCard
                     IntakeCountersView(
                         onProtein: { grams in withErrorHandling { try store.addProtein(grams) } },
-                        onWater: { ml in withErrorHandling { try store.addWater(ml) } }
+                        onWater: { ml in withErrorHandling { try store.addWater(ml) } },
+                        onSetProtein: { grams in withErrorHandling { try store.setProtein(grams: grams) } },
+                        onSetWater: { ml in withErrorHandling { try store.setWater(ml: ml) } }
                     )
                     sideEffectCard
+                    Color.clear.frame(height: 76)
                 }
                 .padding()
             }
@@ -59,6 +70,12 @@ struct TodayView: View {
                 .padding()
                 .accessibilityLabel("Log something")
             }
+            .overlay(alignment: .bottom) {
+                if let undo {
+                    undoSnackbar(undo)
+                }
+            }
+            .animation(.snappy, value: undo)
             .navigationTitle("Today")
             .sensoryFeedback(.success, trigger: doseJustLogged)
             .sheet(item: $activeSheet) { sheet in
@@ -67,8 +84,8 @@ struct TodayView: View {
                     LogSheet(
                         onPill: { activeSheet = nil; takePill() },
                         onWeight: { swapSheet(to: .weight) },
-                        onWater: { activeSheet = nil; withErrorHandling { try store.addWater(237) } },
-                        onProtein: { activeSheet = nil; withErrorHandling { try store.addProtein(25) } },
+                        onWater: { activeSheet = nil; quickAddWater() },
+                        onProtein: { activeSheet = nil; quickAddProtein() },
                         onSideEffect: { swapSheet(to: .sideEffect) }
                     )
                 case .weight:
@@ -178,6 +195,44 @@ struct TodayView: View {
                 }
                 Spacer()
             }
+        }
+    }
+
+    /// Quick-add one cup of water (237 ml / ~8 oz) from the log sheet, with an Undo bar.
+    private func quickAddWater() {
+        withErrorHandling { try store.addWater(237) }
+        let label = (settingsList.first?.usesMetric ?? false) ? "Added 237 ml" : "Added 8 oz"
+        undo = UndoAction(label: label, reverse: { withErrorHandling { try store.addWater(-237) } })
+    }
+
+    /// Quick-add 25 g protein from the log sheet, with an Undo bar.
+    private func quickAddProtein() {
+        withErrorHandling { try store.addProtein(25) }
+        undo = UndoAction(label: "Added 25 g", reverse: { withErrorHandling { try store.addProtein(-25) } })
+    }
+
+    private func undoSnackbar(_ action: UndoAction) -> some View {
+        HStack(spacing: 12) {
+            Text(action.label)
+                .font(.subheadline.weight(.medium))
+                .foregroundStyle(.white)
+            Spacer()
+            Button("Undo") {
+                action.reverse()
+                undo = nil
+            }
+            .font(.subheadline.weight(.semibold))
+            .foregroundStyle(Theme.primary)
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
+        .background(Color(.darkGray), in: Capsule())
+        .padding(.horizontal, 24)
+        .padding(.bottom, 12)
+        .transition(.move(edge: .bottom).combined(with: .opacity))
+        .task(id: action.id) {
+            try? await Task.sleep(for: .seconds(4))
+            if undo == action { undo = nil }
         }
     }
 

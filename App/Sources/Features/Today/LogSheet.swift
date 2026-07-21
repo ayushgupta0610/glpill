@@ -12,8 +12,8 @@ struct LogSheet: View {
             List {
                 row("pills.fill", "Took my pill", onPill)
                 row("scalemass.fill", "Weight", onWeight)
-                row("drop.fill", "Water", onWater)
-                row("fork.knife", "Protein", onProtein)
+                row("drop.fill", "Water · +1 cup", onWater)
+                row("fork.knife", "Protein · +25 g", onProtein)
                 row("bandage.fill", "Side effects", onSideEffect)
                 HStack {
                     Label("Progress photo", systemImage: "camera.fill")
