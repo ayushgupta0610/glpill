@@ -155,7 +155,8 @@ struct TodayView: View {
             let startTimer = try store.logDose()
             doseJustLogged.toggle()
             if startTimer {
-                eatTimerEnd = Date().addingTimeInterval(30 * 60).timeIntervalSince1970
+                let minutes = settingsList.first?.waitWindowMinutes ?? 30
+                eatTimerEnd = Date().addingTimeInterval(Double(minutes) * 60).timeIntervalSince1970
                 ReminderScheduler.scheduleEatTimer(
                     using: UNNotificationScheduler(),
                     meds: settingsList.first?.morningMeds ?? []
