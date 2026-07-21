@@ -169,6 +169,7 @@ private struct MedicationStep: View {
 
             Spacer()
             PillCTAButton(title: "Continue", systemImage: "arrow.right") { next() }
+                .disabled(store.kind == .custom && MedicationName.normalize(store.customName) == nil)
                 .padding(.bottom, 24)
         }
         .padding(.horizontal)

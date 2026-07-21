@@ -46,11 +46,11 @@ struct PaywallView: View {
 
     private var featureList: some View {
         VStack(alignment: .leading, spacing: 14) {
-            feature("clock.fill", "Time the empty-stomach window", "Log your pill and we count the 30 minutes; we tell you the exact minute you can eat and take your other morning meds.")
-            feature("pills.fill", "Never miss a dose", "One-tap logging, streaks and a daily reminder.")
-            feature("icloud.fill", "Never lose your history", "Syncs privately across your devices.")
-            feature("chart.line.uptrend.xyaxis", "Watch it work", "Weight trend, milestones and share-ready cards.")
-            feature("doc.text.fill", "Doctor-ready reports", "Adherence, doses and side effects in one summary.")
+            feature("doc.text.fill", "Doctor-ready PDF report", "Adherence, doses and side effects in one summary to bring to your appointment.")
+            feature("square.and.arrow.up.fill", "Consistency & journey share cards", "Celebrate streaks and progress with share-ready cards.")
+            feature("apps.iphone", "Advanced widgets", "Lock Screen and medication-level widgets at a glance.")
+            feature("chart.line.uptrend.xyaxis", "Weight projection", "See where your trend is heading based on your data.")
+            feature("tablecells.fill", "Data export (CSV)", "Take your full history with you anytime.")
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(20)

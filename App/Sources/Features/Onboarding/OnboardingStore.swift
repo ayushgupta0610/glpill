@@ -60,7 +60,7 @@ final class OnboardingStore {
             throw OnboardingError.goalAboveCurrentWeight
         }
 
-        let medication = Medication(kind: kind, customName: kind == .custom ? customName : nil, createdAt: now)
+        let medication = Medication(kind: kind, customName: kind == .custom ? MedicationName.normalize(customName) : nil, createdAt: now)
         context.insert(medication)
 
         if steps.contains(where: { !UnitFormat.isValidDose(mg: $0.doseMg) }) {
