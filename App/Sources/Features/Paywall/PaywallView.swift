@@ -33,10 +33,10 @@ struct PaywallView: View {
                 .frame(width: 84, height: 84)
                 .background(Theme.heroGradient, in: RoundedRectangle(cornerRadius: 22))
                 .shadow(color: Theme.primary.opacity(0.35), radius: 14, y: 6)
-            Text("Never mistime your pill again")
+            Text("Unlock GLPill Premium")
                 .font(.system(.largeTitle, design: .rounded).bold())
                 .multilineTextAlignment(.center)
-            Text("Stay consistent, watch the scale move, and never lose your history — it syncs privately across your devices.")
+            Text("Doctor-ready PDF report, share cards, advanced widgets, weight projection, and data export.")
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
@@ -118,8 +118,8 @@ struct PaywallView: View {
                     HStack(spacing: 8) {
                         Text(isYearly ? "Yearly" : "Monthly")
                             .font(.headline)
-                        if hasFreeTrial(product) {
-                            Text(trialBadge(product))
+                        if isYearly {
+                            Text("BEST VALUE")
                                 .font(.caption2.weight(.bold))
                                 .padding(.horizontal, 8)
                                 .padding(.vertical, 3)
@@ -146,18 +146,6 @@ struct PaywallView: View {
         .buttonStyle(.plain)
     }
 
-    private func hasFreeTrial(_ product: Product) -> Bool {
-        guard let offer = product.subscription?.introductoryOffer else { return false }
-        return offer.paymentMode == .freeTrial
-    }
-
-    private func trialBadge(_ product: Product) -> String {
-        if let offer = product.subscription?.introductoryOffer, offer.paymentMode == .freeTrial {
-            return "\(offer.period.value)-DAY FREE TRIAL"
-        }
-        return "BEST VALUE"
-    }
-
     private func planSubtitle(_ product: Product, isYearly: Bool) -> String {
         if isYearly {
             let weekly = product.price / 52
@@ -166,9 +154,6 @@ struct PaywallView: View {
                 return "\(product.displayPrice)/year — \(weeklyString)/week · Save \(savings)%"
             }
             return "\(product.displayPrice)/year — just \(weeklyString) a week"
-        }
-        if hasFreeTrial(product) {
-            return "\(product.displayPrice)/month after trial, flexible"
         }
         return "\(product.displayPrice)/month, flexible"
     }
@@ -233,18 +218,11 @@ struct PaywallView: View {
 
     private var ctaTitle: String {
         guard let product = selectedProduct else { return "Continue" }
-        if hasFreeTrial(product) {
-            return "Start my free trial"
-        }
         return "Continue — \(product.displayPrice)/mo"
     }
 
     private var ctaSubtext: String {
-        guard let product = selectedProduct else { return "" }
-        if let offer = product.subscription?.introductoryOffer, offer.paymentMode == .freeTrial {
-            let period = product.id == SubscriptionStore.yearlyId ? "year" : "month"
-            return "No payment now. \(offer.period.value) days free, then \(product.displayPrice)/\(period). Cancel anytime."
-        }
+        guard selectedProduct != nil else { return "" }
         return "Billed monthly. Cancel anytime."
     }
 

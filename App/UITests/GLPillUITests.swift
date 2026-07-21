@@ -2,18 +2,18 @@ import XCTest
 
 final class GLPillUITests: XCTestCase {
     @MainActor
-    func testOnboardingLeadsToPaywall() {
+    func testOnboardingLeadsToTodayTab() {
         let app = XCUIApplication()
         app.launchArguments = ["-resetData", "-disableCloudKit"]
         app.launch()
 
         completeOnboarding(app)
 
-        // The auto-renew disclaimer is our own view and renders even while
-        // SubscriptionStoreView is still loading products.
-        let disclaimer = app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH 'Auto-renews'")).firstMatch
-        XCTAssertTrue(disclaimer.waitForExistence(timeout: 10))
-        attach(app, name: "paywall")
+        // Freemium: the app is free, so completing onboarding lands on the Today
+        // tab (MainTabView) — not a hard paywall.
+        let today = app.tabBars.buttons["Today"]
+        XCTAssertTrue(today.waitForExistence(timeout: 10))
+        attach(app, name: "today-tab")
     }
 
     @MainActor
