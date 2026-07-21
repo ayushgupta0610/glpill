@@ -37,6 +37,7 @@ struct TodayView: View {
                     if medications.first?.requiresEmptyStomach == true || !(settingsList.first?.morningMeds ?? []).isEmpty {
                         MorningSequenceCard(steps: morningSequence)
                     }
+                    MedLevelPreviewCard(points: medLevelPoints)
                     streakCard
                     IntakeCountersView(
                         onProtein: { grams in withErrorHandling { try store.addProtein(grams) } },
@@ -96,6 +97,12 @@ struct TodayView: View {
                 Text(errorMessage ?? "")
             }
         }
+    }
+
+    private var medLevelPoints: [MedicationLevel.Point] {
+        let doses = doseLogs.map { (date: $0.takenAt, mg: $0.doseMg) }
+        let kind = medications.first?.kind ?? .custom
+        return MedicationLevel.curve(doses: doses, halfLifeHours: MedicationLevel.halfLifeHours(for: kind), samples: 40, now: .now)
     }
 
     private var morningSequence: [MorningSequence.Step] {
