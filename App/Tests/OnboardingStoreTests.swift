@@ -141,6 +141,7 @@ final class OnboardingStoreTests: XCTestCase {
         let container = try makeContainer()
         let context = container.mainContext
         let store = OnboardingStore()
+        store.usesMetric = false
         store.displayWeight = 200
         store.displayGoal = 180
 
@@ -155,6 +156,7 @@ final class OnboardingStoreTests: XCTestCase {
         let container = try makeContainer()
         let context = container.mainContext
         let store = OnboardingStore()
+        store.usesMetric = false
         store.displayWeight = nil
         store.displayGoal = 180
 

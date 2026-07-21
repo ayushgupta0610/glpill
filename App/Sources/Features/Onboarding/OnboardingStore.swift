@@ -31,8 +31,10 @@ final class OnboardingStore {
     var kind: MedicationKind = .foundayo
     var customName = ""
     var steps: [DraftStep] = [DraftStep(doseMg: 0.8, durationWeeks: 4)]
-    // US-first default: pounds
-    var usesMetric = false
+    // Default to the device's measurement system (weight step was removed from
+    // onboarding, so this is the only place units get inferred); user can still
+    // switch in Settings.
+    var usesMetric = Locale.current.measurementSystem == .metric
     var displayWeight: Double?
     var displayGoal: Double?
     var morningMeds: [String] = []

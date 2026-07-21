@@ -21,7 +21,7 @@ struct LogSheet: View {
                     Text("Premium").font(.caption2.weight(.semibold)).foregroundStyle(.secondary)
                 }
                 .contentShape(Rectangle())
-                .premiumAction { /* progress-photo capture ships with the premium photo feature */ }
+                .premiumAction { /* TODO(premium-photos): wire progress-photo capture when the premium photo feature ships */ }
             }
             .navigationTitle("Log for today")
             .navigationBarTitleDisplayMode(.inline)

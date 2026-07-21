@@ -218,12 +218,14 @@ struct PaywallView: View {
 
     private var ctaTitle: String {
         guard let product = selectedProduct else { return "Continue" }
-        return "Continue — \(product.displayPrice)/mo"
+        let period = product.id == SubscriptionStore.yearlyId ? "yr" : "mo"
+        return "Continue — \(product.displayPrice)/\(period)"
     }
 
     private var ctaSubtext: String {
-        guard selectedProduct != nil else { return "" }
-        return "Billed monthly. Cancel anytime."
+        guard let product = selectedProduct else { return "" }
+        let cadence = product.id == SubscriptionStore.yearlyId ? "yearly" : "monthly"
+        return "Billed \(cadence). Cancel anytime."
     }
 
     private func reassurance(_ icon: String, _ text: String) -> some View {

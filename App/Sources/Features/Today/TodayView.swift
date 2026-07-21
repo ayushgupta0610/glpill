@@ -132,6 +132,7 @@ struct TodayView: View {
                 medName: medications.first?.displayName ?? "Your GLP-1 pill",
                 doseSubtitle: doseSubtitle,
                 state: ritualState,
+                waitWindowMinutes: settingsList.first?.waitWindowMinutes ?? 30,
                 takePill: takePill,
                 undo: todayLog != nil ? undoDose : nil
             )
