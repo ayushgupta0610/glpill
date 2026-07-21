@@ -38,6 +38,13 @@ final class OnboardingStore {
     var morningMeds: [String] = []
     var reminderHour = 9
     var reminderMinute = 0
+    var stage: String?
+    var waitWindowMinutes = 30
+    var concerns: [String] = []
+    var goals: [String] = []
+    var reminderStyle = "full"
+    /// Convenience for the conditional wait-window step.
+    var requiresEmptyStomach: Bool { kind.defaultRequiresEmptyStomach }
 
     func complete(in context: ModelContext, now: Date = .now) throws {
         let startKg = displayWeight.map { UnitFormat.kilograms(fromDisplay: $0, metric: usesMetric) }
@@ -73,7 +80,12 @@ final class OnboardingStore {
             reminderHour: reminderHour,
             reminderMinute: reminderMinute,
             startDate: now,
-            morningMeds: MorningMeds.normalize(morningMeds)
+            morningMeds: MorningMeds.normalize(morningMeds),
+            waitWindowMinutes: waitWindowMinutes,
+            onboardingStage: stage,
+            sideEffectConcerns: concerns,
+            goals: goals,
+            reminderStyle: reminderStyle
         ))
 
         if let startKg {

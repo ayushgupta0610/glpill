@@ -164,6 +164,27 @@ final class OnboardingStoreTests: XCTestCase {
         XCTAssertEqual(settings.goalKilograms, UnitFormat.kilograms(fromDisplay: 180, metric: false))
     }
 
+    @MainActor
+    func testCompletePersistsNewOnboardingAnswers() throws {
+        let container = try makeContainer()
+        let context = container.mainContext
+        let store = OnboardingStore()
+        store.kind = .wegovyPill
+        store.stage = "switchingFromInjections"
+        store.waitWindowMinutes = 45
+        store.concerns = ["nausea"]
+        store.goals = ["consistency"]
+        store.reminderStyle = "pillOnly"
+        store.steps = [OnboardingStore.DraftStep(doseMg: 1.5, durationWeeks: 4)]
+        try store.complete(in: context)
+        let s = try XCTUnwrap(try context.fetch(FetchDescriptor<UserSettings>()).first)
+        XCTAssertEqual(s.waitWindowMinutes, 45)
+        XCTAssertEqual(s.onboardingStage, "switchingFromInjections")
+        XCTAssertEqual(s.sideEffectConcerns, ["nausea"])
+        XCTAssertEqual(s.goals, ["consistency"])
+        XCTAssertEqual(s.reminderStyle, "pillOnly")
+    }
+
     func testDoseValidationBounds() {
         XCTAssertTrue(UnitFormat.isValidDose(mg: 0.05))
         XCTAssertTrue(UnitFormat.isValidDose(mg: 36))
