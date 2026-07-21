@@ -11,7 +11,8 @@
 **Spec:** `docs/superpowers/specs/2026-07-21-glpill-pill-copilot-experience-design.md`
 
 **Conventions:**
-- Run `cd App && xcodegen generate` after adding any new source file (new files must be picked up by the project).
+- `project.yml` and `GLPill.xcodeproj` are at the **repo root**. Run `xcodegen generate` **from the repo root** after adding any new source file (new files must be picked up by the project). Do NOT `cd App` first.
+- Unit tests live in `App/Tests/` (target `GLPillTests`); UI tests in `App/UITests/GLPillUITests.swift` (target `GLPillUITests`). **Several test files already exist** (`OnboardingStoreTests.swift`, `TodayStoreTests.swift`, `MorningMedsTests.swift`, `SubscriptionGateTests.swift`, `StoreKitConfigTests.swift`, `RitualStateTests.swift`, …) — ADD new `@Test` cases to the existing file when one exists; only create a new file when none matches. Check with `ls App/Tests` first.
 - Build/test: `xcodebuild -scheme GLPill -destination 'platform=iOS Simulator,name=iPhone 17 Pro' test` (simulator forces local store via the existing `#if targetEnvironment(simulator)` guard).
 - Commit after every green step. Conventional commits (`feat:`/`test:`/`refactor:`). No attribution footer (disabled globally).
 - The app currently HARD-gates behind the paywall in `RootView.swift`; Phase 2 flips that. Do Phase 1 → 2 first so later UI has a place to run free.
@@ -109,7 +110,7 @@ Run: same as Step 2. Expected: PASS.
 - [ ] **Step 5: Commit**
 
 ```bash
-cd App && xcodegen generate && cd ..
+xcodegen generate
 git add App/Sources/Core/Models/Medication.swift App/Tests/MedicationKindTests.swift
 git commit -m "feat: add Wegovy pill medication kind"
 ```
@@ -171,7 +172,7 @@ enum MedicationLadder {
 - [ ] **Step 5: Commit**
 
 ```bash
-cd App && xcodegen generate && cd ..
+xcodegen generate
 git add App/Sources/Core/Models/MedicationLadder.swift App/Tests/MedicationLadderTests.swift
 git commit -m "feat: per-kind dose ladders"
 ```
@@ -308,7 +309,7 @@ extension View {
 - [ ] **Step 5: Commit**
 
 ```bash
-cd App && xcodegen generate && cd ..
+xcodegen generate
 git add App/Sources/Core/Purchases/PremiumGate.swift App/Tests/PremiumGateTests.swift
 git commit -m "feat: PremiumGate for feature-level gating"
 ```
@@ -340,7 +341,7 @@ In `App/Sources/Features/Paywall/PaywallView.swift`, change the hero headline/su
 
 - [ ] **Step 3: Update the onboarding→app UI test**
 
-`App/Tests/GLPillUITests.swift` `testOnboardingLeadsToPaywall` must become `testOnboardingLeadsToTodayTab`: after completing onboarding, assert the "Today" tab exists (not the paywall). Update the assertion accordingly.
+`App/UITests/GLPillUITests.swift` `testOnboardingLeadsToPaywall` must become `testOnboardingLeadsToTodayTab`: after completing onboarding, assert the "Today" tab exists (not the paywall). Update the assertion accordingly.
 
 - [ ] **Step 4: Build & run tests**
 
@@ -350,7 +351,7 @@ Expected: builds; app opens to Today after onboarding; no full-screen paywall.
 - [ ] **Step 5: Commit**
 
 ```bash
-git add App/Sources/App/RootView.swift App/Sources/Features/Paywall/PaywallView.swift App/Tests/GLPillUITests.swift
+git add App/Sources/App/RootView.swift App/Sources/Features/Paywall/PaywallView.swift App/UITests/GLPillUITests.swift
 git commit -m "feat: flip to freemium — app free, paywall is in-context upgrade"
 ```
 
@@ -486,7 +487,7 @@ struct MorningSequence {
 - [ ] **Step 5: Commit**
 
 ```bash
-cd App && xcodegen generate && cd ..
+xcodegen generate
 git add App/Sources/Core/Logic/MorningSequence.swift App/Tests/MorningSequenceTests.swift
 git commit -m "feat: pure morning-sequence derivation"
 ```
@@ -556,7 +557,7 @@ Run: `xcodebuild ... build 2>&1 | tail -5` — Expected: success.
 - [ ] **Step 4: Commit**
 
 ```bash
-cd App && xcodegen generate && cd ..
+xcodegen generate
 git add App/Sources/Features/Today/MorningSequenceCard.swift App/Sources/Features/Today/TodayView.swift
 git commit -m "feat: morning-sequence card on Today"
 ```
@@ -704,7 +705,7 @@ Run: `xcodebuild ... build 2>&1 | tail -5` — Expected: success.
 - [ ] **Step 4: Commit**
 
 ```bash
-cd App && xcodegen generate && cd ..
+xcodegen generate
 git add App/Sources/Features/Today/LogSheet.swift App/Sources/Features/Today/TodayView.swift
 git commit -m "feat: central pill-native Log sheet + FAB"
 ```
@@ -798,7 +799,7 @@ enum MedicationLevel {
 - [ ] **Step 5: Commit**
 
 ```bash
-cd App && xcodegen generate && cd ..
+xcodegen generate
 git add App/Sources/Core/Logic/MedicationLevel.swift App/Tests/MedicationLevelTests.swift
 git commit -m "feat: estimated medication-level curve"
 ```
@@ -897,7 +898,7 @@ Run: `xcodebuild ... build 2>&1 | tail -5` — Expected: success.
 - [ ] **Step 5: Commit**
 
 ```bash
-cd App && xcodegen generate && cd ..
+xcodegen generate
 git add App/Sources/Features/Today/MedLevelPreviewCard.swift App/Sources/Features/Today/MedicationLevelView.swift App/Sources/Features/Today/TodayView.swift
 git commit -m "feat: medication-level preview + full graph (free)"
 ```
@@ -1013,7 +1014,7 @@ struct WaitWindowStep: View {
 - [ ] **Step 5: Commit**
 
 ```bash
-cd App && xcodegen generate && cd ..
+xcodegen generate
 git add App/Sources/Features/Onboarding/Steps/
 git commit -m "feat: new onboarding step views"
 ```
@@ -1046,7 +1047,7 @@ git commit -m "feat: 11-step pill-first onboarding flow"
 
 ### Task 17: Full suite + coverage + manual pass
 
-- [ ] **Step 1:** `cd App && xcodegen generate && cd .. && xcodebuild -scheme GLPill -destination 'platform=iOS Simulator,name=iPhone 17 Pro' test 2>&1 | tail -30`. Expected: all green except the one known headless StoreKit case (XCTSkip) — confirm no NEW failures.
+- [ ] **Step 1:** `xcodegen generate && xcodebuild -scheme GLPill -destination 'platform=iOS Simulator,name=iPhone 17 Pro' test 2>&1 | tail -30`. Expected: all green except the one known headless StoreKit case (XCTSkip) — confirm no NEW failures.
 - [ ] **Step 2:** Manual smoke on simulator (use the click-drag scroll, since simulator scroll-wheel doesn't map to touch): complete onboarding for Rybelsus → Today shows ritual hero, morning sequence, med-level preview, Log FAB → log dose, weight, water, protein, side effect → tap med-level → full graph → tap Progress-photo row → paywall appears.
 - [ ] **Step 3:** Confirm the app is fully usable without purchasing (freemium), and premium rows show the upgrade.
 - [ ] **Step 4: Commit any fixes**, then final:
