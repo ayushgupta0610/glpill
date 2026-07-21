@@ -77,6 +77,8 @@ Replaces the current 6-step `OnboardingFlow`. Warm and personalized like MeAgain
 
 The Plan reveal is a real render of the user's answers — **no fabricated "Crafting your plan… 97%" loader**.
 
+> **Shipped-flow reconciliation (2026-07-21):** the built onboarding is an **11-step flow that is the source of truth**. The **Apple Health onboarding step (step 11 above) and a dedicated weight-entry step were deliberately deferred/dropped**: weight stays optional and is logged in-app (via the weigh-in sheet), and Apple Health sync is planned as a later addition rather than an onboarding gate. The step table above reflects the original design; where it diverges from the shipped flow, the shipped flow wins.
+
 ## 6. Design — Today home (ritual-first, Direction A)
 
 `TodayView` becomes a single calm scroll. Order:
