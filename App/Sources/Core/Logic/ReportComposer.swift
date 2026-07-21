@@ -44,8 +44,9 @@ enum ReportComposer {
         let doseValues = input.doses
             .filter { calendar.startOfDay(for: $0.0) >= start && calendar.startOfDay(for: $0.0) <= end }
             .map(\.1)
+            .filter { $0 > 0 } // drop "unknown" (0 mg) doses so an unset plan isn't reported as "0 mg"
         let unique = Array(Set(doseValues)).sorted()
-        guard !unique.isEmpty else { return "Doses taken: none logged" }
+        guard !unique.isEmpty else { return "Doses taken: not recorded" }
         let formatted = unique.map { String(format: "%g mg", $0) }.joined(separator: " → ")
         return "Doses taken: \(formatted)"
     }

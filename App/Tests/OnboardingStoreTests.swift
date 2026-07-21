@@ -187,6 +187,21 @@ final class OnboardingStoreTests: XCTestCase {
         XCTAssertEqual(s.reminderStyle, "pillOnly")
     }
 
+    @MainActor
+    func testCompleteWithNoStepsInsertsNoTitrationSteps() throws {
+        let container = try makeContainer()
+        let context = container.mainContext
+        let store = OnboardingStore()
+        store.kind = .foundayo
+        store.steps = []
+
+        try store.complete(in: context)
+
+        XCTAssertEqual(try context.fetch(FetchDescriptor<TitrationStep>()).count, 0)
+        XCTAssertNotNil(try context.fetch(FetchDescriptor<UserSettings>()).first)
+        XCTAssertNotNil(try context.fetch(FetchDescriptor<Medication>()).first)
+    }
+
     func testDoseValidationBounds() {
         XCTAssertTrue(UnitFormat.isValidDose(mg: 0.05))
         XCTAssertTrue(UnitFormat.isValidDose(mg: 36))

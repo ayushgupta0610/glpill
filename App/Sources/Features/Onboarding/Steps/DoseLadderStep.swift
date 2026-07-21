@@ -28,8 +28,8 @@ struct DoseLadderStep: View {
                                 store.steps = [.init(doseMg: dose, durationWeeks: 4)]
                             }
                         }
-                        OnboardingOptionRow(title: "Not sure", subtitle: "You can change this anytime", selected: false, multi: false) {
-                            store.steps = [.init(doseMg: ladder.first ?? 0.8, durationWeeks: 4)]; next()
+                        OnboardingOptionRow(title: "Not sure", subtitle: "You can add it later in Settings", selected: false, multi: false) {
+                            store.steps = []; next()
                         }
                     }
                 }

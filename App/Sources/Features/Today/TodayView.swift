@@ -143,7 +143,7 @@ struct TodayView: View {
         let steps = titrationSteps.map { (doseMg: $0.doseMg, durationWeeks: $0.durationWeeks) }
         let planStart = settingsList.first?.startDate ?? .now
         guard let position = TitrationProgress.position(steps: steps, planStart: planStart, today: .now, calendar: calendar) else {
-            return "No dose plan — add one in Settings"
+            return "Dose not set — add in Settings"
         }
         let dose = steps[position.stepIndex].doseMg
         var text = String(format: "%g mg — step %d of %d", dose, position.stepIndex + 1, steps.count)
