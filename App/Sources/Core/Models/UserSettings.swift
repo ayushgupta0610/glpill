@@ -21,6 +21,11 @@ final class UserSettings {
     /// Optional list of the user's OTHER morning medications (names only). Used to
     /// tell them when their empty-stomach window is clear. Timing metadata, not advice.
     var morningMeds: [String] = []
+    var waitWindowMinutes: Int = 30
+    var onboardingStage: String?
+    var sideEffectConcerns: [String] = []
+    var goals: [String] = []
+    var reminderStyle: String = "full"
 
     init(
         onboardingComplete: Bool = false,
@@ -34,7 +39,12 @@ final class UserSettings {
         waterTargetMl: Int = 2000,
         startDate: Date = .now,
         lastCelebratedMilestone: Int = 0,
-        morningMeds: [String] = []
+        morningMeds: [String] = [],
+        waitWindowMinutes: Int = 30,
+        onboardingStage: String? = nil,
+        sideEffectConcerns: [String] = [],
+        goals: [String] = [],
+        reminderStyle: String = "full"
     ) {
         self.onboardingComplete = onboardingComplete
         self.usesMetric = usesMetric
@@ -48,5 +58,10 @@ final class UserSettings {
         self.startDate = startDate
         self.lastCelebratedMilestone = lastCelebratedMilestone
         self.morningMeds = morningMeds
+        self.waitWindowMinutes = waitWindowMinutes
+        self.onboardingStage = onboardingStage
+        self.sideEffectConcerns = sideEffectConcerns
+        self.goals = goals
+        self.reminderStyle = reminderStyle
     }
 }
