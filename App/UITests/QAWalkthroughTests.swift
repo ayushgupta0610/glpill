@@ -106,7 +106,24 @@ final class QAWalkthroughTests: XCTestCase {
             fab.tap()
             sleep(1)
             shot(app, "15-log-sheet")
+            // Open the weigh-in sheet to capture the kg/lb toggle
+            let weightRow = app.buttons["Weight"]
+            if weightRow.waitForExistence(timeout: 3) {
+                weightRow.tap()
+                sleep(1)
+                shot(app, "17-weighin-units")
+                if app.buttons["Cancel"].exists { app.buttons["Cancel"].tap() }
+            } else if app.navigationBars.buttons.firstMatch.exists {
+                app.swipeDown()
+            }
         }
+
+        // Scroll Today to the intake card to capture the filling vessels + steppers
+        sleep(1)
+        app.swipeUp()
+        app.swipeUp()
+        sleep(1)
+        shot(app, "16-intake-vessels")
     }
 
     @MainActor private func tapContinue(_ app: XCUIApplication) {
