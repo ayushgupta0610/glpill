@@ -88,6 +88,8 @@ The Plan reveal is a real render of the user's answers — **no fabricated "Craf
 5. **Intake counters** — existing water + protein counters (`IntakeCountersView`).
 6. **Side effects** — existing quick-log entry (`SideEffectSheet`).
 
+**Central Log sheet (`⊕` FAB):** a floating button on Today opens a bottom sheet of quick log actions — **Took my pill · Weight · Water · Protein · Side effects** (+ *Progress photo* as a premium row). This is the "adopt from MeAgain with our twist" element: pill-native ("Took my pill", not "Log a Shot") and deliberately **no food-database row** (Scan/Search/Voice) since GLPill is not a calorie app. The individual actions reuse existing logging paths (`DoseLog`, `WeightEntry`, `IntakeDay`, `SideEffectLog`).
+
 Navigation stays the current 5 tabs (Today · Progress · History · Report · Settings). Only Today changes.
 
 ## 7. Design — Medication-level graph (pill-adapted)
@@ -96,18 +98,34 @@ New component. Estimates relative drug level over time from the user's dose + da
 
 - **Shape:** a daily pill produces small daily increments **climbing to a stable steady-state** over ~a week (contrast MeAgain's weekly-injection peak-and-crash). This is the visual we own: *"steadier levels, fewer ups and downs — by design."*
 - **Model:** a simple, transparent relative-level estimate (not a clinical PK model, and labelled "estimated"). Uses a per-drug elimination half-life constant to accumulate logged daily doses into a normalized 0–100% curve. No medical claims; "estimated" label required. Exact math to be pinned in the plan; must be pure and unit-testable.
-- **Free vs premium:** Today shows a **7-day preview** sparkline; the **full interactive graph** (range selector, tap-to-inspect, steady-state annotation) is premium.
+- **Free:** the full interactive graph (range selector, tap-to-inspect, steady-state annotation) is **free**, matching MeAgain's generosity. Today shows a compact preview card that opens the full graph.
 - **Missing data:** if the drug is unknown or few doses logged, show an honest empty/low-confidence state rather than a fake curve.
 
 ## 8. Design — Freemium model
 
-Flip from hard paywall to freemium. Pricing unchanged: **$6.99/mo · $39.99/yr · 7-day trial**, moved from a wall to an in-context upgrade.
+Flip from hard paywall to **generous freemium**. The second MeAgain video (see `docs/competitor/meagain/`, 2026-07-21) showed the incumbent gives away nearly the entire app for free — medication-level graph, all tracking, full history and charts — and monetizes only a *thin* "extras" layer (progress photos, a photo "journey" card, premium widgets, food database) plus an opportunistic discount paywall. To not look stingy next to the incumbent, GLPill matches that generosity.
 
-**Free forever:** ritual hero + wait-window timer · morning-meds sequence · one-tap pill logging + streak · smart reminders (pill + window-clear) · side-effect quick-log · med-level graph **preview** (7 days) · recent dose history (14 days) · streak home-screen widget.
+**Pricing:** **$6.99/mo · $39.99/yr, no trial** (the core is already free, so a trial is redundant). Upgrade is honest and in-context — **no fake-scarcity "85% off, you'll never see this again"** paywall.
 
-**Premium ✦:** full medication-level graph (steady-state, any range, tap-to-inspect) · unlimited history & trends · weight trend + projection (opt-in) · doctor-ready PDF report · side-effect insights/patterns · Lock-Screen + larger widgets · Consistency "Wrapped" share cards.
+**Free forever — the whole tracker:**
+- Ritual hero + wait-window timer
+- Morning-meds sequence (the wedge)
+- **Central Log sheet** (the `⊕` FAB): Took my pill · Weight · Water · Protein · Side effects
+- Streak + smart reminders (pill + window-clear)
+- **Full medication-level graph** (steady-state, all ranges, tap-to-inspect) — *free, not gated*
+- **Full dose history**
+- **Weight trend + BMI + timeline**
+- Streak home-screen widget
 
-**Rationale:** the wedge is free so every pill user feels the difference on day 1 and can recommend it; premium is the deeper data layer wanted around week 2–4 ("I've been consistent — now I want my trends and a report for my doctor").
+**Premium ✦ — thin, high-value, leaning into the medical wedge:**
+- **Doctor-ready PDF report** (adherence, doses, side effects) — the flagship upgrade for our T2D/medical audience
+- Consistency "Wrapped" & journey share cards
+- Advanced widgets — Lock Screen + medication-level widget
+- Weight projection (goal-date estimate)
+- Data export (CSV) & multiple medications
+- Progress photo logging
+
+**Rationale:** everything a pill user needs daily is free, so they feel the difference on day 1 and recommend it. Premium is a small set of "extras" — and unlike MeAgain (which monetizes weight-loss photos), our headline upgrade is the **doctor report**, which fits the medical wedge. The natural upgrade moment is a real one: "I have a clinic appointment — I want the report."
 
 ## 9. Data model changes
 
@@ -129,8 +147,9 @@ Existing SwiftData models to extend (additive, migration-safe defaults):
 
 - **Onboarding**: expand `OnboardingFlow.swift` (currently 6 `switch` cases → ~11). Each step is a small private `View`. `OnboardingStore` gains the new fields. Keep the existing `store.complete(in:)` + reminder-scheduling pattern. Consider extracting steps into `Features/Onboarding/Steps/` if the file exceeds ~400 lines (per the many-small-files rule).
 - **Freemium flip**: `RootView.swift` currently renders `PaywallView()` when `!subscriptions.isUnlocked`. Change so that after onboarding it **always** renders `MainTabView()`; premium features check entitlement at the feature boundary. Introduce a lightweight `PremiumGate` view-modifier / helper (reads `EntitlementState`) that wraps premium surfaces and presents `PaywallView` as a sheet on tap. `PaywallView` copy shifts from hard-wall to upgrade.
-- **Today**: `TodayView` composes existing `RitualCard`, `IntakeCountersView`, `SideEffectSheet` + two new subviews: `MorningSequenceCard` and `MedLevelPreviewCard`. `TodayStore` gains sequence + level-preview derivation (pure).
-- **Med-level graph**: new `Core/Logic/MedicationLevel.swift` (pure estimator, unit-tested) + `Features/Today/MedLevelPreviewCard.swift` (sparkline) + `Features/Today/MedicationLevelView.swift` (full, premium-gated). Uses Swift Charts.
+- **Today**: `TodayView` composes existing `RitualCard`, `IntakeCountersView`, `SideEffectSheet` + new subviews: `MorningSequenceCard`, `MedLevelPreviewCard`, and a `LogSheet` presented from the `⊕` FAB. `TodayStore` gains sequence + level-preview derivation (pure).
+- **Log sheet**: new `Features/Today/LogSheet.swift` — a bottom sheet routing to existing logging flows (pill/weight/water/protein/side effects); the progress-photo row is premium-gated via `PremiumGate`.
+- **Med-level graph**: new `Core/Logic/MedicationLevel.swift` (pure estimator, unit-tested) + `Features/Today/MedLevelPreviewCard.swift` (sparkline) + `Features/Today/MedicationLevelView.swift` (full graph, **free**). Uses Swift Charts.
 - **Sequencing**: pure helper deriving the ordered sequence (pill → meds → breakfast) from `RitualState` + `morningMeds` + `waitWindowMinutes`.
 
 ## 11. Non-goals / explicitly deferred
@@ -142,7 +161,7 @@ Existing SwiftData models to extend (additive, migration-safe defaults):
 ## 12. Testing
 
 - **Pure logic (unit, Swift Testing):** `RitualState.make` across `waitWindowMinutes`; morning-sequence derivation (empty meds, with meds, Foundayo no-window); `MedicationLevel` estimator (steady-state monotonic climb, missing-data empty state, per-drug half-life); onboarding store field persistence; entitlement gating decisions.
-- **Freemium boundary:** premium surfaces present the paywall sheet when `locked`, render content when `active`; the whole app is reachable when `locked`.
+- **Freemium boundary:** the whole app (incl. med-level graph, full history, weight trends, the Log sheet) is reachable when `locked`; only the thin premium surfaces (doctor PDF report, Wrapped/journey cards, advanced widgets, weight projection, data export, progress-photo row) present the upgrade sheet when `locked` and render when `active`.
 - **Onboarding:** each step advances, "Not sure"/"Skip" never blocks, `store.complete` writes all new fields.
 - **UI test:** onboarding completes → lands on Today (not paywall); tapping a premium card shows the upgrade sheet.
 - Keep the existing suite green; maintain the project's ≥80% coverage bar. Note the 2 known pre-existing failures (headless StoreKit config; onboarding→paywall UI test — the latter changes meaning under freemium and must be updated).
