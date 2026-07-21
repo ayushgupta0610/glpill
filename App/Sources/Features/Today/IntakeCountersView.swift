@@ -108,13 +108,26 @@ struct IntakeCountersView: View {
             IntakeVessel(fraction: fraction, tint: tint, isShaker: isShaker)
 
             VStack(alignment: .leading, spacing: 6) {
+                // Current total is the tap target for exact entry.
                 HStack(spacing: 6) {
                     if targetHit {
                         Image(systemName: "checkmark.circle.fill").foregroundStyle(tint)
                     }
-                    Text("\(display(value)) / \(display(target))")
+                    Button {
+                        editText = ""
+                        editing.wrappedValue = true
+                    } label: {
+                        Text(display(value))
+                            .font(.subheadline.weight(.bold))
+                            .monospacedDigit()
+                            .foregroundStyle(tint)
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel("Current \(unitName): \(display(value)). Tap to type an exact value.")
+                    Text("/ \(display(target))")
                         .font(.subheadline.weight(.semibold))
                         .monospacedDigit()
+                        .foregroundStyle(.secondary)
                     if targetHit {
                         Text("Target hit")
                             .font(.caption2.weight(.semibold))
@@ -122,6 +135,7 @@ struct IntakeCountersView: View {
                     }
                 }
 
+                // Stepper: − [step size] +. The middle shows how much each tap changes.
                 HStack(spacing: 12) {
                     Button {
                         tapPulse.toggle()
@@ -133,20 +147,14 @@ struct IntakeCountersView: View {
                     }
                     .buttonStyle(.bordered)
                     .tint(.secondary)
-                    .accessibilityLabel("Subtract \(step) \(unitName)")
+                    .accessibilityLabel("Subtract \(display(step))")
 
-                    Button {
-                        editText = ""
-                        editing.wrappedValue = true
-                    } label: {
-                        Text(display(value))
-                            .font(.title3.weight(.bold))
-                            .monospacedDigit()
-                            .frame(minWidth: 64)
-                    }
-                    .buttonStyle(.plain)
-                    .foregroundStyle(tint)
-                    .accessibilityLabel("Current \(unitName): \(display(value)). Tap to type an exact value.")
+                    Text(display(step))
+                        .font(.title3.weight(.bold))
+                        .monospacedDigit()
+                        .frame(minWidth: 64)
+                        .foregroundStyle(.secondary)
+                        .accessibilityLabel("Step size \(display(step))")
 
                     Button {
                         tapPulse.toggle()
@@ -158,10 +166,10 @@ struct IntakeCountersView: View {
                     }
                     .buttonStyle(.bordered)
                     .tint(tint)
-                    .accessibilityLabel("Add \(step) \(unitName)")
+                    .accessibilityLabel("Add \(display(step))")
                 }
 
-                Text("Tap the number to type an exact amount")
+                Text("Tap the total above to enter an exact amount")
                     .font(.caption2)
                     .foregroundStyle(.secondary)
 
