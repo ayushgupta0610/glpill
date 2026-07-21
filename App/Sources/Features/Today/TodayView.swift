@@ -33,6 +33,9 @@ struct TodayView: View {
                         .foregroundStyle(.secondary)
                         .frame(maxWidth: .infinity, alignment: .leading)
                     ritualCard
+                    if medications.first?.requiresEmptyStomach == true || !(settingsList.first?.morningMeds ?? []).isEmpty {
+                        MorningSequenceCard(steps: morningSequence)
+                    }
                     streakCard
                     IntakeCountersView(
                         onProtein: { grams in withErrorHandling { try store.addProtein(grams) } },
@@ -68,6 +71,17 @@ struct TodayView: View {
                 Text(errorMessage ?? "")
             }
         }
+    }
+
+    private var morningSequence: [MorningSequence.Step] {
+        let clear = eatTimerEnd > 0 ? Date(timeIntervalSince1970: eatTimerEnd) : nil
+        return MorningSequence.make(
+            pillTaken: todayLog != nil,
+            pillName: medications.first?.displayName ?? "Your GLP-1 pill",
+            hadWindow: medications.first?.requiresEmptyStomach ?? false,
+            clearTime: clear,
+            meds: settingsList.first?.morningMeds ?? []
+        )
     }
 
     private var ritualState: RitualState {
