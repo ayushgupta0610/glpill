@@ -22,6 +22,7 @@ enum ReportComposer {
         lines.append("Window: last \(input.windowDays) days (ending \(dateString(end)))")
         lines.append("")
         lines.append(adherenceLine(input, start: start, end: end, calendar: calendar))
+        lines.append(gapLine(input, start: start, end: end, calendar: calendar))
         lines.append(dosesLine(input, start: start, end: end, calendar: calendar))
         lines.append(weightLine(input, start: start, end: end, calendar: calendar))
         lines.append("")
@@ -38,6 +39,11 @@ enum ReportComposer {
             .filter { $0 >= start && $0 <= end }
             .count
         return "Adherence: \(percent)% (\(dosedDays) of \(input.windowDays) days)"
+    }
+
+    private static func gapLine(_ input: ReportInput, start: Date, end: Date, calendar: Calendar) -> String {
+        let gap = AdherenceStats.longestGapDays(doseDays: input.doseDays, from: start, to: end, calendar: calendar, today: input.today)
+        return gap > 0 ? "Longest gap: \(gap) days" : "Longest gap: none"
     }
 
     private static func dosesLine(_ input: ReportInput, start: Date, end: Date, calendar: Calendar) -> String {

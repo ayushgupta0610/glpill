@@ -12,6 +12,7 @@ private struct HistoryDay: Identifiable {
 struct HistoryView: View {
     @Query(sort: \DoseLog.date) private var doseLogs: [DoseLog]
     @Query(sort: \SideEffectLog.date) private var sideEffects: [SideEffectLog]
+    @Query private var settingsList: [UserSettings]
     @State private var monthAnchor = Calendar.current.startOfDay(for: .now)
     @State private var selectedDay: HistoryDay?
 
@@ -23,6 +24,14 @@ struct HistoryView: View {
 
     private var effectDays: Set<Date> {
         Set(sideEffects.map { calendar.startOfDay(for: $0.date) })
+    }
+
+    /// The first day a dose was "expected" — the earlier of the user's plan start
+    /// or their first logged dose. Days before this read as blank, not missed.
+    private var planStart: Date? {
+        let settingsStart = settingsList.first.map { calendar.startOfDay(for: $0.startDate) }
+        let firstDose = dosedDays.min()
+        return [settingsStart, firstDose].compactMap { $0 }.min()
     }
 
     var body: some View {
@@ -93,6 +102,9 @@ struct HistoryView: View {
         let dosed = dosedDays.contains(day)
         let hasEffect = effectDays.contains(day)
         let isFuture = day > calendar.startOfDay(for: .now)
+        // A day is "missed" when it's expected (past-or-today, on/after the plan
+        // start) but has no dose — a gap, distinct from a blank future day.
+        let isMissed = !dosed && !isFuture && planStart.map { day >= $0 } == true
 
         return Button {
             selectedDay = HistoryDay(date: day)
@@ -103,6 +115,11 @@ struct HistoryView: View {
                     .foregroundStyle(dosed ? .white : (isFuture ? .secondary : .primary))
                     .frame(width: 32, height: 32)
                     .background(dosed ? Theme.primary : Color.clear, in: Circle())
+                    .overlay {
+                        if isMissed {
+                            Circle().stroke(Color.secondary.opacity(0.4), lineWidth: 1.5)
+                        }
+                    }
                 Circle()
                     .fill(hasEffect ? Theme.warn : Color.clear)
                     .frame(width: 5, height: 5)
@@ -110,12 +127,18 @@ struct HistoryView: View {
         }
         .buttonStyle(.plain)
         .disabled(isFuture)
-        .accessibilityLabel(accessibilityText(for: day, dosed: dosed, hasEffect: hasEffect))
+        .accessibilityLabel(accessibilityText(for: day, dosed: dosed, hasEffect: hasEffect, missed: isMissed))
     }
 
-    private func accessibilityText(for day: Date, dosed: Bool, hasEffect: Bool) -> String {
+    private func accessibilityText(for day: Date, dosed: Bool, hasEffect: Bool, missed: Bool) -> String {
         var parts = [day.formatted(date: .long, time: .omitted)]
-        parts.append(dosed ? "pill taken" : "no pill logged")
+        if dosed {
+            parts.append("pill taken")
+        } else if missed {
+            parts.append("missed")
+        } else {
+            parts.append("no pill logged")
+        }
         if hasEffect { parts.append("side effect logged") }
         return parts.joined(separator: ", ")
     }

@@ -35,6 +35,22 @@ final class ReportComposerTests: XCTestCase {
         XCTAssertTrue(report.contains("Adherence: 86% (24 of 28 days)"), report)
     }
 
+    func testLongestGapLineWithHole() {
+        // Dose every day in the 28-day window except a single 4-day hole
+        // (day(-8)...day(-5)), so the longest gap is exactly 4.
+        let hole: Set<Int> = [5, 6, 7, 8]
+        let doseDays = (0...27).filter { !hole.contains($0) }.map { day(-$0) }
+        let report = ReportComposer.compose(makeInput(doseDays: doseDays), calendar: calendar)
+        XCTAssertTrue(report.contains("Longest gap: 4 days"), report)
+    }
+
+    func testLongestGapLineNone() {
+        // Every day in the 28-day window is dosed.
+        let doseDays = (0...27).map { day(-$0) }
+        let report = ReportComposer.compose(makeInput(doseDays: doseDays), calendar: calendar)
+        XCTAssertTrue(report.contains("Longest gap: none"), report)
+    }
+
     func testWeightChangeLine() {
         let report = ReportComposer.compose(
             makeInput(doseDays: [day(0)], weights: [(day(-27), 90.0), (day(0), 87.5)]),
