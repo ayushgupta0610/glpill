@@ -5,7 +5,7 @@ pillar: orforglipron
 datePublished: "2026-07-19"
 dateModified: "2026-07-19"
 author: "Ayush Gupta"
-keywords: ["orforglipron vs ozempic", "foundayo vs ozempic", "orforglipron vs semaglutide", "oral glp-1 vs ozempic", "orforglipron vs wegovy", "orforglipron vs rybelsus"]
+keywords: ["orforglipron vs ozempic", "foundayo vs ozempic", "orforglipron vs semaglutide", "oral glp-1 vs ozempic", "orforglipron vs wegovy"]
 faqs:
   - q: "Is orforglipron the same type of drug as Ozempic?"
     a: "They're the same drug class but different molecules. Orforglipron (Foundayo) and semaglutide (the active ingredient in Ozempic, Wegovy, and Rybelsus) are both GLP-1 receptor agonists — single-receptor drugs, unlike tirzepatide's dual GIP/GLP-1 mechanism. But orforglipron is a small molecule and semaglutide is a peptide, which is part of why they're dosed so differently."
