@@ -52,6 +52,8 @@ final class OnboardingStore {
         let startKg = displayWeight.map { UnitFormat.kilograms(fromDisplay: $0, metric: usesMetric) }
         let goalKg = displayGoal.map { UnitFormat.kilograms(fromDisplay: $0, metric: usesMetric) }
 
+        // Validate everything BEFORE any insert so a throw leaves no partial rows
+        // behind (no orphaned Medication/TitrationSteps to duplicate on retry).
         for kg in [startKg, goalKg].compactMap({ $0 }) where !UnitFormat.isValidWeight(kilograms: kg) {
             throw OnboardingError.invalidWeight
         }
@@ -60,11 +62,24 @@ final class OnboardingStore {
             throw OnboardingError.goalAboveCurrentWeight
         }
 
-        let medication = Medication(kind: kind, customName: kind == .custom ? MedicationName.normalize(customName) : nil, createdAt: now)
-        context.insert(medication)
-
         if steps.contains(where: { !UnitFormat.isValidDose(mg: $0.doseMg) }) {
             throw OnboardingError.invalidDose
+        }
+
+        // Upsert the medication: re-running onboarding updates the existing row in
+        // place rather than inserting a second one.
+        let normalizedCustom = kind == .custom ? MedicationName.normalize(customName) : nil
+        if let existing = try context.fetch(FetchDescriptor<Medication>())
+            .sorted(by: { $0.createdAt < $1.createdAt }).first {
+            existing.kindRaw = kind.rawValue
+            existing.customName = normalizedCustom
+        } else {
+            context.insert(Medication(kind: kind, customName: normalizedCustom, createdAt: now))
+        }
+
+        // Replace titration steps wholesale (they're plan-scoped, not identity-scoped).
+        for step in try context.fetch(FetchDescriptor<TitrationStep>()) {
+            context.delete(step)
         }
         for (index, step) in steps.enumerated() {
             context.insert(TitrationStep(
@@ -74,21 +89,39 @@ final class OnboardingStore {
             ))
         }
 
-        context.insert(UserSettings(
-            onboardingComplete: true,
-            usesMetric: usesMetric,
-            goalKilograms: goalKg,
-            startKilograms: startKg,
-            reminderHour: reminderHour,
-            reminderMinute: reminderMinute,
-            startDate: now,
-            morningMeds: MorningMeds.normalize(morningMeds),
-            waitWindowMinutes: waitWindowMinutes,
-            onboardingStage: stage,
-            sideEffectConcerns: concerns,
-            goals: goals,
-            reminderStyle: reminderStyle
-        ))
+        // Upsert user settings: update the earliest existing row in place if present.
+        if let settings = try context.fetch(FetchDescriptor<UserSettings>())
+            .sorted(by: { $0.startDate < $1.startDate }).first {
+            settings.onboardingComplete = true
+            settings.usesMetric = usesMetric
+            settings.goalKilograms = goalKg
+            settings.startKilograms = startKg
+            settings.reminderHour = reminderHour
+            settings.reminderMinute = reminderMinute
+            settings.startDate = now
+            settings.morningMeds = MorningMeds.normalize(morningMeds)
+            settings.waitWindowMinutes = waitWindowMinutes
+            settings.onboardingStage = stage
+            settings.sideEffectConcerns = concerns
+            settings.goals = goals
+            settings.reminderStyle = reminderStyle
+        } else {
+            context.insert(UserSettings(
+                onboardingComplete: true,
+                usesMetric: usesMetric,
+                goalKilograms: goalKg,
+                startKilograms: startKg,
+                reminderHour: reminderHour,
+                reminderMinute: reminderMinute,
+                startDate: now,
+                morningMeds: MorningMeds.normalize(morningMeds),
+                waitWindowMinutes: waitWindowMinutes,
+                onboardingStage: stage,
+                sideEffectConcerns: concerns,
+                goals: goals,
+                reminderStyle: reminderStyle
+            ))
+        }
 
         if let startKg {
             context.insert(WeightEntry(date: now, kilograms: startKg))

@@ -4,7 +4,7 @@ import UserNotifications
 
 struct SettingsView: View {
     @Environment(SubscriptionStore.self) private var subscriptions
-    @Query private var settingsList: [UserSettings]
+    @Query(sort: \UserSettings.startDate) private var settingsList: [UserSettings]
     @State private var reminderTime = Date.now
     @State private var restoreMessage: String?
     @State private var showManageSubscription = false

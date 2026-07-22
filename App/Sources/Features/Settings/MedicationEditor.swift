@@ -2,7 +2,7 @@ import SwiftUI
 import SwiftData
 
 struct MedicationEditor: View {
-    @Query private var medications: [Medication]
+    @Query(sort: \Medication.createdAt) private var medications: [Medication]
     @State private var customNameDraft = ""
 
     var body: some View {

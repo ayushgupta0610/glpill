@@ -8,10 +8,10 @@ import UIKit
 struct TodayView: View {
     @Environment(\.modelContext) private var context
     @Query(sort: \DoseLog.date) private var doseLogs: [DoseLog]
-    @Query private var medications: [Medication]
+    @Query(sort: \Medication.createdAt) private var medications: [Medication]
     @Query(sort: \TitrationStep.order) private var titrationSteps: [TitrationStep]
     @Query(sort: \WeightEntry.date, order: .reverse) private var weightEntries: [WeightEntry]
-    @Query private var settingsList: [UserSettings]
+    @Query(sort: \UserSettings.startDate) private var settingsList: [UserSettings]
     @AppStorage("eatTimerEnd") private var eatTimerEnd: Double = 0
     private enum ActiveSheet: Int, Identifiable { case log, weight, sideEffect; var id: Int { rawValue } }
     @State private var activeSheet: ActiveSheet?

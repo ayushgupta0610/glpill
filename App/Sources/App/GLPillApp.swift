@@ -34,6 +34,9 @@ struct GLPillApp: App {
                 .tint(Theme.primary)
                 .task {
                     _ = subscriptions.startTransactionListener()
+                    // Collapse CloudKit-synced duplicates before any read so
+                    // `.first` on UserSettings/Medication is deterministic.
+                    ModelMaintenance.deduplicate(in: container.mainContext)
                     WidgetSnapshotBuilder.refresh(context: container.mainContext)
                     #if DEBUG
                     if ProcessInfo.processInfo.arguments.contains("-exportCards") {

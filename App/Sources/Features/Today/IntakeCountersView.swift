@@ -8,11 +8,12 @@ struct IntakeCountersView: View {
     let onSetWater: (Int) -> Void
 
     @Query private var intakeDays: [IntakeDay]
-    @Query private var settingsList: [UserSettings]
+    @Query(sort: \UserSettings.startDate) private var settingsList: [UserSettings]
     @State private var tapPulse = false
     @State private var editingProtein = false
     @State private var editingWater = false
     @State private var editText = ""
+    @State private var inputError: String?
 
     private static let mlPerOz = 29.5735
     private static let waterTint = Color(red: 0.184, green: 0.498, blue: 0.816) // #2F7FD0
@@ -68,28 +69,55 @@ struct IntakeCountersView: View {
         .alert("Set protein (grams)", isPresented: $editingProtein) {
             TextField("grams", text: $editText)
                 .keyboardType(.decimalPad)
-            Button("Cancel", role: .cancel) {}
+            Button("Cancel", role: .cancel) { inputError = nil }
+            // Non-dismissing default keeps the alert open on invalid input so the
+            // entry isn't silently discarded.
             Button("Set") {
-                if let grams = parsed(editText) { onSetProtein(grams); tapPulse.toggle() }
+                guard let grams = IntakeInput.parse(editText) else {
+                    inputError = Self.invalidInputMessage
+                    editingProtein = true
+                    return
+                }
+                inputError = nil
+                onSetProtein(grams)
+                tapPulse.toggle()
             }
+        } message: {
+            if let inputError { Text(inputError) }
         }
         .alert(metric ? "Set water (ml)" : "Set water (oz)", isPresented: $editingWater) {
             TextField(metric ? "ml" : "oz", text: $editText)
                 .keyboardType(.decimalPad)
-            Button("Cancel", role: .cancel) {}
+            Button("Cancel", role: .cancel) { inputError = nil }
             Button("Set") {
-                if let entered = parsed(editText) {
-                    let ml = metric ? entered : Int((Double(entered) * Self.mlPerOz).rounded())
-                    onSetWater(ml); tapPulse.toggle()
+                guard let entered = IntakeInput.parse(editText) else {
+                    inputError = Self.invalidInputMessage
+                    editingWater = true
+                    return
                 }
+                let ml: Int
+                if metric {
+                    ml = entered
+                } else {
+                    // Cap the oz→ml converted value before it can overflow Int64.
+                    let converted = (Double(entered) * Self.mlPerOz).rounded()
+                    guard converted.isFinite, converted <= IntakeInput.maxValue else {
+                        inputError = Self.invalidInputMessage
+                        editingWater = true
+                        return
+                    }
+                    ml = Int(converted)
+                }
+                inputError = nil
+                onSetWater(ml)
+                tapPulse.toggle()
             }
+        } message: {
+            if let inputError { Text(inputError) }
         }
     }
 
-    private func parsed(_ text: String) -> Int? {
-        guard let value = Double(text.trimmingCharacters(in: .whitespaces)), value >= 0 else { return nil }
-        return Int(value.rounded())
-    }
+    private static let invalidInputMessage = "Enter a number between 0 and 100000."
 
     private func counterRow(
         isShaker: Bool,
@@ -115,6 +143,7 @@ struct IntakeCountersView: View {
                     }
                     Button {
                         editText = ""
+                        inputError = nil
                         editing.wrappedValue = true
                     } label: {
                         Text(display(value))

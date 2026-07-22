@@ -14,6 +14,11 @@ struct TodayStore {
     /// apart, different calendar day).
     private static let minHoursBetweenDoses: TimeInterval = 6 * 60 * 60
 
+    /// Sane ceilings so a fat-fingered or overflowing manual entry can't be stored
+    /// or synced (e.g. "50000 ml"). Lower bound stays 0.
+    static let maxProteinGrams = 1000
+    static let maxWaterMl = 20000
+
     /// Logs today's dose once. Returns true when the empty-stomach eat timer
     /// should start (first log of the day for a medication that requires it).
     @discardableResult
@@ -44,7 +49,8 @@ struct TodayStore {
         let steps = ((try? context.fetch(FetchDescriptor<TitrationStep>())) ?? [])
             .sorted { $0.order < $1.order }
             .map { (doseMg: $0.doseMg, durationWeeks: $0.durationWeeks) }
-        let planStart = (try? context.fetch(FetchDescriptor<UserSettings>()))?.first?.startDate ?? date
+        let planStart = ((try? context.fetch(FetchDescriptor<UserSettings>())) ?? [])
+            .sorted { $0.startDate < $1.startDate }.first?.startDate ?? date
         guard let position = TitrationProgress.position(steps: steps, planStart: planStart, today: date, calendar: calendar),
               position.stepIndex < steps.count else { return 0 }
         return steps[position.stepIndex].doseMg
@@ -52,26 +58,30 @@ struct TodayStore {
 
     func addProtein(_ grams: Int, on date: Date = .now) throws {
         let day = try intakeDay(for: date)
-        day.proteinGrams = max(0, day.proteinGrams + grams)
+        day.proteinGrams = clamp(day.proteinGrams + grams, upper: Self.maxProteinGrams)
         try context.save()
     }
 
     func addWater(_ ml: Int, on date: Date = .now) throws {
         let day = try intakeDay(for: date)
-        day.waterMl = max(0, day.waterMl + ml)
+        day.waterMl = clamp(day.waterMl + ml, upper: Self.maxWaterMl)
         try context.save()
     }
 
     func setProtein(grams: Int, on date: Date = .now) throws {
         let day = try intakeDay(for: date)
-        day.proteinGrams = max(0, grams)
+        day.proteinGrams = clamp(grams, upper: Self.maxProteinGrams)
         try context.save()
     }
 
     func setWater(ml: Int, on date: Date = .now) throws {
         let day = try intakeDay(for: date)
-        day.waterMl = max(0, ml)
+        day.waterMl = clamp(ml, upper: Self.maxWaterMl)
         try context.save()
+    }
+
+    private func clamp(_ value: Int, upper: Int) -> Int {
+        min(max(0, value), upper)
     }
 
     func logSideEffect(_ kind: SideEffectKind, severity: Int, note: String? = nil, on date: Date = .now) throws {

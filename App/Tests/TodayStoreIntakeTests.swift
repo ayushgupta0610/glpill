@@ -20,4 +20,23 @@ import SwiftData
         try s.setWater(ml: 500)
         #expect(try c.fetch(FetchDescriptor<IntakeDay>()).first?.waterMl == 500)
     }
+    @Test("setWater clamps to the upper ceiling")
+    func setWaterUpperClamp() throws {
+        let c = try ctx(); let s = TodayStore(context: c)
+        try s.setWater(ml: 50000)
+        #expect(try c.fetch(FetchDescriptor<IntakeDay>()).first?.waterMl == TodayStore.maxWaterMl)
+    }
+    @Test("setProtein clamps to the upper ceiling")
+    func setProteinUpperClamp() throws {
+        let c = try ctx(); let s = TodayStore(context: c)
+        try s.setProtein(grams: 5000)
+        #expect(try c.fetch(FetchDescriptor<IntakeDay>()).first?.proteinGrams == TodayStore.maxProteinGrams)
+    }
+    @Test("addProtein clamps the accumulated total to the ceiling")
+    func addProteinUpperClamp() throws {
+        let c = try ctx(); let s = TodayStore(context: c)
+        try s.setProtein(grams: 900)
+        try s.addProtein(500)
+        #expect(try c.fetch(FetchDescriptor<IntakeDay>()).first?.proteinGrams == TodayStore.maxProteinGrams)
+    }
 }

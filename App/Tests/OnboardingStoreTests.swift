@@ -202,6 +202,59 @@ final class OnboardingStoreTests: XCTestCase {
         XCTAssertNotNil(try context.fetch(FetchDescriptor<Medication>()).first)
     }
 
+    @MainActor
+    func testCompleteTwiceUpsertsSingleSettingsAndMedication() throws {
+        let container = try makeContainer()
+        let context = container.mainContext
+        let store = OnboardingStore()
+        store.kind = .rybelsus
+        store.displayWeight = 200
+        store.usesMetric = false
+        store.steps = [OnboardingStore.DraftStep(doseMg: 3, durationWeeks: 4)]
+
+        try store.complete(in: context)
+        // Re-run onboarding (e.g. user backs out and finishes again).
+        store.displayWeight = 190
+        try store.complete(in: context)
+
+        XCTAssertEqual(try context.fetch(FetchDescriptor<UserSettings>()).count, 1)
+        XCTAssertEqual(try context.fetch(FetchDescriptor<Medication>()).count, 1)
+        // Steps replaced wholesale, not duplicated.
+        XCTAssertEqual(try context.fetch(FetchDescriptor<TitrationStep>()).count, 1)
+    }
+
+    @MainActor
+    func testInvalidDoseLeavesNoOrphanMedication() throws {
+        let container = try makeContainer()
+        let context = container.mainContext
+        let store = OnboardingStore()
+        store.displayWeight = 200
+        store.usesMetric = false
+        store.steps = [OnboardingStore.DraftStep(doseMg: 800, durationWeeks: 4)]
+
+        XCTAssertThrowsError(try store.complete(in: context))
+        XCTAssertEqual(try context.fetch(FetchDescriptor<Medication>()).count, 0)
+        XCTAssertEqual(try context.fetch(FetchDescriptor<TitrationStep>()).count, 0)
+        XCTAssertTrue(try context.fetch(FetchDescriptor<UserSettings>()).isEmpty)
+    }
+
+    @MainActor
+    func testDeduplicateKeepsEarliestUserSettings() throws {
+        let container = try makeContainer()
+        let context = container.mainContext
+        let base = Date(timeIntervalSince1970: 1_700_000_000)
+        context.insert(UserSettings(startDate: base.addingTimeInterval(200)))
+        context.insert(UserSettings(startDate: base))
+        context.insert(UserSettings(startDate: base.addingTimeInterval(100)))
+        try context.save()
+
+        ModelMaintenance.deduplicate(in: context)
+
+        let remaining = try context.fetch(FetchDescriptor<UserSettings>())
+        XCTAssertEqual(remaining.count, 1)
+        XCTAssertEqual(remaining.first?.startDate, base)
+    }
+
     func testDoseValidationBounds() {
         XCTAssertTrue(UnitFormat.isValidDose(mg: 0.05))
         XCTAssertTrue(UnitFormat.isValidDose(mg: 36))
