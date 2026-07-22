@@ -16,8 +16,6 @@ struct IntakeCountersView: View {
     @State private var inputError: String?
 
     private static let mlPerOz = 29.5735
-    // Semantic blue adapts to light/dark so the water total stays legible on the near-black card.
-    private static let waterTint = Color(uiColor: .systemBlue)
 
     private var today: IntakeDay? {
         intakeDays.first { Calendar.current.isDateInToday($0.date) }
@@ -33,6 +31,10 @@ struct IntakeCountersView: View {
     /// Water step in ml: 50 metric, ~2 oz (59 ml) imperial.
     private var waterStep: Int { metric ? 50 : Int((2 * Self.mlPerOz).rounded()) }
 
+    private func waterDisplay(_ ml: Int) -> String {
+        metric ? "\(ml) ml" : "\(Int((Double(ml) / Self.mlPerOz).rounded())) oz"
+    }
+
     var body: some View {
         Card {
             SectionHeader(title: "Protein & water")
@@ -40,31 +42,11 @@ struct IntakeCountersView: View {
                 .font(.caption)
                 .foregroundStyle(.secondary)
 
-            counterRow(
-                isShaker: true,
-                tint: Theme.primary,
-                value: proteinValue,
-                target: proteinTarget,
-                step: 5,
-                display: { "\($0) g" },
-                unitName: "grams of protein",
-                onDelta: onProtein,
-                editing: $editingProtein
-            )
-
-            Divider()
-
-            counterRow(
-                isShaker: false,
-                tint: Self.waterTint,
-                value: waterValue,
-                target: waterTarget,
-                step: waterStep,
-                display: { metric ? "\($0) ml" : "\(Int((Double($0) / Self.mlPerOz).rounded())) oz" },
-                unitName: metric ? "milliliters of water" : "ounces of water",
-                onDelta: onWater,
-                editing: $editingWater
-            )
+            HStack(alignment: .top, spacing: 12) {
+                proteinColumn
+                waterColumn
+            }
+            .padding(.top, 4)
         }
         .sensoryFeedback(.impact(weight: .light), trigger: tapPulse)
         .alert("Set protein (grams)", isPresented: $editingProtein) {
@@ -120,93 +102,95 @@ struct IntakeCountersView: View {
 
     private static let invalidInputMessage = "Enter a number between 0 and 100000."
 
-    private func counterRow(
-        isShaker: Bool,
-        tint: Color,
-        value: Int,
-        target: Int,
-        step: Int,
-        display: (Int) -> String,
-        unitName: String,
-        onDelta: @escaping (Int) -> Void,
-        editing: Binding<Bool>
-    ) -> some View {
-        let targetHit = value >= target
-        let fraction = target > 0 ? Double(value) / Double(target) : 0
-        return HStack(alignment: .center, spacing: 14) {
-            IntakeVessel(fraction: fraction, tint: tint, isShaker: isShaker)
+    // MARK: - Protein (ring)
 
-            VStack(alignment: .leading, spacing: 6) {
-                // Current total is the tap target for exact entry.
-                HStack(spacing: 6) {
-                    if targetHit {
-                        Image(systemName: "checkmark.circle.fill").foregroundStyle(tint)
-                    }
-                    Button {
-                        editText = ""
-                        inputError = nil
-                        editing.wrappedValue = true
-                    } label: {
-                        Text(display(value))
-                            .font(.subheadline.weight(.bold))
-                            .monospacedDigit()
-                            .foregroundStyle(tint)
-                    }
-                    .buttonStyle(.plain)
-                    .accessibilityLabel("Current \(unitName): \(display(value)). Tap to type an exact value.")
-                    Text("/ \(display(target))")
-                        .font(.subheadline.weight(.semibold))
-                        .monospacedDigit()
-                        .foregroundStyle(.secondary)
-                    if targetHit {
-                        Text("Target hit")
-                            .font(.caption2.weight(.semibold))
-                            .foregroundStyle(tint)
-                    }
-                }
+    private var proteinColumn: some View {
+        let fraction = proteinTarget > 0 ? Double(proteinValue) / Double(proteinTarget) : 0
+        let hit = proteinValue >= proteinTarget
+        return VStack(spacing: 10) {
+            columnHeader(icon: "fork.knife", title: "Protein", tint: Theme.primary, hit: hit)
 
-                // Stepper: − [step size] +. The middle shows how much each tap changes.
-                HStack(spacing: 12) {
-                    Button {
-                        tapPulse.toggle()
-                        onDelta(-step)
-                    } label: {
-                        Image(systemName: "minus")
-                            .font(.headline)
-                            .frame(width: 36, height: 36)
-                    }
-                    .buttonStyle(.bordered)
-                    .tint(.secondary)
-                    .accessibilityLabel("Subtract \(display(step))")
-
-                    Text(display(step))
-                        .font(.title3.weight(.bold))
-                        .monospacedDigit()
-                        .frame(minWidth: 64)
-                        .foregroundStyle(.secondary)
-                        .accessibilityLabel("Step size \(display(step))")
-
-                    Button {
-                        tapPulse.toggle()
-                        onDelta(step)
-                    } label: {
-                        Image(systemName: "plus")
-                            .font(.headline)
-                            .frame(width: 36, height: 36)
-                    }
-                    .buttonStyle(.bordered)
-                    .tint(tint)
-                    .accessibilityLabel("Add \(display(step))")
-                }
-
-                Text("Tap the total above to enter an exact amount")
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
-
-                ProgressView(value: min(Double(value), Double(target)), total: Double(max(target, 1)))
-                    .tint(tint)
+            Button {
+                editText = ""
+                inputError = nil
+                editingProtein = true
+            } label: {
+                ProteinRingView(fraction: fraction, tint: Theme.primary,
+                                label: "\(proteinValue)/\(proteinTarget)g")
             }
+            .buttonStyle(.plain)
+            .accessibilityLabel("Protein \(proteinValue) of \(proteinTarget) grams. Tap to type an exact value.")
+
+            stepper(tint: Theme.primary, step: 5, stepLabel: "5 g",
+                    unit: "grams of protein", onDelta: onProtein)
         }
-        .padding(.vertical, 4)
+        .frame(maxWidth: .infinity)
+    }
+
+    // MARK: - Water (glass)
+
+    private var waterColumn: some View {
+        let fraction = waterTarget > 0 ? Double(waterValue) / Double(waterTarget) : 0
+        let hit = waterValue >= waterTarget
+        let stepLabel = metric ? "50 ml" : "8 oz"
+        return VStack(spacing: 10) {
+            columnHeader(icon: "drop.fill", title: "Water", tint: .blue, hit: hit)
+
+            Button {
+                editText = ""
+                inputError = nil
+                editingWater = true
+            } label: {
+                WaterGlassView(fraction: fraction, label: waterDisplay(waterValue))
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("Water \(waterDisplay(waterValue)) of \(waterDisplay(waterTarget)). Tap to type an exact value.")
+
+            Text("of \(waterDisplay(waterTarget))")
+                .font(.caption2).foregroundStyle(.secondary)
+
+            stepper(tint: .blue, step: waterStep, stepLabel: stepLabel,
+                    unit: metric ? "milliliters of water" : "ounces of water", onDelta: onWater)
+        }
+        .frame(maxWidth: .infinity)
+    }
+
+    // MARK: - Shared pieces
+
+    private func columnHeader(icon: String, title: String, tint: Color, hit: Bool) -> some View {
+        HStack(spacing: 5) {
+            Image(systemName: hit ? "checkmark.circle.fill" : icon)
+                .font(.subheadline).foregroundStyle(tint)
+            Text(title).font(.subheadline.weight(.semibold))
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private func stepper(tint: Color, step: Int, stepLabel: String, unit: String,
+                         onDelta: @escaping (Int) -> Void) -> some View {
+        HStack(spacing: 10) {
+            Button {
+                tapPulse.toggle()
+                onDelta(-step)
+            } label: {
+                Image(systemName: "minus").font(.headline).frame(width: 34, height: 34)
+            }
+            .buttonStyle(.bordered).tint(.secondary)
+            .accessibilityLabel("Subtract \(stepLabel)")
+
+            Text(stepLabel)
+                .font(.subheadline.weight(.bold)).monospacedDigit()
+                .frame(minWidth: 44).foregroundStyle(.secondary)
+                .accessibilityHidden(true)
+
+            Button {
+                tapPulse.toggle()
+                onDelta(step)
+            } label: {
+                Image(systemName: "plus").font(.headline).frame(width: 34, height: 34)
+            }
+            .buttonStyle(.bordered).tint(tint)
+            .accessibilityLabel("Add \(stepLabel)")
+        }
     }
 }
