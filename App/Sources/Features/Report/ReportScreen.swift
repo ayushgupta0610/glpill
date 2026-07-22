@@ -2,11 +2,13 @@ import SwiftUI
 import SwiftData
 
 struct ReportScreen: View {
+    @Environment(SubscriptionStore.self) private var subscriptions
+    @State private var showPaywall = false
     @Query private var medications: [Medication]
     @Query(sort: \DoseLog.date) private var doseLogs: [DoseLog]
     @Query(sort: \WeightEntry.date) private var weights: [WeightEntry]
     @Query(sort: \SideEffectLog.date) private var sideEffects: [SideEffectLog]
-    @Query private var settingsList: [UserSettings]
+    @Query(sort: \UserSettings.createdAt) private var settingsList: [UserSettings]
 
     private var calendar: Calendar { .current }
 
@@ -18,12 +20,27 @@ struct ReportScreen: View {
         return min(28, max(1, elapsed))
     }
 
+    /// Earliest day the plan could have data: the earlier of the user's start
+    /// date and their first logged dose. Floors the report's adherence + gap.
+    private var planStart: Date? {
+        let starts = [settingsList.first?.startDate, doseLogs.first?.date].compactMap { $0 }
+        return starts.min()
+    }
+
     private var windowStart: Date {
         calendar.date(byAdding: .day, value: -(windowDays - 1), to: calendar.startOfDay(for: .now))!
     }
 
+    /// Badge window floored to `planStart` (min of start date & first dose), exactly
+    /// as ReportComposer floors the copyable report — so the badge % and the shared
+    /// report % always agree for a backdated-dose user.
+    private var badgeStart: Date {
+        guard let planStart else { return windowStart }
+        return max(windowStart, calendar.startOfDay(for: planStart))
+    }
+
     private var adherencePercent: Int {
-        StreakCalculator.adherencePercent(doseDays: doseLogs.map(\.date), from: windowStart, to: .now, calendar: calendar)
+        StreakCalculator.adherencePercent(doseDays: doseLogs.map(\.date), from: badgeStart, to: .now, calendar: calendar)
     }
 
     private var sideEffectCount: Int {
@@ -48,7 +65,8 @@ struct ReportScreen: View {
                 weights: weights.map { ($0.date, $0.kilograms) },
                 sideEffects: sideEffects.map { ($0.date, $0.kind.label, $0.severity) },
                 metric: settingsList.first?.usesMetric ?? false,
-                today: .now
+                today: .now,
+                planStart: planStart
             ),
             calendar: calendar
         )
@@ -72,17 +90,38 @@ struct ReportScreen: View {
                         }
                     }
 
-                    ShareLink(item: reportText) {
-                        HStack(spacing: 8) {
-                            Text("Share with your doctor")
-                            Image(systemName: "square.and.arrow.up")
+                    if PremiumGate.shouldShowUpgrade(for: subscriptions.state) {
+                        Button {
+                            showPaywall = true
+                        } label: {
+                            HStack(spacing: 8) {
+                                Text("Export report")
+                                Image(systemName: "lock.fill").font(.footnote)
+                                Text("Premium")
+                                    .font(.caption2.weight(.semibold))
+                                    .padding(.horizontal, 8)
+                                    .padding(.vertical, 3)
+                                    .background(.white.opacity(0.2), in: Capsule())
+                            }
+                            .font(.headline)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 16)
                         }
-                        .font(.headline)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 16)
+                        .buttonStyle(.borderedProminent)
+                        .tint(Theme.primary)
+                    } else {
+                        ShareLink(item: reportText) {
+                            HStack(spacing: 8) {
+                                Text("Share with your doctor")
+                                Image(systemName: "square.and.arrow.up")
+                            }
+                            .font(.headline)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 16)
+                        }
+                        .buttonStyle(.borderedProminent)
+                        .tint(Theme.primary)
                     }
-                    .buttonStyle(.borderedProminent)
-                    .tint(Theme.primary)
 
                     Card {
                         SectionHeader(title: "Full report")
@@ -95,6 +134,7 @@ struct ReportScreen: View {
             }
             .background(Color(.systemGroupedBackground))
             .navigationTitle("Doctor report")
+            .sheet(isPresented: $showPaywall) { PaywallView() }
         }
     }
 }

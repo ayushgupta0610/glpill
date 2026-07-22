@@ -1,12 +1,15 @@
 import SwiftUI
+import SwiftData
 
 struct SideEffectSheet: View {
     var existing: SideEffectLog? = nil
     let onSave: (SideEffectKind, Int, String?) -> Void
     @Environment(\.dismiss) private var dismiss
+    @Query(sort: \UserSettings.createdAt) private var settingsList: [UserSettings]
     @State private var kind: SideEffectKind = .nausea
     @State private var severity = 1
     @State private var note = ""
+    @State private var isSaving = false
 
     private static let noteCharacterLimit = 280
 
@@ -14,7 +17,7 @@ struct SideEffectSheet: View {
         NavigationStack {
             Form {
                 Picker("Side effect", selection: $kind) {
-                    ForEach(SideEffectKind.allCases, id: \.self) { kind in
+                    ForEach(SideEffectOrder.ordered(concerns: settingsList.first?.sideEffectConcerns ?? []), id: \.self) { kind in
                         Text("\(kind.emoji) \(kind.label)").tag(kind)
                     }
                 }
@@ -36,9 +39,12 @@ struct SideEffectSheet: View {
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Save") {
+                        guard !isSaving else { return }
+                        isSaving = true
                         onSave(kind, severity, note.isEmpty ? nil : note)
                         dismiss()
                     }
+                    .disabled(isSaving)
                 }
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel", role: .cancel) { dismiss() }

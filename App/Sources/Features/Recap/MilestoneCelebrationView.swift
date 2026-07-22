@@ -8,7 +8,10 @@ import SwiftData
 struct MilestoneCelebrationView: View {
     let milestone: Int
     @Environment(\.dismiss) private var dismiss
-    @Query private var settingsList: [UserSettings]
+    @Environment(SubscriptionStore.self) private var subscriptions
+    @State private var showPaywall = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Query(sort: \UserSettings.createdAt) private var settingsList: [UserSettings]
     @State private var appeared = false
     @State private var displayedCount = 0
     @State private var statsShown = false
@@ -28,7 +31,20 @@ struct MilestoneCelebrationView: View {
                 .scaleEffect(appeared ? 1 : 0.8)
                 .opacity(appeared ? 1 : 0)
 
-            if let image = shareImage() {
+            if PremiumGate.shouldShowUpgrade(for: subscriptions.state) {
+                Button {
+                    showPaywall = true
+                } label: {
+                    Label("Share this win", systemImage: "lock.fill")
+                        .font(.headline)
+                        .padding(.horizontal, 28)
+                        .padding(.vertical, 14)
+                        .background(Theme.primary, in: Capsule())
+                        .foregroundStyle(.white)
+                }
+                .opacity(statsShown ? 1 : 0)
+                .offset(y: statsShown ? 0 : 12)
+            } else if let image = shareImage() {
                 ShareLink(
                     item: Image(uiImage: image),
                     preview: SharePreview("\(milestone)-day streak on GLPill", image: Image(uiImage: image))
@@ -56,14 +72,21 @@ struct MilestoneCelebrationView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color(.systemGroupedBackground))
         .overlay {
-            ConfettiView(
-                count: MilestoneTier.particleCount(for: milestone),
-                colors: [Theme.primary, Theme.mint, MilestoneTier.ringColor(for: milestone), .white]
-            )
+            if !reduceMotion {
+                ConfettiView(
+                    count: MilestoneTier.particleCount(for: milestone),
+                    colors: [Theme.primary, Theme.mint, MilestoneTier.ringColor(for: milestone), .white]
+                )
+            }
         }
+        .sheet(isPresented: $showPaywall) { PaywallView() }
         .sensoryFeedback(.success, trigger: celebrateHaptic)
         .onAppear {
-            withAnimation(.spring(response: 0.5, dampingFraction: 0.6)) { appeared = true }
+            if reduceMotion {
+                appeared = true
+            } else {
+                withAnimation(.spring(response: 0.5, dampingFraction: 0.6)) { appeared = true }
+            }
             celebrateHaptic.toggle()
         }
         .task { await runCountUp() }
@@ -98,6 +121,11 @@ struct MilestoneCelebrationView: View {
     /// Counts the number up to the milestone with a numeric content transition,
     /// then staggers in the surrounding stat lines.
     private func runCountUp() async {
+        guard !reduceMotion else {
+            displayedCount = milestone
+            statsShown = true
+            return
+        }
         let start = max(0, milestone - 10)
         displayedCount = start
         for value in stride(from: start, through: milestone, by: 1) {

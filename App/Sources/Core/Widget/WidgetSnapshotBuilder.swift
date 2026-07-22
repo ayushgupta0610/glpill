@@ -26,7 +26,8 @@ enum WidgetSnapshotBuilder {
     static func refresh(context: ModelContext, now: Date = .now, calendar: Calendar = .current) {
         let doseDays = ((try? context.fetch(FetchDescriptor<DoseLog>())) ?? []).map(\.date)
 
-        let medication = try? context.fetch(FetchDescriptor<Medication>()).first
+        let medication = ((try? context.fetch(FetchDescriptor<Medication>())) ?? [])
+            .sorted { $0.createdAt < $1.createdAt }.first
         let medShort = medication.map { med in
             med.displayName.components(separatedBy: " (").first ?? med.displayName
         } ?? "GLP-1 pill"
@@ -34,7 +35,7 @@ enum WidgetSnapshotBuilder {
         let steps = ((try? context.fetch(FetchDescriptor<TitrationStep>())) ?? [])
             .sorted { $0.order < $1.order }
             .map { (doseMg: $0.doseMg, durationWeeks: $0.durationWeeks) }
-        let planStart = (try? context.fetch(FetchDescriptor<UserSettings>()))?.first?.startDate ?? now
+        let planStart = UserSettings.canonical(in: context)?.startDate ?? now
         var doseMg = 0.0
         if let position = TitrationProgress.position(steps: steps, planStart: planStart, today: now, calendar: calendar),
            position.stepIndex < steps.count {

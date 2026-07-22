@@ -4,12 +4,15 @@ import Charts
 
 struct ProgressScreen: View {
     @Environment(\.modelContext) private var context
+    @Environment(SubscriptionStore.self) private var subscriptions
+    @State private var showPaywall = false
     @Query(sort: \WeightEntry.date) private var entries: [WeightEntry]
-    @Query private var settingsList: [UserSettings]
+    @Query(sort: \UserSettings.createdAt) private var settingsList: [UserSettings]
     @Query(sort: \DoseLog.date) private var doseLogs: [DoseLog]
     @State private var showEntrySheet = false
     @State private var showRecap = false
     @State private var editingEntry: WeightEntry?
+    @State private var errorMessage: String?
 
     private var metric: Bool { settingsList.first?.usesMetric ?? false }
 
@@ -52,6 +55,15 @@ struct ProgressScreen: View {
             }
             .sheet(isPresented: $showRecap) {
                 RecapView()
+            }
+            .sheet(isPresented: $showPaywall) { PaywallView() }
+            .alert("Couldn't delete weigh-in", isPresented: Binding(
+                get: { errorMessage != nil },
+                set: { if !$0 { errorMessage = nil } }
+            )) {
+                Button("OK", role: .cancel) { errorMessage = nil }
+            } message: {
+                Text(errorMessage ?? "")
             }
         }
     }
@@ -98,7 +110,14 @@ struct ProgressScreen: View {
 
     private func deleteEntry(_ entry: WeightEntry) {
         context.delete(entry)
-        try? context.save()
+        do {
+            try context.save()
+        } catch {
+            // Restore the in-memory deletion so the @Query-backed list doesn't
+            // diverge from disk (the row reappears rather than silently vanishing).
+            context.rollback()
+            errorMessage = "Your weigh-in couldn't be deleted. Please try again."
+        }
     }
 
     private var monthCard: some View {
@@ -166,7 +185,7 @@ struct ProgressScreen: View {
     private var toGoalString: String {
         guard let current = entries.last?.kilograms, let goal = settingsList.first?.goalKilograms else { return "—" }
         let remaining = WeightStats.toGoal(current: current, goal: goal)
-        guard remaining > 0 else { return "Goal reached 🎉" }
+        guard remaining > 0 else { return "Reached ✓" }
         let display = metric ? remaining : remaining / UnitFormat.kgPerLb
         return String(format: "%.1f %@", display, metric ? "kg" : "lb")
     }
@@ -238,7 +257,19 @@ struct ProgressScreen: View {
             Text("A clean card for your GLP-1 journey posts — no medication name on it.")
                 .font(.caption)
                 .foregroundStyle(.secondary)
-            if let image = renderShareImage() {
+            if PremiumGate.shouldShowUpgrade(for: subscriptions.state) {
+                Button {
+                    showPaywall = true
+                } label: {
+                    HStack(spacing: 8) {
+                        Label("Share progress card", systemImage: "square.and.arrow.up")
+                            .font(.subheadline.weight(.semibold))
+                        Text("Premium")
+                            .font(.caption2.weight(.semibold))
+                            .foregroundStyle(.secondary)
+                    }
+                }
+            } else if let image = renderShareImage() {
                 ShareLink(
                     item: Image(uiImage: image),
                     preview: SharePreview("My GLPill progress", image: Image(uiImage: image))

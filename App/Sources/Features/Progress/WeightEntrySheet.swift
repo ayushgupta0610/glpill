@@ -12,6 +12,7 @@ struct WeightEntrySheet: View {
     @State private var date = Date.now
     @State private var errorMessage: String?
     @State private var showOutlierAlert = false
+    @State private var isSaving = false
 
     var body: some View {
         NavigationStack {
@@ -97,14 +98,16 @@ struct WeightEntrySheet: View {
     }
 
     private func persist() {
-        guard let kilograms = enteredKilograms else { return }
+        guard !isSaving else { return }
+        isSaving = true
+        guard let kilograms = enteredKilograms else { isSaving = false; return }
         if let entry {
             entry.kilograms = kilograms
             entry.date = date
         } else {
             context.insert(WeightEntry(date: date, kilograms: kilograms))
         }
-        if let settings = try? context.fetch(FetchDescriptor<UserSettings>()).first {
+        if let settings = UserSettings.canonical(in: context) {
             settings.usesMetric = usesMetric
         }
         do {
@@ -112,6 +115,7 @@ struct WeightEntrySheet: View {
             dismiss()
         } catch {
             errorMessage = "Couldn't save — please try again."
+            isSaving = false
         }
     }
 }

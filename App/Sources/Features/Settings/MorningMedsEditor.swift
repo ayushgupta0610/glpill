@@ -2,7 +2,7 @@ import SwiftUI
 import SwiftData
 
 struct MorningMedsEditor: View {
-    @Query private var settingsList: [UserSettings]
+    @Query(sort: \UserSettings.createdAt) private var settingsList: [UserSettings]
     @State private var entry = ""
 
     var body: some View {

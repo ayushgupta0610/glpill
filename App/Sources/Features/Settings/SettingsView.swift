@@ -1,12 +1,14 @@
 import SwiftUI
 import SwiftData
+import UserNotifications
 
 struct SettingsView: View {
     @Environment(SubscriptionStore.self) private var subscriptions
-    @Query private var settingsList: [UserSettings]
+    @Query(sort: \UserSettings.createdAt) private var settingsList: [UserSettings]
     @State private var reminderTime = Date.now
     @State private var restoreMessage: String?
     @State private var showManageSubscription = false
+    @State private var notificationsDenied = false
 
     var body: some View {
         NavigationStack {
@@ -52,6 +54,44 @@ struct SettingsView: View {
                         )
                     }
 
+                    Section {
+                        Picker("Reminders", selection: $settings.reminderStyle) {
+                            Text("Pill + window clear").tag("full")
+                            Text("Pill only").tag("pillOnly")
+                            Text("Off").tag("none")
+                        }
+                        .onChange(of: settings.reminderStyle) {
+                            let style = settings.reminderStyle
+                            Task {
+                                let scheduler = UNNotificationScheduler()
+                                // Leaving "full" means no eat-again nudge — cancel any
+                                // in-flight "you can eat now" push mid-window.
+                                if style != "full" {
+                                    scheduler.removePending(ids: [ReminderScheduler.eatTimerId])
+                                }
+                                if style == "none" {
+                                    scheduler.removePending(ids: [ReminderScheduler.dailyId])
+                                } else if await scheduler.requestAuthorization() {
+                                    ReminderScheduler.scheduleDaily(
+                                        hour: settings.reminderHour,
+                                        minute: settings.reminderMinute,
+                                        using: scheduler
+                                    )
+                                }
+                            }
+                        }
+                    } header: {
+                        Text("Reminder style")
+                    } footer: {
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("“Pill only” drops the eat-again nudge after your empty-stomach window. “Off” turns off the daily pill reminder.")
+                            if notificationsDenied && settings.reminderStyle != "none" {
+                                Text("Notifications are turned off for GLPill, so reminders can't be delivered. Turn them on in iOS Settings.")
+                                    .foregroundStyle(Theme.warn)
+                            }
+                        }
+                    }
+
                     Section("Daily reminder") {
                         DatePicker("Remind me at", selection: $reminderTime, displayedComponents: .hourAndMinute)
                             .onChange(of: reminderTime) {
@@ -60,6 +100,12 @@ struct SettingsView: View {
                                 settings.reminderMinute = components.minute ?? 0
                                 Task {
                                     let scheduler = UNNotificationScheduler()
+                                    // Don't resurrect a disabled ("Off") daily reminder just
+                                    // because the user nudged the time picker.
+                                    guard settings.reminderStyle != "none" else {
+                                        scheduler.removePending(ids: [ReminderScheduler.dailyId])
+                                        return
+                                    }
                                     if await scheduler.requestAuthorization() {
                                         ReminderScheduler.scheduleDaily(
                                             hour: settings.reminderHour,
@@ -102,6 +148,9 @@ struct SettingsView: View {
             }
             .navigationTitle("Settings")
             .manageSubscriptionsSheet(isPresented: $showManageSubscription)
+            .task {
+                notificationsDenied = await UNNotificationScheduler().authorizationStatus() == .denied
+            }
             .onAppear {
                 if let settings = settingsList.first {
                     reminderTime = Calendar.current.date(

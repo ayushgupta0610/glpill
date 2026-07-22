@@ -4,11 +4,21 @@ import Charts
 struct MedLevelPreviewCard: View {
     let points: [MedicationLevel.Point]
     var projection: [MedicationLevel.Point] = []
+    var kind: MedicationKind = .custom
+    var firstDose: Date?
 
     private var hasEnoughData: Bool { MedicationLevel.hasEnoughData(points: points) }
 
+    private var isNearSteadyState: Bool {
+        guard let firstDose else { return false }
+        return MedicationLevel.isNearSteadyState(
+            firstDose: firstDose, now: .now,
+            halfLifeHours: MedicationLevel.halfLifeHours(for: kind)
+        )
+    }
+
     var body: some View {
-        NavigationLink { MedicationLevelView(points: points, projection: projection) } label: {
+        NavigationLink { MedicationLevelView(points: points, projection: projection, kind: kind, firstDose: firstDose) } label: {
             Card {
                 HStack {
                     SectionHeader(title: "Medication level")
@@ -21,7 +31,7 @@ struct MedLevelPreviewCard: View {
                             .foregroundStyle(Theme.primary)
                     }
                     .chartXAxis(.hidden).chartYAxis(.hidden).frame(height: 48)
-                    Text("Steady daily levels — no peak-and-crash")
+                    Text(isNearSteadyState ? "Steady daily levels — no peak-and-crash" : "Still climbing toward steady state")
                         .font(.caption2).foregroundStyle(.secondary)
                 } else if !projection.isEmpty {
                     Chart {

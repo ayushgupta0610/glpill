@@ -1,12 +1,17 @@
 import SwiftUI
 import SwiftData
+import UserNotifications
+#if canImport(UIKit)
+import UIKit
+#endif
 
 struct TodayView: View {
     @Environment(\.modelContext) private var context
     @Query(sort: \DoseLog.date) private var doseLogs: [DoseLog]
-    @Query private var medications: [Medication]
+    @Query(sort: \Medication.createdAt) private var medications: [Medication]
     @Query(sort: \TitrationStep.order) private var titrationSteps: [TitrationStep]
-    @Query private var settingsList: [UserSettings]
+    @Query(sort: \WeightEntry.date, order: .reverse) private var weightEntries: [WeightEntry]
+    @Query(sort: \UserSettings.createdAt) private var settingsList: [UserSettings]
     @AppStorage("eatTimerEnd") private var eatTimerEnd: Double = 0
     private enum ActiveSheet: Int, Identifiable { case log, weight, sideEffect; var id: Int { rawValue } }
     @State private var activeSheet: ActiveSheet?
@@ -14,6 +19,8 @@ struct TodayView: View {
     @State private var doseJustLogged = false
     @State private var celebratingMilestone: Int?
     @State private var undo: UndoAction?
+    @State private var notificationsDenied = false
+    @State private var notifBannerDismissed = false
 
     private struct UndoAction: Equatable {
         let id = UUID()
@@ -41,24 +48,29 @@ struct TodayView: View {
                         .font(.subheadline.weight(.medium))
                         .foregroundStyle(.secondary)
                         .frame(maxWidth: .infinity, alignment: .leading)
+                    if showNotifDeniedBanner {
+                        notifDeniedBanner
+                    }
                     ritualCard
+                    if !(settingsList.first?.coachingDismissed ?? false),
+                       let coaching = StageCoaching.message(
+                           stage: settingsList.first?.onboardingStage,
+                           requiresEmptyStomach: medications.first?.requiresEmptyStomach ?? false
+                       ) {
+                        StageCoachingCard(message: coaching, onDismiss: dismissCoaching)
+                    }
                     if medications.first?.requiresEmptyStomach == true || !(settingsList.first?.morningMeds ?? []).isEmpty {
                         MorningSequenceCard(steps: morningSequence)
                     }
-                    MedLevelPreviewCard(points: medLevelPoints, projection: medLevelProjection)
-                    streakCard
-                    IntakeCountersView(
-                        onProtein: { grams in withErrorHandling { try store.addProtein(grams) } },
-                        onWater: { ml in withErrorHandling { try store.addWater(ml) } },
-                        onSetProtein: { grams in withErrorHandling { try store.setProtein(grams: grams) } },
-                        onSetWater: { ml in withErrorHandling { try store.setWater(ml: ml) } }
-                    )
-                    sideEffectCard
+                    ForEach(TodayLayout.sections(goals: settingsList.first?.goals ?? []), id: \.self) { section in
+                        sectionView(section)
+                    }
                     Color.clear.frame(height: 76)
                 }
                 .padding()
             }
             .background(Color(.systemGroupedBackground))
+            .task { await refreshNotificationStatus() }
             .overlay(alignment: .bottomTrailing) {
                 Button { activeSheet = .log } label: {
                     Image(systemName: "plus")
@@ -116,20 +128,68 @@ struct TodayView: View {
         }
     }
 
+    @ViewBuilder
+    private func sectionView(_ section: TodaySection) -> some View {
+        switch section {
+        case .weightShortcut:
+            WeightShortcutCard(
+                latestKilograms: weightEntries.first?.kilograms,
+                metric: settingsList.first?.usesMetric ?? false
+            )
+        case .reportShortcut:
+            ReportShortcutCard()
+        case .sideEffects:
+            sideEffectCard
+        case .medLevel:
+            MedLevelPreviewCard(points: medLevelPoints, projection: medLevelProjection, kind: medications.first?.kind ?? .custom, firstDose: firstDoseDate)
+        case .streak:
+            streakCard
+        case .intake:
+            IntakeCountersView(
+                onProtein: { grams in withErrorHandling { try store.addProtein(grams) } },
+                onWater: { ml in withErrorHandling { try store.addWater(ml) } },
+                onSetProtein: { grams in withErrorHandling { try store.setProtein(grams: grams) } },
+                onSetWater: { ml in withErrorHandling { try store.setWater(ml: ml) } }
+            )
+        }
+    }
+
+    /// Earliest real dose, used to judge whether the estimated level is near
+    /// steady state (the 3-half-lives threshold in MedicationLevelView).
+    private var firstDoseDate: Date? {
+        doseLogs.filter { $0.doseMg > 0 }.map(\.takenAt).min()
+    }
+
     private var medLevelPoints: [MedicationLevel.Point] {
-        let doses = doseLogs.map { (date: $0.takenAt, mg: $0.doseMg) }
         let kind = medications.first?.kind ?? .custom
-        return MedicationLevel.curve(doses: doses, halfLifeHours: MedicationLevel.halfLifeHours(for: kind), samples: 40, now: .now)
+        let halfLife = MedicationLevel.halfLifeHours(for: kind)
+        // Only feed doses from the last ~5 half-lives; older doses have decayed to
+        // near-zero and would otherwise stretch the fixed 40 samples too thin for a
+        // user whose first dose is very old, making the recent curve inaccurate.
+        let lookbackStart = Date.now.addingTimeInterval(-5 * halfLife * 3600)
+        let doses = doseLogs
+            .filter { $0.doseMg > 0 && $0.takenAt >= lookbackStart }
+            .map { (date: $0.takenAt, mg: $0.doseMg) }
+        return MedicationLevel.curve(doses: doses, halfLifeHours: halfLife, samples: 40, now: .now)
     }
 
     private var medLevelProjection: [MedicationLevel.Point] {
         let kind = medications.first?.kind ?? .custom
-        let dose = doseLogs.last?.doseMg ?? 0
-        return MedicationLevel.projection(dailyDoseMg: dose, halfLifeHours: MedicationLevel.halfLifeHours(for: kind), days: 7, samples: 40, startingFrom: doseLogs.first?.takenAt ?? .now)
+        let dose = store.currentDoseMg()
+        return MedicationLevel.projection(dailyDoseMg: dose, halfLifeHours: MedicationLevel.halfLifeHours(for: kind), days: 7, samples: 40, startingFrom: .now)
+    }
+
+    /// Eat-timer end as a Date, but only while the window belongs to today.
+    /// A stale `eatTimerEnd` from a prior day (not cleared until relaunch) would
+    /// otherwise render "After 8:14 AM" for a long-closed window.
+    private var activeWindowEnd: Date? {
+        guard eatTimerEnd > 0 else { return nil }
+        let end = Date(timeIntervalSince1970: eatTimerEnd)
+        return calendar.isDateInToday(end) ? end : nil
     }
 
     private var morningSequence: [MorningSequence.Step] {
-        let clear = eatTimerEnd > 0 ? Date(timeIntervalSince1970: eatTimerEnd) : nil
+        let clear = activeWindowEnd
         return MorningSequence.make(
             pillTaken: todayLog != nil,
             pillName: medications.first?.displayName ?? "Your GLP-1 pill",
@@ -143,7 +203,7 @@ struct TodayView: View {
         RitualState.make(
             todayLogged: todayLog != nil,
             requiresEmptyStomach: medications.first?.requiresEmptyStomach ?? false,
-            windowEnd: eatTimerEnd > 0 ? Date(timeIntervalSince1970: eatTimerEnd) : nil,
+            windowEnd: activeWindowEnd,
             meds: settingsList.first?.morningMeds ?? [],
             now: .now
         )
@@ -265,6 +325,50 @@ struct TodayView: View {
         DispatchQueue.main.async { activeSheet = next }
     }
 
+    /// Show the "reminders are off" banner only when the user expects reminders,
+    /// the system has denied notification permission, and they haven't dismissed it.
+    private var showNotifDeniedBanner: Bool {
+        notificationsDenied
+            && (settingsList.first?.reminderStyle ?? "full") != "none"
+            && !notifBannerDismissed
+    }
+
+    private var notifDeniedBanner: some View {
+        Card {
+            HStack(alignment: .top, spacing: 12) {
+                Image(systemName: "bell.slash.fill")
+                    .foregroundStyle(Theme.warn)
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Reminders are off. Turn on notifications in Settings to get your daily nudge.")
+                        .font(.subheadline)
+                    Button("Open Settings") { openSystemSettings() }
+                        .font(.subheadline.weight(.semibold))
+                }
+                Spacer()
+                Button {
+                    notifBannerDismissed = true
+                } label: {
+                    Image(systemName: "xmark")
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(.secondary)
+                }
+                .accessibilityLabel("Dismiss")
+            }
+        }
+    }
+
+    private func refreshNotificationStatus() async {
+        notificationsDenied = await UNNotificationScheduler().authorizationStatus() == .denied
+    }
+
+    private func openSystemSettings() {
+        #if canImport(UIKit)
+        if let url = URL(string: UIApplication.openSettingsURLString) {
+            UIApplication.shared.open(url)
+        }
+        #endif
+    }
+
     private func takePill() {
         let wasAlreadyLogged = todayLog != nil
         withErrorHandling {
@@ -273,10 +377,12 @@ struct TodayView: View {
             if startTimer {
                 let minutes = settingsList.first?.waitWindowMinutes ?? 30
                 eatTimerEnd = Date().addingTimeInterval(Double(minutes) * 60).timeIntervalSince1970
-                ReminderScheduler.scheduleEatTimer(
-                    using: UNNotificationScheduler(),
-                    meds: settingsList.first?.morningMeds ?? []
-                )
+                if (settingsList.first?.reminderStyle ?? "full") == "full" {
+                    ReminderScheduler.scheduleEatTimer(
+                        using: UNNotificationScheduler(),
+                        waitWindowMinutes: settingsList.first?.waitWindowMinutes ?? 30
+                    )
+                }
             }
         }
         if !wasAlreadyLogged { celebrateMilestoneIfReached() }
@@ -292,9 +398,19 @@ struct TodayView: View {
         guard let settings = settingsList.first,
               let milestone = StreakMilestone.newlyReached(streak: newStreak, lastCelebrated: settings.lastCelebratedMilestone)
         else { return }
+        let previous = settings.lastCelebratedMilestone
         settings.lastCelebratedMilestone = milestone
-        try? context.save()
-        celebratingMilestone = milestone
+        do {
+            try context.save()
+            // Present on the NEXT runloop so a same-tick `activeSheet = nil`
+            // (Log-sheet dismiss) can't swallow this present-while-dismiss.
+            DispatchQueue.main.async { celebratingMilestone = milestone }
+        } catch {
+            // Revert the bump so the milestone can re-fire next time rather than
+            // being silently consumed (never celebrated, never re-fires).
+            settings.lastCelebratedMilestone = previous
+            errorMessage = "Your change couldn't be saved. Please try again."
+        }
     }
 
     /// Undoes today's dose log — only meaningful same-day. Clears the eat timer,
@@ -305,6 +421,17 @@ struct TodayView: View {
             try store.deleteDose(todayLog)
             eatTimerEnd = 0
             UNNotificationScheduler().removePending(ids: [ReminderScheduler.eatTimerId])
+        }
+    }
+
+    private func dismissCoaching() {
+        guard let settings = settingsList.first else { return }
+        settings.coachingDismissed = true
+        do {
+            try context.save()
+        } catch {
+            settings.coachingDismissed = false
+            errorMessage = "Your change couldn't be saved. Please try again."
         }
     }
 

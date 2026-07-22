@@ -1,15 +1,36 @@
 import XCTest
 @testable import GLPill
 
+private extension EntitlementState {
+    var asCheck: EntitlementCheck {
+        switch self {
+        case .active: return .active
+        case .locked: return .none
+        case .unknown: return .inconclusive
+        }
+    }
+}
+
 private struct MockProvider: EntitlementProviding {
     let state: EntitlementState
     func currentState() async -> EntitlementState { state }
+    func directCheck() async -> EntitlementCheck { state.asCheck }
 }
 
 private final class MutableProvider: EntitlementProviding, @unchecked Sendable {
     var current: EntitlementState
     init(_ current: EntitlementState) { self.current = current }
     func currentState() async -> EntitlementState { current }
+    func directCheck() async -> EntitlementCheck { current.asCheck }
+}
+
+/// Restore-path provider: the timeout-raced `currentState()` fails closed to
+/// `.locked` (cold connection), but the direct check reports the truth.
+private struct RestoreProvider: EntitlementProviding {
+    let raced: EntitlementState
+    let direct: EntitlementCheck
+    func currentState() async -> EntitlementState { raced }
+    func directCheck() async -> EntitlementCheck { direct }
 }
 
 /// Simulates a stalled entitlement lookup (cold storekitd, no network) that
@@ -19,6 +40,7 @@ private struct NeverResolvingProvider: EntitlementProviding {
         try? await Task.sleep(for: .seconds(3600))
         return .active
     }
+    func directCheck() async -> EntitlementCheck { .inconclusive }
 }
 
 /// Simulates a provider that ignores cancellation entirely — ie. a real hang,
@@ -38,6 +60,7 @@ private struct NonCancellableStallProvider: EntitlementProviding {
         }
         return .active
     }
+    func directCheck() async -> EntitlementCheck { .inconclusive }
 }
 
 final class SubscriptionGateTests: XCTestCase {
@@ -143,5 +166,38 @@ final class SubscriptionGateTests: XCTestCase {
         XCTAssertEqual(store.state, .locked)
         XCTAssertFalse(store.isUnlocked)
         XCTAssertLessThan(elapsed, .seconds(2), "refresh() must return promptly even when the provider ignores cancellation")
+    }
+
+    // CRITICAL (D2): a real subscriber on a cold connection where the raced
+    // lookup fails closed to .locked must still be unlocked by restore()'s
+    // DIRECT entitlement check — no false "no subscription found".
+    @MainActor
+    func testRestoreUnlocksWhenDirectCheckFindsActiveDespiteRacedTimeout() async {
+        let store = SubscriptionStore(
+            provider: RestoreProvider(raced: .locked, direct: .active),
+            refreshTimeout: .milliseconds(50),
+            syncAppStore: {}
+        )
+        await store.restore()
+        XCTAssertTrue(store.isUnlocked)
+        XCTAssertNil(store.lastError)
+    }
+
+    // Only report "none found" when the direct check DEFINITIVELY finds nothing.
+    @MainActor
+    func testRestoreReportsNoneWhenDirectCheckDefinitivelyEmpty() async {
+        let store = SubscriptionStore(provider: RestoreProvider(raced: .locked, direct: .none), syncAppStore: {})
+        await store.restore()
+        XCTAssertFalse(store.isUnlocked)
+        XCTAssertEqual(store.lastError, "No active subscription found to restore.")
+    }
+
+    // An inconclusive direct check must NOT claim "none found" — distinct message.
+    @MainActor
+    func testRestoreReportsInconclusiveDistinctlyWhenDirectCheckCantComplete() async {
+        let store = SubscriptionStore(provider: RestoreProvider(raced: .locked, direct: .inconclusive), syncAppStore: {})
+        await store.restore()
+        XCTAssertFalse(store.isUnlocked)
+        XCTAssertEqual(store.lastError, "Couldn't confirm your subscription — check your connection and try again.")
     }
 }

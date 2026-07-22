@@ -10,9 +10,10 @@ struct PlanRevealStep: View {
         return d.formatted(date: .omitted, time: .shortened)
     }
     var body: some View {
-        VStack(alignment: .leading, spacing: 18) {
-            Spacer()
-            VStack(alignment: .leading, spacing: 12) {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 18) {
+                Spacer(minLength: 24)
+                VStack(alignment: .leading, spacing: 12) {
                 Text("YOUR DAILY PLAN").font(.caption.weight(.bold)).foregroundStyle(.white.opacity(0.85))
                 Text("You're set 🌱").font(.largeTitle.bold()).foregroundStyle(.white)
                 VStack(alignment: .leading, spacing: 6) {
@@ -31,10 +32,16 @@ struct PlanRevealStep: View {
             }
             .padding().frame(maxWidth: .infinity, alignment: .leading)
             .background(Theme.heroGradient, in: RoundedRectangle(cornerRadius: 24))
-            Text("Free to use. No card needed.").font(.caption).foregroundStyle(.secondary)
-            Spacer()
-            PillCTAButton(title: "Start day 1", systemImage: "checkmark") { finish() }.padding(.bottom, 24)
+                Text("Free to use. No card needed.").font(.caption).foregroundStyle(.secondary)
+                Spacer(minLength: 24)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal)
         }
-        .padding(.horizontal).background(Color(.systemGroupedBackground))
+        .background(Color(.systemGroupedBackground))
+        .safeAreaInset(edge: .bottom) {
+            PillCTAButton(title: "Start day 1", systemImage: "checkmark") { finish() }
+                .padding(.horizontal).padding(.bottom, 24)
+        }
     }
 }

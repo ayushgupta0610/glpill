@@ -15,13 +15,6 @@ struct LogSheet: View {
                 row("drop.fill", "Water · +1 cup", onWater)
                 row("fork.knife", "Protein · +25 g", onProtein)
                 row("bandage.fill", "Side effects", onSideEffect)
-                HStack {
-                    Label("Progress photo", systemImage: "camera.fill")
-                    Spacer()
-                    Text("Premium").font(.caption2.weight(.semibold)).foregroundStyle(.secondary)
-                }
-                .contentShape(Rectangle())
-                .premiumAction { /* TODO(premium-photos): wire progress-photo capture when the premium photo feature ships */ }
             }
             .navigationTitle("Log for today")
             .navigationBarTitleDisplayMode(.inline)

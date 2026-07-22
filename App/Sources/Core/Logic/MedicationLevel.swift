@@ -16,8 +16,30 @@ enum MedicationLevel {
         }
     }
 
+    /// Human phrase for "time to steady state" ≈ 5 half-lives, derived from the
+    /// drug's half-life so we never imply the wrong plateau timeline (e.g. the
+    /// hard-coded "about a week" was ~4× too fast for semaglutide).
+    static func timeToSteadyStateText(for kind: MedicationKind) -> String {
+        let days = 5 * halfLifeHours(for: kind) / 24
+        switch days {
+        case ..<10: return "about a week"        // orforglipron ~8 days
+        case ..<25: return "about 3 weeks"       // custom ~20 days
+        default: return "about 4–5 weeks"        // semaglutide ~35 days
+        }
+    }
+
+    /// True once enough time has passed that the estimated level is genuinely near
+    /// plateau (≥ 3 half-lives ≈ 87% of steady state). Guards the "steady daily
+    /// levels" caption from showing while the level is still clearly climbing.
+    static func isNearSteadyState(firstDose: Date, now: Date, halfLifeHours: Double) -> Bool {
+        now.timeIntervalSince(firstDose) >= 3 * halfLifeHours * 3600
+    }
+
     /// Samples the accumulated level from the first dose to `now`.
-    static func curve(doses: [(date: Date, mg: Double)], halfLifeHours: Double, samples: Int, now: Date) -> [Point] {
+    static func curve(doses rawDoses: [(date: Date, mg: Double)], halfLifeHours: Double, samples: Int, now: Date) -> [Point] {
+        // Drop "unknown" (0 mg) doses so an unset plan renders as no reading
+        // rather than a fabricated flat-zero "steady daily levels" line.
+        let doses = rawDoses.filter { $0.mg > 0 }
         guard let first = doses.map(\.date).min(), samples > 1, halfLifeHours > 0 else { return [] }
         let span = now.timeIntervalSince(first)
         guard span > 0 else { return [] }
@@ -35,6 +57,8 @@ enum MedicationLevel {
     /// True once the curve is worth showing as a real reading: ≥3 points spanning ≥2 days.
     static func hasEnoughData(points: [Point]) -> Bool {
         guard points.count >= 3, let first = points.first?.date, let last = points.last?.date else { return false }
+        // An all-zero series (e.g. unknown-dose input) is not a real reading.
+        guard (points.map(\.level).max() ?? 0) > 0 else { return false }
         return last.timeIntervalSince(first) >= 2 * 86_400
     }
 

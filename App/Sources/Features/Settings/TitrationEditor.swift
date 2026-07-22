@@ -21,7 +21,6 @@ struct TitrationEditor: View {
                             get: { step.durationWeeks },
                             set: { step.durationWeeks = $0 }
                         ), in: 1...52)
-                            .fixedSize()
                     }
                 }
                 .onDelete(perform: deleteSteps)

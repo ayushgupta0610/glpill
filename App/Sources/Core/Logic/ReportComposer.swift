@@ -9,19 +9,30 @@ struct ReportInput {
     let sideEffects: [(Date, String, Int)]
     let metric: Bool
     let today: Date
+    /// Earliest day the user could have dosed (min of settings.startDate and
+    /// first dose). The adherence denominator and gap scan are floored to this
+    /// so a 3-day-old user reads "3 of 3 days", not "10% of 30".
+    let planStart: Date?
 }
 
 enum ReportComposer {
     static func compose(_ input: ReportInput, calendar: Calendar) -> String {
         let end = calendar.startOfDay(for: input.today)
-        let start = calendar.date(byAdding: .day, value: -(input.windowDays - 1), to: end)!
+        let windowStart = calendar.date(byAdding: .day, value: -(input.windowDays - 1), to: end)!
+        // Floor the window to the day the user actually started, so a brand-new
+        // user isn't scored against days before their plan existed.
+        let start: Date = {
+            guard let planStart = input.planStart else { return windowStart }
+            return max(windowStart, calendar.startOfDay(for: planStart))
+        }()
+        let effectiveDays = (calendar.dateComponents([.day], from: start, to: end).day ?? 0) + 1
 
         var lines: [String] = []
         lines.append("GLPill — Doctor Visit Summary")
         lines.append("Medication: \(input.medName)")
-        lines.append("Window: last \(input.windowDays) days (ending \(dateString(end)))")
+        lines.append("Window: last \(effectiveDays) days (ending \(dateString(end)))")
         lines.append("")
-        lines.append(adherenceLine(input, start: start, end: end, calendar: calendar))
+        lines.append(adherenceLine(input, start: start, end: end, windowDays: effectiveDays, calendar: calendar))
         lines.append(gapLine(input, start: start, end: end, calendar: calendar))
         lines.append(dosesLine(input, start: start, end: end, calendar: calendar))
         lines.append(weightLine(input, start: start, end: end, calendar: calendar))
@@ -33,12 +44,12 @@ enum ReportComposer {
         return lines.joined(separator: "\n")
     }
 
-    private static func adherenceLine(_ input: ReportInput, start: Date, end: Date, calendar: Calendar) -> String {
+    private static func adherenceLine(_ input: ReportInput, start: Date, end: Date, windowDays: Int, calendar: Calendar) -> String {
         let percent = StreakCalculator.adherencePercent(doseDays: input.doseDays, from: start, to: end, calendar: calendar)
         let dosedDays = Set(input.doseDays.map { calendar.startOfDay(for: $0) })
             .filter { $0 >= start && $0 <= end }
             .count
-        return "Adherence: \(percent)% (\(dosedDays) of \(input.windowDays) days)"
+        return "Adherence: \(percent)% (\(dosedDays) of \(windowDays) days)"
     }
 
     private static func gapLine(_ input: ReportInput, start: Date, end: Date, calendar: Calendar) -> String {
@@ -52,9 +63,10 @@ enum ReportComposer {
             .map(\.1)
             .filter { $0 > 0 } // drop "unknown" (0 mg) doses so an unset plan isn't reported as "0 mg"
         let unique = Array(Set(doseValues)).sorted()
-        guard !unique.isEmpty else { return "Doses taken: not recorded" }
-        let formatted = unique.map { String(format: "%g mg", $0) }.joined(separator: " → ")
-        return "Doses taken: \(formatted)"
+        guard !unique.isEmpty else { return "Doses recorded: not recorded" }
+        // Non-directional: a de-escalation (14→7) must not read as an escalation.
+        let formatted = unique.map { String(format: "%g mg", $0) }.joined(separator: ", ")
+        return "Doses recorded: \(formatted)"
     }
 
     private static func weightLine(_ input: ReportInput, start: Date, end: Date, calendar: Calendar) -> String {
@@ -89,7 +101,16 @@ enum ReportComposer {
             .map { "- \($0.key): \($0.value.count)x (max severity \($0.value.maxSeverity)/3)" }
     }
 
+    /// Fixed en_US_POSIX so the whole clinician report stays consistent ASCII
+    /// (no localized/Devanagari numerals mixed with ASCII numbers elsewhere).
+    private static let dateFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.dateFormat = "MMM d, yyyy"
+        return formatter
+    }()
+
     private static func dateString(_ date: Date) -> String {
-        date.formatted(date: .abbreviated, time: .omitted)
+        dateFormatter.string(from: date)
     }
 }

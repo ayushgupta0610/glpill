@@ -15,7 +15,8 @@ final class ReportComposerTests: XCTestCase {
     private func makeInput(
         doseDays: [Date],
         weights: [(Date, Double)] = [],
-        sideEffects: [(Date, String, Int)] = []
+        sideEffects: [(Date, String, Int)] = [],
+        planStart: Date? = nil
     ) -> ReportInput {
         ReportInput(
             medName: "Foundayo (orforglipron)",
@@ -25,7 +26,8 @@ final class ReportComposerTests: XCTestCase {
             weights: weights,
             sideEffects: sideEffects,
             metric: true,
-            today: today
+            today: today,
+            planStart: planStart
         )
     }
 
@@ -48,6 +50,19 @@ final class ReportComposerTests: XCTestCase {
         // Every day in the 28-day window is dosed.
         let doseDays = (0...27).map { day(-$0) }
         let report = ReportComposer.compose(makeInput(doseDays: doseDays), calendar: calendar)
+        XCTAssertTrue(report.contains("Longest gap: none"), report)
+    }
+
+    func testAdherenceFlooredToPlanStart() {
+        // User started 3 days ago (planStart = day(-2)) and dosed every day since.
+        // The 28-day window must be floored to the 3 elapsed days → 100% (3 of 3),
+        // and no fabricated longest gap.
+        let doseDays = [day(-2), day(-1), day(0)]
+        let report = ReportComposer.compose(
+            makeInput(doseDays: doseDays, planStart: day(-2)),
+            calendar: calendar
+        )
+        XCTAssertTrue(report.contains("Adherence: 100% (3 of 3 days)"), report)
         XCTAssertTrue(report.contains("Longest gap: none"), report)
     }
 
