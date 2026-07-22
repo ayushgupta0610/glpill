@@ -42,9 +42,29 @@ struct IntakeCountersView: View {
                 .font(.caption)
                 .foregroundStyle(.secondary)
 
-            HStack(alignment: .top, spacing: 12) {
-                proteinColumn
-                waterColumn
+            // Grid so labels, visuals, targets, and steppers line up row-by-row
+            // across both columns.
+            Grid(horizontalSpacing: 12, verticalSpacing: 8) {
+                GridRow {
+                    columnHeader(icon: "fork.knife", title: "Protein", tint: Theme.primary,
+                                 hit: proteinValue >= proteinTarget)
+                    columnHeader(icon: "drop.fill", title: "Water", tint: .blue,
+                                 hit: waterValue >= waterTarget)
+                }
+                GridRow {
+                    proteinRing
+                    waterGlass
+                }
+                GridRow {
+                    targetCaption("of \(proteinTarget) g")
+                    targetCaption("of \(waterDisplay(waterTarget))")
+                }
+                GridRow {
+                    stepper(tint: Theme.primary, step: 5, stepLabel: "5 g",
+                            unit: "grams of protein", onDelta: onProtein)
+                    stepper(tint: .blue, step: waterStep, stepLabel: metric ? "50 ml" : "8 oz",
+                            unit: metric ? "milliliters of water" : "ounces of water", onDelta: onWater)
+                }
             }
             .padding(.top, 4)
         }
@@ -102,57 +122,40 @@ struct IntakeCountersView: View {
 
     private static let invalidInputMessage = "Enter a number between 0 and 100000."
 
-    // MARK: - Protein (ring)
+    // MARK: - Grid cells
 
-    private var proteinColumn: some View {
+    private var proteinRing: some View {
         let fraction = proteinTarget > 0 ? Double(proteinValue) / Double(proteinTarget) : 0
-        let hit = proteinValue >= proteinTarget
-        return VStack(spacing: 10) {
-            columnHeader(icon: "fork.knife", title: "Protein", tint: Theme.primary, hit: hit)
-
-            Button {
-                editText = ""
-                inputError = nil
-                editingProtein = true
-            } label: {
-                ProteinRingView(fraction: fraction, tint: Theme.primary,
-                                label: "\(proteinValue)/\(proteinTarget)g")
-            }
-            .buttonStyle(.plain)
-            .accessibilityLabel("Protein \(proteinValue) of \(proteinTarget) grams. Tap to type an exact value.")
-
-            stepper(tint: Theme.primary, step: 5, stepLabel: "5 g",
-                    unit: "grams of protein", onDelta: onProtein)
+        return Button {
+            editText = ""
+            inputError = nil
+            editingProtein = true
+        } label: {
+            ProteinRingView(fraction: fraction, tint: Theme.primary, label: "\(proteinValue) g")
         }
+        .buttonStyle(.plain)
         .frame(maxWidth: .infinity)
+        .accessibilityLabel("Protein \(proteinValue) of \(proteinTarget) grams. Tap to type an exact value.")
     }
 
-    // MARK: - Water (glass)
-
-    private var waterColumn: some View {
+    private var waterGlass: some View {
         let fraction = waterTarget > 0 ? Double(waterValue) / Double(waterTarget) : 0
-        let hit = waterValue >= waterTarget
-        let stepLabel = metric ? "50 ml" : "8 oz"
-        return VStack(spacing: 10) {
-            columnHeader(icon: "drop.fill", title: "Water", tint: .blue, hit: hit)
-
-            Button {
-                editText = ""
-                inputError = nil
-                editingWater = true
-            } label: {
-                WaterGlassView(fraction: fraction, label: waterDisplay(waterValue))
-            }
-            .buttonStyle(.plain)
-            .accessibilityLabel("Water \(waterDisplay(waterValue)) of \(waterDisplay(waterTarget)). Tap to type an exact value.")
-
-            Text("of \(waterDisplay(waterTarget))")
-                .font(.caption2).foregroundStyle(.secondary)
-
-            stepper(tint: .blue, step: waterStep, stepLabel: stepLabel,
-                    unit: metric ? "milliliters of water" : "ounces of water", onDelta: onWater)
+        return Button {
+            editText = ""
+            inputError = nil
+            editingWater = true
+        } label: {
+            WaterGlassView(fraction: fraction, label: waterDisplay(waterValue))
         }
+        .buttonStyle(.plain)
         .frame(maxWidth: .infinity)
+        .accessibilityLabel("Water \(waterDisplay(waterValue)) of \(waterDisplay(waterTarget)). Tap to type an exact value.")
+    }
+
+    private func targetCaption(_ text: String) -> some View {
+        Text(text)
+            .font(.caption2).foregroundStyle(.secondary)
+            .frame(maxWidth: .infinity)
     }
 
     // MARK: - Shared pieces
@@ -192,5 +195,6 @@ struct IntakeCountersView: View {
             .buttonStyle(.bordered).tint(tint)
             .accessibilityLabel("Add \(stepLabel)")
         }
+        .frame(maxWidth: .infinity)
     }
 }
