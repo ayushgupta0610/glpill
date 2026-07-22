@@ -11,7 +11,7 @@ struct TodayView: View {
     @Query(sort: \Medication.createdAt) private var medications: [Medication]
     @Query(sort: \TitrationStep.order) private var titrationSteps: [TitrationStep]
     @Query(sort: \WeightEntry.date, order: .reverse) private var weightEntries: [WeightEntry]
-    @Query(sort: \UserSettings.startDate) private var settingsList: [UserSettings]
+    @Query(sort: \UserSettings.createdAt) private var settingsList: [UserSettings]
     @AppStorage("eatTimerEnd") private var eatTimerEnd: Double = 0
     private enum ActiveSheet: Int, Identifiable { case log, weight, sideEffect; var id: Int { rawValue } }
     @State private var activeSheet: ActiveSheet?
@@ -377,9 +377,17 @@ struct TodayView: View {
         guard let settings = settingsList.first,
               let milestone = StreakMilestone.newlyReached(streak: newStreak, lastCelebrated: settings.lastCelebratedMilestone)
         else { return }
+        let previous = settings.lastCelebratedMilestone
         settings.lastCelebratedMilestone = milestone
-        try? context.save()
-        celebratingMilestone = milestone
+        do {
+            try context.save()
+            celebratingMilestone = milestone
+        } catch {
+            // Revert the bump so the milestone can re-fire next time rather than
+            // being silently consumed (never celebrated, never re-fires).
+            settings.lastCelebratedMilestone = previous
+            errorMessage = "Your change couldn't be saved. Please try again."
+        }
     }
 
     /// Undoes today's dose log — only meaningful same-day. Clears the eat timer,
@@ -396,7 +404,12 @@ struct TodayView: View {
     private func dismissCoaching() {
         guard let settings = settingsList.first else { return }
         settings.coachingDismissed = true
-        try? context.save()
+        do {
+            try context.save()
+        } catch {
+            settings.coachingDismissed = false
+            errorMessage = "Your change couldn't be saved. Please try again."
+        }
     }
 
     private func withErrorHandling(_ work: () throws -> Void) {

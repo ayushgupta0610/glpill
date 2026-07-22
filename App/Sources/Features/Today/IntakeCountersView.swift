@@ -8,7 +8,7 @@ struct IntakeCountersView: View {
     let onSetWater: (Int) -> Void
 
     @Query private var intakeDays: [IntakeDay]
-    @Query(sort: \UserSettings.startDate) private var settingsList: [UserSettings]
+    @Query(sort: \UserSettings.createdAt) private var settingsList: [UserSettings]
     @State private var tapPulse = false
     @State private var editingProtein = false
     @State private var editingWater = false

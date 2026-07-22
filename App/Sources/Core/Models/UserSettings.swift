@@ -3,6 +3,11 @@ import SwiftData
 
 @Model
 final class UserSettings {
+    /// Immutable stable identity for the singleton-ish row. CloudKit can create a
+    /// second row per device before syncing; the canonical row is the one with the
+    /// earliest `createdAt`. Never mutate this after creation — dedup and every
+    /// reader/writer key on it (unlike `startDate`, which re-onboarding overwrites).
+    var createdAt: Date = Date.now
     var onboardingComplete: Bool = false
     var usesMetric: Bool = false
     /// Optional first name for personalizing the shareable recap card. Stored
@@ -29,6 +34,7 @@ final class UserSettings {
     var coachingDismissed: Bool = false
 
     init(
+        createdAt: Date = .now,
         onboardingComplete: Bool = false,
         usesMetric: Bool = false,
         firstName: String? = nil,
@@ -48,6 +54,7 @@ final class UserSettings {
         reminderStyle: String = "full",
         coachingDismissed: Bool = false
     ) {
+        self.createdAt = createdAt
         self.onboardingComplete = onboardingComplete
         self.usesMetric = usesMetric
         self.firstName = firstName
@@ -66,5 +73,14 @@ final class UserSettings {
         self.goals = goals
         self.reminderStyle = reminderStyle
         self.coachingDismissed = coachingDismissed
+    }
+}
+
+extension UserSettings {
+    /// The canonical row — earliest `createdAt`. Use at every non-`@Query` fetch site
+    /// so all readers/writers agree on which row wins during a CloudKit merge window.
+    static func canonical(in context: ModelContext) -> UserSettings? {
+        ((try? context.fetch(FetchDescriptor<UserSettings>())) ?? [])
+            .min { $0.createdAt < $1.createdAt }
     }
 }

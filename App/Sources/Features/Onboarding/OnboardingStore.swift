@@ -89,16 +89,17 @@ final class OnboardingStore {
             ))
         }
 
-        // Upsert user settings: update the earliest existing row in place if present.
-        if let settings = try context.fetch(FetchDescriptor<UserSettings>())
-            .sorted(by: { $0.startDate < $1.startDate }).first {
+        // Upsert user settings: update the canonical (earliest-`createdAt`) row in
+        // place if present. Key on `createdAt` (stable identity), NOT `startDate`
+        // (which we intentionally leave untouched here so re-onboarding preserves
+        // the original plan start / streak). `createdAt` is never reassigned.
+        if let settings = UserSettings.canonical(in: context) {
             settings.onboardingComplete = true
             settings.usesMetric = usesMetric
             settings.goalKilograms = goalKg
             settings.startKilograms = startKg
             settings.reminderHour = reminderHour
             settings.reminderMinute = reminderMinute
-            settings.startDate = now
             settings.morningMeds = MorningMeds.normalize(morningMeds)
             settings.waitWindowMinutes = waitWindowMinutes
             settings.onboardingStage = stage

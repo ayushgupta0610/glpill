@@ -8,7 +8,7 @@ import SwiftData
 struct MilestoneCelebrationView: View {
     let milestone: Int
     @Environment(\.dismiss) private var dismiss
-    @Query private var settingsList: [UserSettings]
+    @Query(sort: \UserSettings.createdAt) private var settingsList: [UserSettings]
     @State private var appeared = false
     @State private var displayedCount = 0
     @State private var statsShown = false

@@ -4,7 +4,7 @@ import UserNotifications
 
 struct RootView: View {
     var storageFailed = false
-    @Query(sort: \UserSettings.startDate) private var settingsList: [UserSettings]
+    @Query(sort: \UserSettings.createdAt) private var settingsList: [UserSettings]
 
     private var onboardingComplete: Bool {
         settingsList.first?.onboardingComplete ?? false

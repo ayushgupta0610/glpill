@@ -8,12 +8,6 @@ struct TodayStore {
     let context: ModelContext
     var calendar = Calendar.current
 
-    /// Catches a re-tap / timezone-travel duplicate log of the same real dose
-    /// (minutes to a couple hours apart), without blocking a legitimate next-day
-    /// dose taken on a shifted schedule (e.g. 10pm one day, 8am the next — ~10h
-    /// apart, different calendar day).
-    private static let minHoursBetweenDoses: TimeInterval = 6 * 60 * 60
-
     /// Sane ceilings so a fat-fingered or overflowing manual entry can't be stored
     /// or synced (e.g. "50000 ml"). Lower bound stays 0.
     static let maxProteinGrams = 1000
@@ -25,8 +19,10 @@ struct TodayStore {
     func logDose(now: Date = .now) throws -> Bool {
         let day = calendar.startOfDay(for: now)
         let existingLogs = try context.fetch(FetchDescriptor<DoseLog>())
+        // Dedup on calendar day only: one dose per day. A legit next-calendar-day
+        // dose taken soon after (e.g. 11pm then 3am) is a different day → allowed.
         let isDuplicate = existingLogs.contains {
-            $0.date == day || abs($0.takenAt.timeIntervalSince(now)) < Self.minHoursBetweenDoses
+            calendar.isDate($0.date, inSameDayAs: now)
         }
         guard !isDuplicate else { return false }
 
@@ -49,8 +45,7 @@ struct TodayStore {
         let steps = ((try? context.fetch(FetchDescriptor<TitrationStep>())) ?? [])
             .sorted { $0.order < $1.order }
             .map { (doseMg: $0.doseMg, durationWeeks: $0.durationWeeks) }
-        let planStart = ((try? context.fetch(FetchDescriptor<UserSettings>())) ?? [])
-            .sorted { $0.startDate < $1.startDate }.first?.startDate ?? date
+        let planStart = UserSettings.canonical(in: context)?.startDate ?? date
         guard let position = TitrationProgress.position(steps: steps, planStart: planStart, today: date, calendar: calendar),
               position.stepIndex < steps.count else { return 0 }
         return steps[position.stepIndex].doseMg
@@ -105,7 +100,7 @@ struct TodayStore {
 
     private func intakeDay(for date: Date) throws -> IntakeDay {
         let day = calendar.startOfDay(for: date)
-        if let existing = try context.fetch(FetchDescriptor<IntakeDay>()).first(where: { $0.date == day }) {
+        if let existing = try context.fetch(FetchDescriptor<IntakeDay>()).first(where: { calendar.isDate($0.date, inSameDayAs: date) }) {
             return existing
         }
         let created = IntakeDay(date: day)

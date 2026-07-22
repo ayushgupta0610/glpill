@@ -104,7 +104,7 @@ struct WeightEntrySheet: View {
         } else {
             context.insert(WeightEntry(date: date, kilograms: kilograms))
         }
-        if let settings = try? context.fetch(FetchDescriptor<UserSettings>()).first {
+        if let settings = UserSettings.canonical(in: context) {
             settings.usesMetric = usesMetric
         }
         do {

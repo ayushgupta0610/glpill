@@ -35,8 +35,7 @@ enum WidgetSnapshotBuilder {
         let steps = ((try? context.fetch(FetchDescriptor<TitrationStep>())) ?? [])
             .sorted { $0.order < $1.order }
             .map { (doseMg: $0.doseMg, durationWeeks: $0.durationWeeks) }
-        let planStart = ((try? context.fetch(FetchDescriptor<UserSettings>())) ?? [])
-            .sorted { $0.startDate < $1.startDate }.first?.startDate ?? now
+        let planStart = UserSettings.canonical(in: context)?.startDate ?? now
         var doseMg = 0.0
         if let position = TitrationProgress.position(steps: steps, planStart: planStart, today: now, calendar: calendar),
            position.stepIndex < steps.count {

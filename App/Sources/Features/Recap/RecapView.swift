@@ -7,12 +7,13 @@ import SwiftData
 struct RecapView: View {
     @Environment(\.modelContext) private var context
     @Environment(\.dismiss) private var dismiss
-    @Query private var settingsList: [UserSettings]
+    @Query(sort: \UserSettings.createdAt) private var settingsList: [UserSettings]
     @Query private var weights: [WeightEntry]
 
     @State private var includeWeight = false
     @State private var nonScaleVictory: String?
     @State private var name = ""
+    @State private var errorMessage: String?
 
     /// Caps the name so it can't overflow the fixed-size rasterized share card.
     private static let maxNameLength = 20
@@ -83,6 +84,14 @@ struct RecapView: View {
             .navigationTitle("My Month")
             .navigationBarTitleDisplayMode(.inline)
             .onAppear { name = settingsList.first?.firstName ?? "" }
+            .alert("Couldn't save your name", isPresented: Binding(
+                get: { errorMessage != nil },
+                set: { if !$0 { errorMessage = nil } }
+            )) {
+                Button("OK", role: .cancel) { errorMessage = nil }
+            } message: {
+                Text(errorMessage ?? "")
+            }
             .onChange(of: name) { _, newValue in
                 if newValue.count > Self.maxNameLength {
                     name = String(newValue.prefix(Self.maxNameLength))
@@ -114,8 +123,14 @@ struct RecapView: View {
     private func persist(name newValue: String) {
         guard let settings = settingsList.first else { return }
         let trimmed = newValue.trimmingCharacters(in: .whitespacesAndNewlines)
+        let previous = settings.firstName
         settings.firstName = trimmed.isEmpty ? nil : trimmed
-        try? context.save()
+        do {
+            try context.save()
+        } catch {
+            settings.firstName = previous
+            errorMessage = "Your name couldn't be saved. Please try again."
+        }
     }
 
     private var victoryPicker: some View {

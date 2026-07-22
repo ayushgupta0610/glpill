@@ -243,16 +243,104 @@ final class OnboardingStoreTests: XCTestCase {
         let container = try makeContainer()
         let context = container.mainContext
         let base = Date(timeIntervalSince1970: 1_700_000_000)
-        context.insert(UserSettings(startDate: base.addingTimeInterval(200)))
-        context.insert(UserSettings(startDate: base))
-        context.insert(UserSettings(startDate: base.addingTimeInterval(100)))
+        context.insert(UserSettings(createdAt: base.addingTimeInterval(200)))
+        context.insert(UserSettings(createdAt: base))
+        context.insert(UserSettings(createdAt: base.addingTimeInterval(100)))
         try context.save()
 
         ModelMaintenance.deduplicate(in: context)
 
         let remaining = try context.fetch(FetchDescriptor<UserSettings>())
         XCTAssertEqual(remaining.count, 1)
-        XCTAssertEqual(remaining.first?.startDate, base)
+        XCTAssertEqual(remaining.first?.createdAt, base)
+    }
+
+    /// Merge-then-delete: three rows with distinct `createdAt` and complementary
+    /// non-default fields collapse to the single earliest row carrying ALL fields.
+    @MainActor
+    func testDeduplicateMergesComplementaryFieldsIntoEarliest() throws {
+        let container = try makeContainer()
+        let context = container.mainContext
+        let base = Date(timeIntervalSince1970: 1_700_000_000)
+
+        // Earliest (kept) row: only firstName set, everything else default.
+        let keep = UserSettings(createdAt: base, firstName: "Ada")
+        // Second row: goal/start weight + metric.
+        let second = UserSettings(
+            createdAt: base.addingTimeInterval(100),
+            usesMetric: true,
+            goalKilograms: 70,
+            startKilograms: 90
+        )
+        // Third row: onboarding answers + completion.
+        let third = UserSettings(
+            createdAt: base.addingTimeInterval(200),
+            onboardingComplete: true,
+            reminderHour: 7,
+            reminderMinute: 30,
+            morningMeds: ["Thyroid"],
+            onboardingStage: "switchingFromInjections",
+            sideEffectConcerns: ["nausea"],
+            goals: ["consistency"],
+            reminderStyle: "pillOnly",
+            coachingDismissed: true
+        )
+        context.insert(second)
+        context.insert(third)
+        context.insert(keep)
+        try context.save()
+
+        ModelMaintenance.deduplicate(in: context)
+
+        let remaining = try context.fetch(FetchDescriptor<UserSettings>())
+        XCTAssertEqual(remaining.count, 1)
+        let merged = try XCTUnwrap(remaining.first)
+        XCTAssertEqual(merged.createdAt, base)
+        XCTAssertEqual(merged.firstName, "Ada")
+        XCTAssertEqual(merged.goalKilograms, 70)
+        XCTAssertEqual(merged.startKilograms, 90)
+        XCTAssertTrue(merged.usesMetric)
+        XCTAssertEqual(merged.reminderHour, 7)
+        XCTAssertEqual(merged.reminderMinute, 30)
+        XCTAssertEqual(merged.morningMeds, ["Thyroid"])
+        XCTAssertEqual(merged.onboardingStage, "switchingFromInjections")
+        XCTAssertEqual(merged.sideEffectConcerns, ["nausea"])
+        XCTAssertEqual(merged.goals, ["consistency"])
+        XCTAssertEqual(merged.reminderStyle, "pillOnly")
+        XCTAssertTrue(merged.coachingDismissed)
+        XCTAssertTrue(merged.onboardingComplete)
+    }
+
+    /// Re-onboarding must NOT reset the original plan `startDate` (streak/plan start),
+    /// and must never reassign the stable `createdAt` identity.
+    @MainActor
+    func testCompleteTwicePreservesStartDateAndCreatedAt() throws {
+        let container = try makeContainer()
+        let context = container.mainContext
+        let store = OnboardingStore()
+        store.kind = .rybelsus
+        store.displayWeight = 200
+        store.usesMetric = false
+        store.steps = [OnboardingStore.DraftStep(doseMg: 3, durationWeeks: 4)]
+
+        let firstNow = Date(timeIntervalSince1970: 1_700_000_000)
+        try store.complete(in: context, now: firstNow)
+        let original = try XCTUnwrap(try context.fetch(FetchDescriptor<UserSettings>()).first)
+        let originalStart = original.startDate
+        let originalCreatedAt = original.createdAt
+        XCTAssertEqual(originalStart, firstNow)
+
+        // Re-run onboarding a week later.
+        let laterNow = firstNow.addingTimeInterval(7 * 24 * 60 * 60)
+        store.displayWeight = 190
+        try store.complete(in: context, now: laterNow)
+
+        let settings = try context.fetch(FetchDescriptor<UserSettings>())
+        XCTAssertEqual(settings.count, 1)
+        let updated = try XCTUnwrap(settings.first)
+        XCTAssertEqual(updated.startDate, originalStart, "re-onboard must preserve the original plan start")
+        XCTAssertEqual(updated.createdAt, originalCreatedAt, "createdAt identity must never change")
+        XCTAssertEqual(updated.startKilograms, UnitFormat.kilograms(fromDisplay: 190, metric: false), "other fields still update in place")
     }
 
     func testDoseValidationBounds() {

@@ -5,7 +5,7 @@ struct SideEffectSheet: View {
     var existing: SideEffectLog? = nil
     let onSave: (SideEffectKind, Int, String?) -> Void
     @Environment(\.dismiss) private var dismiss
-    @Query private var settingsList: [UserSettings]
+    @Query(sort: \UserSettings.createdAt) private var settingsList: [UserSettings]
     @State private var kind: SideEffectKind = .nausea
     @State private var severity = 1
     @State private var note = ""

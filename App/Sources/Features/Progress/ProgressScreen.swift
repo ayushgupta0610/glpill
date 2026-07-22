@@ -5,11 +5,12 @@ import Charts
 struct ProgressScreen: View {
     @Environment(\.modelContext) private var context
     @Query(sort: \WeightEntry.date) private var entries: [WeightEntry]
-    @Query private var settingsList: [UserSettings]
+    @Query(sort: \UserSettings.createdAt) private var settingsList: [UserSettings]
     @Query(sort: \DoseLog.date) private var doseLogs: [DoseLog]
     @State private var showEntrySheet = false
     @State private var showRecap = false
     @State private var editingEntry: WeightEntry?
+    @State private var errorMessage: String?
 
     private var metric: Bool { settingsList.first?.usesMetric ?? false }
 
@@ -52,6 +53,14 @@ struct ProgressScreen: View {
             }
             .sheet(isPresented: $showRecap) {
                 RecapView()
+            }
+            .alert("Couldn't delete weigh-in", isPresented: Binding(
+                get: { errorMessage != nil },
+                set: { if !$0 { errorMessage = nil } }
+            )) {
+                Button("OK", role: .cancel) { errorMessage = nil }
+            } message: {
+                Text(errorMessage ?? "")
             }
         }
     }
@@ -98,7 +107,14 @@ struct ProgressScreen: View {
 
     private func deleteEntry(_ entry: WeightEntry) {
         context.delete(entry)
-        try? context.save()
+        do {
+            try context.save()
+        } catch {
+            // Restore the in-memory deletion so the @Query-backed list doesn't
+            // diverge from disk (the row reappears rather than silently vanishing).
+            context.rollback()
+            errorMessage = "Your weigh-in couldn't be deleted. Please try again."
+        }
     }
 
     private var monthCard: some View {
