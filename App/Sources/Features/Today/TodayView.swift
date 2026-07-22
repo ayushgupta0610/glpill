@@ -141,7 +141,7 @@ struct TodayView: View {
         case .sideEffects:
             sideEffectCard
         case .medLevel:
-            MedLevelPreviewCard(points: medLevelPoints, projection: medLevelProjection)
+            MedLevelPreviewCard(points: medLevelPoints, projection: medLevelProjection, kind: medications.first?.kind ?? .custom, firstDose: firstDoseDate)
         case .streak:
             streakCard
         case .intake:
@@ -152,6 +152,12 @@ struct TodayView: View {
                 onSetWater: { ml in withErrorHandling { try store.setWater(ml: ml) } }
             )
         }
+    }
+
+    /// Earliest real dose, used to judge whether the estimated level is near
+    /// steady state (the 3-half-lives threshold in MedicationLevelView).
+    private var firstDoseDate: Date? {
+        doseLogs.filter { $0.doseMg > 0 }.map(\.takenAt).min()
     }
 
     private var medLevelPoints: [MedicationLevel.Point] {

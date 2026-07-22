@@ -47,6 +47,27 @@ struct MedicationLevelTests {
         let enough = (0..<4).map { MedicationLevel.Point(date: d0.addingTimeInterval(Double($0)*86_400), level: Double($0)) }
         #expect(MedicationLevel.hasEnoughData(points: enough) == true)
     }
+    @Test("timeToSteadyStateText is drug-derived (5 half-lives)")
+    func steadyStateText() {
+        #expect(MedicationLevel.timeToSteadyStateText(for: .foundayo) == "about a week")
+        #expect(MedicationLevel.timeToSteadyStateText(for: .rybelsus) == "about 4–5 weeks")
+        #expect(MedicationLevel.timeToSteadyStateText(for: .wegovyPill) == "about 4–5 weeks")
+        #expect(MedicationLevel.timeToSteadyStateText(for: .custom) == "about 3 weeks")
+    }
+
+    @Test("isNearSteadyState: elapsed >= 3 half-lives")
+    func nearSteadyState() {
+        let now = day(30)
+        let semaHalf = MedicationLevel.halfLifeHours(for: .rybelsus) // 168h = 7d
+        // 2 days elapsed for semaglutide -> not near steady state
+        #expect(MedicationLevel.isNearSteadyState(firstDose: now.addingTimeInterval(-2 * 86_400), now: now, halfLifeHours: semaHalf) == false)
+        // 25 days elapsed for semaglutide (3 * 7 = 21d threshold) -> near steady state
+        #expect(MedicationLevel.isNearSteadyState(firstDose: now.addingTimeInterval(-25 * 86_400), now: now, halfLifeHours: semaHalf) == true)
+        // orforglipron 40h = ~1.67d, threshold 3 * 1.67 = 5d; 6 days elapsed -> true
+        let orfoHalf = MedicationLevel.halfLifeHours(for: .foundayo)
+        #expect(MedicationLevel.isNearSteadyState(firstDose: now.addingTimeInterval(-6 * 86_400), now: now, halfLifeHours: orfoHalf) == true)
+    }
+
     @Test("projection climbs for a positive daily dose and is empty for zero")
     func projection() {
         let start = Date(timeIntervalSince1970: 0)

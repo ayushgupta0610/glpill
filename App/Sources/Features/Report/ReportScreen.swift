@@ -31,8 +31,16 @@ struct ReportScreen: View {
         calendar.date(byAdding: .day, value: -(windowDays - 1), to: calendar.startOfDay(for: .now))!
     }
 
+    /// Badge window floored to `planStart` (min of start date & first dose), exactly
+    /// as ReportComposer floors the copyable report — so the badge % and the shared
+    /// report % always agree for a backdated-dose user.
+    private var badgeStart: Date {
+        guard let planStart else { return windowStart }
+        return max(windowStart, calendar.startOfDay(for: planStart))
+    }
+
     private var adherencePercent: Int {
-        StreakCalculator.adherencePercent(doseDays: doseLogs.map(\.date), from: windowStart, to: .now, calendar: calendar)
+        StreakCalculator.adherencePercent(doseDays: doseLogs.map(\.date), from: badgeStart, to: .now, calendar: calendar)
     }
 
     private var sideEffectCount: Int {
