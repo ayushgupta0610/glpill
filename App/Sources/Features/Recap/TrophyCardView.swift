@@ -27,7 +27,12 @@ struct TrophyCardView: View {
                     .padding(.bottom, 6)
             }
 
-            Text("🏆").font(.system(size: 72))
+            Text(MilestoneTier.emoji(for: milestone))
+                .font(.system(size: 72))
+                .padding(18)
+                .overlay(
+                    Circle().stroke(MilestoneTier.ringColor(for: milestone), lineWidth: 4)
+                )
             Text("\(milestone)")
                 .font(.system(size: 96, weight: .heavy, design: .rounded))
                 .foregroundStyle(.white)
