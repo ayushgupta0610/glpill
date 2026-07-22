@@ -182,7 +182,7 @@ struct ProgressScreen: View {
     private var toGoalString: String {
         guard let current = entries.last?.kilograms, let goal = settingsList.first?.goalKilograms else { return "—" }
         let remaining = WeightStats.toGoal(current: current, goal: goal)
-        guard remaining > 0 else { return "Goal reached 🎉" }
+        guard remaining > 0 else { return "Reached ✓" }
         let display = metric ? remaining : remaining / UnitFormat.kgPerLb
         return String(format: "%.1f %@", display, metric ? "kg" : "lb")
     }

@@ -84,35 +84,40 @@ private struct WelcomeStep: View {
     let next: () -> Void
 
     var body: some View {
-        VStack(spacing: 24) {
-            Spacer()
-            Image(systemName: "pills.fill")
-                .font(.system(size: 64))
-                .foregroundStyle(.white)
-                .frame(width: 120, height: 120)
-                .background(Theme.heroGradient, in: RoundedRectangle(cornerRadius: 28))
-            Text("The calm daily co-pilot for the GLP-1 pill")
-                .font(.largeTitle.bold())
-                .multilineTextAlignment(.center)
-            Text("Take it right, remember your other morning meds, and watch steady progress — without the weight-loss noise.")
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
-                .multilineTextAlignment(.center)
+        ScrollView {
+            VStack(spacing: 24) {
+                Spacer(minLength: 24)
+                Image(systemName: "pills.fill")
+                    .font(.system(size: 64))
+                    .foregroundStyle(.white)
+                    .frame(width: 120, height: 120)
+                    .background(Theme.heroGradient, in: RoundedRectangle(cornerRadius: 28))
+                Text("The calm daily co-pilot for the GLP-1 pill")
+                    .font(.largeTitle.bold())
+                    .multilineTextAlignment(.center)
+                Text("Take it right, remember your other morning meds, and watch steady progress — without the weight-loss noise.")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal)
+                VStack(alignment: .leading, spacing: 12) {
+                    bullet("checkmark.circle.fill", "One-tap daily pill tracking with streaks")
+                    bullet("chart.line.uptrend.xyaxis", "Weight trend and milestones")
+                    bullet("clock.fill", "Empty-stomach timer for Rybelsus®")
+                    bullet("doc.text.fill", "A summary your doctor will love")
+                    bullet("lock.fill", "Private by design — no account, no servers")
+                }
                 .padding(.horizontal)
-            VStack(alignment: .leading, spacing: 12) {
-                bullet("checkmark.circle.fill", "One-tap daily pill tracking with streaks")
-                bullet("chart.line.uptrend.xyaxis", "Weight trend and milestones")
-                bullet("clock.fill", "Empty-stomach timer for Rybelsus®")
-                bullet("doc.text.fill", "A summary your doctor will love")
-                bullet("lock.fill", "Private by design — no account, no servers")
+                Spacer(minLength: 24)
+                Text("GLPill is a tracking tool, not medical advice. Always follow your prescriber's instructions.")
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal)
             }
-            .padding(.horizontal)
-            Spacer()
-            Text("GLPill is a tracking tool, not medical advice. Always follow your prescriber's instructions.")
-                .font(.caption2)
-                .foregroundStyle(.secondary)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal)
+            .frame(maxWidth: .infinity)
+        }
+        .safeAreaInset(edge: .bottom) {
             PillCTAButton(title: "Get started", systemImage: "arrow.right") { next() }
                 .padding(.horizontal)
                 .padding(.bottom, 24)
@@ -134,12 +139,13 @@ private struct MedicationStep: View {
     let next: () -> Void
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            Text("Which pill are you on?")
-                .font(.title.bold())
-                .padding(.top, 24)
+        ScrollView {
+            VStack(alignment: .leading, spacing: 16) {
+                Text("Which pill are you on?")
+                    .font(.title.bold())
+                    .padding(.top, 24)
 
-            ForEach(MedicationKind.allCases, id: \.self) { kind in
+                ForEach(MedicationKind.allCases, id: \.self) { kind in
                 Button {
                     store.kind = kind
                 } label: {
@@ -180,14 +186,16 @@ private struct MedicationStep: View {
                 TextField("Medication name", text: $store.customName)
                     .textFieldStyle(.roundedBorder)
             }
-
-            Spacer()
+            }
+            .padding(.horizontal)
+        }
+        .background(Color(.systemGroupedBackground))
+        .safeAreaInset(edge: .bottom) {
             PillCTAButton(title: "Continue", systemImage: "arrow.right") { next() }
                 .disabled(store.kind == .custom && MedicationName.normalize(store.customName) == nil)
+                .padding(.horizontal)
                 .padding(.bottom, 24)
         }
-        .padding(.horizontal)
-        .background(Color(.systemGroupedBackground))
     }
 }
 private struct MorningMedsStep: View {
@@ -196,40 +204,44 @@ private struct MorningMedsStep: View {
     @State private var entry = ""
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            Text("Other morning meds?")
-                .font(.title.bold())
-                .padding(.top, 24)
-            Text("Optional. Add anything else you take in the morning (thyroid, blood pressure, birth control). We'll tell you when your empty-stomach window is clear so you know when to take them. Names only — stored privately on your device.")
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
+        ScrollView {
+            VStack(alignment: .leading, spacing: 16) {
+                Text("Other morning meds?")
+                    .font(.title.bold())
+                    .padding(.top, 24)
+                Text("Optional. Add anything else you take in the morning (thyroid, blood pressure, birth control). We'll tell you when your empty-stomach window is clear so you know when to take them. Names only — stored privately on your device.")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
 
-            HStack {
-                TextField("Add a medication", text: $entry)
-                    .textFieldStyle(.roundedBorder)
-                    .onSubmit(add)
-                Button("Add", action: add)
-                    .buttonStyle(.bordered)
-                    .disabled(entry.trimmingCharacters(in: .whitespaces).isEmpty)
-            }
-
-            ForEach(store.morningMeds, id: \.self) { med in
                 HStack {
-                    Text(med)
-                    Spacer()
-                    Button {
-                        store.morningMeds.removeAll { $0 == med }
-                    } label: { Image(systemName: "minus.circle.fill").foregroundStyle(.secondary) }
+                    TextField("Add a medication", text: $entry)
+                        .textFieldStyle(.roundedBorder)
+                        .onSubmit(add)
+                    Button("Add", action: add)
+                        .buttonStyle(.bordered)
+                        .disabled(entry.trimmingCharacters(in: .whitespaces).isEmpty)
+                }
+
+                ForEach(store.morningMeds, id: \.self) { med in
+                    HStack {
+                        Text(med)
+                        Spacer()
+                        Button {
+                            store.morningMeds.removeAll { $0 == med }
+                        } label: { Image(systemName: "minus.circle.fill").foregroundStyle(.secondary) }
+                    }
                 }
             }
-
-            Spacer()
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal)
+        }
+        .background(Color(.systemGroupedBackground))
+        .safeAreaInset(edge: .bottom) {
             PillCTAButton(title: store.morningMeds.isEmpty ? "Skip for now" : "Continue",
                           systemImage: "arrow.right") { next() }
+                .padding(.horizontal)
                 .padding(.bottom, 24)
         }
-        .padding(.horizontal)
-        .background(Color(.systemGroupedBackground))
     }
 
     private func add() {

@@ -16,7 +16,8 @@ struct IntakeCountersView: View {
     @State private var inputError: String?
 
     private static let mlPerOz = 29.5735
-    private static let waterTint = Color(red: 0.184, green: 0.498, blue: 0.816) // #2F7FD0
+    // Semantic blue adapts to light/dark so the water total stays legible on the near-black card.
+    private static let waterTint = Color(uiColor: .systemBlue)
 
     private var today: IntakeDay? {
         intakeDays.first { Calendar.current.isDateInToday($0.date) }

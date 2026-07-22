@@ -187,10 +187,17 @@ struct PaywallView: View {
 
     private var ctaSection: some View {
         VStack(spacing: 10) {
-            HStack(spacing: 14) {
-                reassurance("icloud.fill", "Private in your iCloud")
-                reassurance("person.crop.circle.badge.xmark", "No account needed")
-                reassurance("apple.logo", "Billed by Apple")
+            ViewThatFits(in: .horizontal) {
+                HStack(spacing: 14) {
+                    reassurance("icloud.fill", "Private in your iCloud")
+                    reassurance("person.crop.circle.badge.xmark", "No account needed")
+                    reassurance("apple.logo", "Billed by Apple")
+                }
+                VStack(spacing: 10) {
+                    reassurance("icloud.fill", "Private in your iCloud")
+                    reassurance("person.crop.circle.badge.xmark", "No account needed")
+                    reassurance("apple.logo", "Billed by Apple")
+                }
             }
             .padding(.bottom, 2)
 

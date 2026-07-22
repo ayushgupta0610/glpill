@@ -14,7 +14,7 @@ struct RitualCard: View {
         Card {
             HStack {
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(medName).font(.headline)
+                    Text(medName).font(.headline).lineLimit(2)
                     Text(doseSubtitle).font(.subheadline).foregroundStyle(.secondary)
                 }
                 Spacer()

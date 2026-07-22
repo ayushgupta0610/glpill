@@ -11,10 +11,10 @@ struct GoalsStep: View {
         ("weight", "See my weight trend"),
     ]
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            Text("What should this app help with?").font(.title.bold()).padding(.top, 24)
-            Text("We'll put what matters to you up front.").font(.subheadline).foregroundStyle(.secondary)
-            ScrollView {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 16) {
+                Text("What should this app help with?").font(.title.bold()).padding(.top, 24)
+                Text("We'll put what matters to you up front.").font(.subheadline).foregroundStyle(.secondary)
                 VStack(spacing: 10) {
                     ForEach(options, id: \.id) { opt in
                         OnboardingOptionRow(title: opt.label, subtitle: nil, selected: store.goals.contains(opt.id), multi: true) {
@@ -23,9 +23,14 @@ struct GoalsStep: View {
                     }
                 }
             }
-            PillCTAButton(title: "Continue", systemImage: "arrow.right") { next() }.padding(.bottom, 24)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal)
         }
-        .padding(.horizontal).background(Color(.systemGroupedBackground))
+        .background(Color(.systemGroupedBackground))
+        .safeAreaInset(edge: .bottom) {
+            PillCTAButton(title: "Continue", systemImage: "arrow.right") { next() }
+                .padding(.horizontal).padding(.bottom, 24)
+        }
     }
     private func toggle(_ id: String) {
         if store.goals.contains(id) { store.goals.removeAll { $0 == id } } else { store.goals.append(id) }

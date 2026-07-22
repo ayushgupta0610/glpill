@@ -9,17 +9,23 @@ struct ReminderStyleStep: View {
         ("none", "No reminders"),
     ]
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            Text("Never mistime a dose").font(.title.bold()).padding(.top, 24)
-            Text("We'll only nudge you the way you choose.").font(.subheadline).foregroundStyle(.secondary)
-            ForEach(options, id: \.id) { opt in
-                OnboardingOptionRow(title: opt.label, subtitle: nil, selected: store.reminderStyle == opt.id, multi: false) {
-                    store.reminderStyle = opt.id
+        ScrollView {
+            VStack(alignment: .leading, spacing: 16) {
+                Text("Never mistime a dose").font(.title.bold()).padding(.top, 24)
+                Text("We'll only nudge you the way you choose.").font(.subheadline).foregroundStyle(.secondary)
+                ForEach(options, id: \.id) { opt in
+                    OnboardingOptionRow(title: opt.label, subtitle: nil, selected: store.reminderStyle == opt.id, multi: false) {
+                        store.reminderStyle = opt.id
+                    }
                 }
             }
-            Spacer()
-            PillCTAButton(title: "Continue", systemImage: "arrow.right") { next() }.padding(.bottom, 24)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal)
         }
-        .padding(.horizontal).background(Color(.systemGroupedBackground))
+        .background(Color(.systemGroupedBackground))
+        .safeAreaInset(edge: .bottom) {
+            PillCTAButton(title: "Continue", systemImage: "arrow.right") { next() }
+                .padding(.horizontal).padding(.bottom, 24)
+        }
     }
 }
