@@ -7,7 +7,8 @@ enum SideEffectOrder {
         case "constipation": return .constipation
         case "lowAppetite": return .appetiteLoss
         case "fatigue": return .fatigue
-        default: return nil // reflux / none / unknown → nil
+        case "reflux": return .reflux
+        default: return nil // none / unknown → nil
         }
     }
 

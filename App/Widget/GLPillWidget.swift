@@ -80,7 +80,7 @@ struct GLPillWidgetEntryView: View {
                     .foregroundStyle(.white)
                     .contentTransition(.numericText())
             }
-            Text(entry.snapshot.streak == 1 ? "day streak" : "day streak")
+            Text(entry.snapshot.streak == 1 ? "day streak" : "days streak")
                 .font(.system(size: 13, weight: .semibold))
                 .foregroundStyle(.white.opacity(0.85))
 
@@ -132,7 +132,7 @@ struct GLPillWidgetEntryView: View {
                 .font(.system(size: 22))
                 .widgetAccentable()
             VStack(alignment: .leading, spacing: 1) {
-                Text("\(entry.snapshot.streak) day streak")
+                Text("\(entry.snapshot.streak) \(entry.snapshot.streak == 1 ? "day" : "days") streak")
                     .font(.headline)
                 Text(entry.snapshot.doseTakenToday ? "Taken today ✓" : "Take today's pill")
                     .font(.caption)

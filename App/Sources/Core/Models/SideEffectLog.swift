@@ -9,6 +9,7 @@ enum SideEffectKind: String, Codable, CaseIterable {
     case fatigue
     case headache
     case appetiteLoss
+    case reflux
     case other
 
     var label: String {
@@ -20,6 +21,7 @@ enum SideEffectKind: String, Codable, CaseIterable {
         case .fatigue: return "Fatigue"
         case .headache: return "Headache"
         case .appetiteLoss: return "Appetite loss"
+        case .reflux: return "Reflux / burping"
         case .other: return "Other"
         }
     }
@@ -33,6 +35,7 @@ enum SideEffectKind: String, Codable, CaseIterable {
         case .fatigue: return "😴"
         case .headache: return "🤕"
         case .appetiteLoss: return "🍽️"
+        case .reflux: return "😮‍💨"
         case .other: return "📝"
         }
     }

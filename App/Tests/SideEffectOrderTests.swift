@@ -8,10 +8,17 @@ struct SideEffectOrderTests {
         #expect(Array(out.prefix(2)) == [.constipation, .nausea])
     }
 
-    @Test("Unknown, reflux and none concerns are ignored")
+    @Test("Unknown and none concerns are ignored")
     func unmappedIgnored() {
-        let out = SideEffectOrder.ordered(concerns: ["reflux", "none", "bogus"])
+        let out = SideEffectOrder.ordered(concerns: ["none", "bogus"])
         #expect(out == SideEffectKind.allCases)
+    }
+
+    @Test("Reflux concern leads the list")
+    func refluxLeads() {
+        let out = SideEffectOrder.ordered(concerns: ["reflux"])
+        #expect(out.first == .reflux)
+        #expect(out.count == SideEffectKind.allCases.count)
     }
 
     @Test("Result contains every kind exactly once")

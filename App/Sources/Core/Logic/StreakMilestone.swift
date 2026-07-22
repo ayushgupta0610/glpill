@@ -4,13 +4,16 @@ import Foundation
 enum StreakMilestone {
     static let thresholds = [7, 30, 100, 365]
 
-    /// The milestone to celebrate right now: the highest threshold the current
+    /// The milestone to celebrate right now: the lowest threshold the current
     /// streak has reached that hasn't been celebrated yet. `nil` if none.
+    /// Returning the lowest un-celebrated tier lets successive logs walk the
+    /// tiers up one at a time (7 → 30 → 100 → 365) even after a non-monotonic
+    /// streak jump, so no tier is permanently skipped.
     /// `lastCelebrated` is persisted so a milestone fires once, not every launch.
     static func newlyReached(streak: Int, lastCelebrated: Int) -> Int? {
         thresholds
             .filter { $0 <= streak && $0 > lastCelebrated }
-            .max()
+            .min()
     }
 
     /// Warm, non-clinical celebration copy for a reached milestone.
