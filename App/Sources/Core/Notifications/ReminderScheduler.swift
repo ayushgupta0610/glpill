@@ -10,6 +10,7 @@ protocol NotificationScheduling {
     func requestAuthorization() async -> Bool
     func removePending(ids: [String])
     func add(id: String, title: String, body: String, trigger: ReminderTrigger)
+    func pendingIds() async -> [String]
 }
 
 enum ReminderScheduler {
@@ -26,14 +27,29 @@ enum ReminderScheduler {
         )
     }
 
-    static func eatTimerBody(meds: [String]) -> String {
-        let base = "30 minutes are up — enjoy your meal."
+    static func eatTimerBody(waitWindowMinutes: Int = 30, meds: [String]) -> String {
+        let base = "Your \(waitWindowMinutes)-minute wait is up — you can eat now."
         guard !meds.isEmpty else { return base }
         return base + " You can also take your \(meds.joined(separator: ", ")) now."
     }
 
-    static func scheduleEatTimer(using scheduler: NotificationScheduling, meds: [String] = []) {
-        scheduler.add(id: eatTimerId, title: "You can eat now ✅", body: eatTimerBody(meds: meds), trigger: .once(after: 30 * 60))
+    static func scheduleEatTimer(using scheduler: NotificationScheduling, waitWindowMinutes: Int = 30, meds: [String] = []) {
+        scheduler.add(
+            id: eatTimerId,
+            title: "You can eat now ✅",
+            body: eatTimerBody(waitWindowMinutes: waitWindowMinutes, meds: meds),
+            trigger: .once(after: Double(waitWindowMinutes) * 60)
+        )
+    }
+
+    /// If the daily reminder isn't already pending, (re)schedule it. Used at launch to
+    /// re-assert reminders for already-onboarded users (upgrades, new devices) whose
+    /// pending requests were never persisted across installs. Only reschedules when
+    /// already authorized — never prompts.
+    static func ensureDailyScheduled(hour: Int, minute: Int, using scheduler: NotificationScheduling) async {
+        let pending = await scheduler.pendingIds()
+        guard !pending.contains(dailyId) else { return }
+        scheduleDaily(hour: hour, minute: minute, using: scheduler)
     }
 }
 
@@ -45,6 +61,15 @@ final class UNNotificationScheduler: NotificationScheduling {
 
     func removePending(ids: [String]) {
         UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: ids)
+    }
+
+    func pendingIds() async -> [String] {
+        await UNUserNotificationCenter.current().pendingNotificationRequests().map(\.identifier)
+    }
+
+    /// Current authorization status, read without prompting.
+    func authorizationStatus() async -> UNAuthorizationStatus {
+        await UNUserNotificationCenter.current().notificationSettings().authorizationStatus
     }
 
     func add(id: String, title: String, body: String, trigger: ReminderTrigger) {

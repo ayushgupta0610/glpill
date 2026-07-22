@@ -1,5 +1,9 @@
 import SwiftUI
 import SwiftData
+import UserNotifications
+#if canImport(UIKit)
+import UIKit
+#endif
 
 struct TodayView: View {
     @Environment(\.modelContext) private var context
@@ -15,6 +19,8 @@ struct TodayView: View {
     @State private var doseJustLogged = false
     @State private var celebratingMilestone: Int?
     @State private var undo: UndoAction?
+    @State private var notificationsDenied = false
+    @State private var notifBannerDismissed = false
 
     private struct UndoAction: Equatable {
         let id = UUID()
@@ -42,6 +48,9 @@ struct TodayView: View {
                         .font(.subheadline.weight(.medium))
                         .foregroundStyle(.secondary)
                         .frame(maxWidth: .infinity, alignment: .leading)
+                    if showNotifDeniedBanner {
+                        notifDeniedBanner
+                    }
                     ritualCard
                     if !(settingsList.first?.coachingDismissed ?? false),
                        let coaching = StageCoaching.message(
@@ -61,6 +70,7 @@ struct TodayView: View {
                 .padding()
             }
             .background(Color(.systemGroupedBackground))
+            .task { await refreshNotificationStatus() }
             .overlay(alignment: .bottomTrailing) {
                 Button { activeSheet = .log } label: {
                     Image(systemName: "plus")
@@ -293,6 +303,50 @@ struct TodayView: View {
         DispatchQueue.main.async { activeSheet = next }
     }
 
+    /// Show the "reminders are off" banner only when the user expects reminders,
+    /// the system has denied notification permission, and they haven't dismissed it.
+    private var showNotifDeniedBanner: Bool {
+        notificationsDenied
+            && (settingsList.first?.reminderStyle ?? "full") != "none"
+            && !notifBannerDismissed
+    }
+
+    private var notifDeniedBanner: some View {
+        Card {
+            HStack(alignment: .top, spacing: 12) {
+                Image(systemName: "bell.slash.fill")
+                    .foregroundStyle(Theme.warn)
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Reminders are off. Turn on notifications in Settings to get your daily nudge.")
+                        .font(.subheadline)
+                    Button("Open Settings") { openSystemSettings() }
+                        .font(.subheadline.weight(.semibold))
+                }
+                Spacer()
+                Button {
+                    notifBannerDismissed = true
+                } label: {
+                    Image(systemName: "xmark")
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(.secondary)
+                }
+                .accessibilityLabel("Dismiss")
+            }
+        }
+    }
+
+    private func refreshNotificationStatus() async {
+        notificationsDenied = await UNNotificationScheduler().authorizationStatus() == .denied
+    }
+
+    private func openSystemSettings() {
+        #if canImport(UIKit)
+        if let url = URL(string: UIApplication.openSettingsURLString) {
+            UIApplication.shared.open(url)
+        }
+        #endif
+    }
+
     private func takePill() {
         let wasAlreadyLogged = todayLog != nil
         withErrorHandling {
@@ -304,6 +358,7 @@ struct TodayView: View {
                 if (settingsList.first?.reminderStyle ?? "full") == "full" {
                     ReminderScheduler.scheduleEatTimer(
                         using: UNNotificationScheduler(),
+                        waitWindowMinutes: settingsList.first?.waitWindowMinutes ?? 30,
                         meds: settingsList.first?.morningMeds ?? []
                     )
                 }

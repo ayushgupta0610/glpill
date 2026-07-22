@@ -1,5 +1,6 @@
 import SwiftUI
 import SwiftData
+import UserNotifications
 
 struct SettingsView: View {
     @Environment(SubscriptionStore.self) private var subscriptions
@@ -7,6 +8,7 @@ struct SettingsView: View {
     @State private var reminderTime = Date.now
     @State private var restoreMessage: String?
     @State private var showManageSubscription = false
+    @State private var notificationsDenied = false
 
     var body: some View {
         NavigationStack {
@@ -62,6 +64,11 @@ struct SettingsView: View {
                             let style = settings.reminderStyle
                             Task {
                                 let scheduler = UNNotificationScheduler()
+                                // Leaving "full" means no eat-again nudge — cancel any
+                                // in-flight "you can eat now" push mid-window.
+                                if style != "full" {
+                                    scheduler.removePending(ids: [ReminderScheduler.eatTimerId])
+                                }
                                 if style == "none" {
                                     scheduler.removePending(ids: [ReminderScheduler.dailyId])
                                 } else if await scheduler.requestAuthorization() {
@@ -76,7 +83,13 @@ struct SettingsView: View {
                     } header: {
                         Text("Reminder style")
                     } footer: {
-                        Text("“Pill only” drops the eat-again nudge after your empty-stomach window. “Off” turns off the daily pill reminder.")
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("“Pill only” drops the eat-again nudge after your empty-stomach window. “Off” turns off the daily pill reminder.")
+                            if notificationsDenied && settings.reminderStyle != "none" {
+                                Text("Notifications are turned off for GLPill, so reminders can't be delivered. Turn them on in iOS Settings.")
+                                    .foregroundStyle(Theme.warn)
+                            }
+                        }
                     }
 
                     Section("Daily reminder") {
@@ -129,6 +142,9 @@ struct SettingsView: View {
             }
             .navigationTitle("Settings")
             .manageSubscriptionsSheet(isPresented: $showManageSubscription)
+            .task {
+                notificationsDenied = await UNNotificationScheduler().authorizationStatus() == .denied
+            }
             .onAppear {
                 if let settings = settingsList.first {
                     reminderTime = Calendar.current.date(
