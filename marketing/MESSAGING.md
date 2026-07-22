@@ -6,11 +6,13 @@ routes through this. Updated 2026-07-20 to the **twist-forward (privacy hook)** 
 ## Why this lane
 "The app made for GLP-1 pills" is a *category label*, not a hook — and it's now contested
 (Shotsy added pill tracking in March 2026). Our two wedges **no competitor leads with**:
-1. **Private by design** — on-device + your own iCloud, no account, no servers. For a
-   stigmatized niche this is *emotional*, not a spec.
+1. **Private by design** — on-device + your own iCloud, no account, no servers, and
+   **completely free** (nothing to sell means nothing to harvest). For a stigmatized niche
+   this is *emotional*, not a spec.
 2. **Pill-native ritual** — the daily streak + the Rybelsus 30-min empty-stomach timer,
    built for the pill, not bolted onto a needle app.
-Lead with privacy (the emotional hook), prove it with pill-native depth.
+Lead with privacy (the emotional hook), prove it with pill-native depth. "Free" is the
+proof, not the pitch — reinforce the privacy stance, don't shout the price.
 
 ## The signature line (the twist — use everywhere)
 > **Every GLP-1 app wants your data. GLPill can't even see it.**
@@ -20,21 +22,21 @@ Endcard two-line form:
 > **This one can't see it.**
 
 ## Positioning through-line (replaces the old one)
-> The **private, pill-native** GLP-1 tracker — no account, no servers, built for the daily
-> pill, not the needle.
+> The **free, private, pill-native** GLP-1 tracker — no account, no servers, built for the
+> daily pill, not the needle.
 
 **Proof sub (the credible detail underneath the hook):**
-> The private, pill-native tracker for Foundayo & Rybelsus — daily streak, the 30-minute
+> The free, private, pill-native tracker for Foundayo & Rybelsus — daily streak, the 30-minute
 > timer, doctor-ready reports. On your iPhone, never our servers.
 
 ## Hero headline (site + as reel/endcard hero)
 > **Every GLP-1 app wants your data. This one can't see it.**
-> *sub:* The private, pill-native tracker for Foundayo & Rybelsus — daily streak, the
-> 30-min timer, doctor reports. On your iPhone, never our servers.
+> *sub:* Free, private, pill-native — for Foundayo & Rybelsus. Daily streak, the 30-min
+> timer, doctor reports. On your iPhone, never our servers.
 
 ## Bio (IG / YouTube / TikTok — ≤150 chars)
 ```
-💊 The GLP-1 pill tracker that can't see your data
+💊 The free GLP-1 pill tracker that can't see your data
 🔒 No account · no servers · Foundayo & Rybelsus
 📲 glpillapp.com
 ```
@@ -76,3 +78,7 @@ Beat-1 = hook line (over B-roll) · Beat-2 = app screenshot + caption · all end
 All captions lead with the tension, end with a soft CTA + `📲 link in bio`, and pin the CTA
 as the first comment (never a hard sell in the video). Hashtag base:
 `#glp1 #glp1pill #rybelsus #foundayo #orforglipron #glp1community #glp1journey`
+
+**"Free" in captions:** drop it into the CTA/first-comment, not the hook — e.g. *"Free,
+private, and built for the pill 👉 glpillapp.com"* or *"100% free — no account, nothing to
+sell."* Keep it as reassurance at the end; the tension still leads.

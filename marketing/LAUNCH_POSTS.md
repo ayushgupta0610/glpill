@@ -1,6 +1,6 @@
 # GLPill — Launch posts & YouTube pack (channels beyond IG)
 
-Positioning through-line for everything below (canonical: `MESSAGING.md`): **the private, pill-native GLP-1 tracker — no account, no servers, built for the daily pill, not the needle.** The twist line to close on: *"Every GLP-1 app wants your data. GLPill can't even see it."* Lead with the privacy/pill differentiators, not the feature list.
+Positioning through-line for everything below (canonical: `MESSAGING.md`): **the free, private, pill-native GLP-1 tracker — no account, no servers, built for the daily pill, not the needle.** The twist line to close on: *"Every GLP-1 app wants your data. GLPill can't even see it."* Lead with the privacy/pill differentiators; "free" is reassurance at the end (no ads, no account, nothing to sell), not the hook.
 
 ---
 
@@ -35,27 +35,27 @@ Check each sub's self-promo rules first; DM mods if unsure. Post to r/Semaglutid
 >
 > So I built **GLPill**: one-tap daily logging with a streak, an automatic 30-minute Rybelsus timer that tells you the exact minute you can eat, weight trends, and a summary you can hand your doctor. Two things I cared about: it **syncs across your devices** (so you don't lose your history switching phones — a complaint I saw a lot about other apps), and it's **private** — no account, no servers, your data lives on your device + your own iCloud, I literally can't see it.
 >
-> It's on the App Store, free to try. Not medical advice, just a tracker — and I'd genuinely love feedback from people actually on the pills. What am I missing? [link]
+> It's on the App Store — completely free, no ads, no account. Not medical advice, just a tracker — and I'd genuinely love feedback from people actually on the pills. What am I missing? [link]
 
 *Follow-up in comments:* answer every reply, thank critics, note requests. Reddit rewards a founder who's present.
 
 ### Facebook Groups (the big GLP-1 / Mounjaro / Zepbound / women's GLP-1 groups)
 Softer, community tone. Post only where you're an active member; many admins allow one honest recommendation.
 
-> Anyone else here on the *pill* version (Rybelsus / the new Foundayo) rather than the shots? I kept forgetting the 30-minute empty-stomach wait and losing track of my doses, and every app I found was really made for injections. I ended up building a little iPhone app just for the pills — daily streak, a timer for the 30-min wait, weight trend, and it syncs so you don't lose everything if you get a new phone. It's free to try if it'd help anyone here 💊 (happy to share the link if that's allowed, mods!). Not medical advice, just something that made my mornings easier.
+> Anyone else here on the *pill* version (Rybelsus / the new Foundayo) rather than the shots? I kept forgetting the 30-minute empty-stomach wait and losing track of my doses, and every app I found was really made for injections. I ended up building a little iPhone app just for the pills — daily streak, a timer for the 30-min wait, weight trend, and it syncs so you don't lose everything if you get a new phone. It's completely free (no ads, no account) if it'd help anyone here 💊 (happy to share the link if that's allowed, mods!). Not medical advice, just something that made my mornings easier.
 
 ### Product Hunt (Tue–Thu, 12:01am PT; warm up the account + a "Coming Soon" page first)
 - **Tagline:** The habit tracker built for GLP-1 *pills* — not injections.
-- **Description:** GLPill is the iPhone app for daily GLP-1 pills (Foundayo/orforglipron, Rybelsus). One-tap dose logging with streaks, an automatic 30-minute empty-stomach timer for Rybelsus, weight trends, and doctor-ready reports. Syncs privately across your devices (never lose your history) with no accounts and no servers — your data stays on your device and your own iCloud. Built for the new wave of pill users the injection-first trackers overlook.
+- **Description:** GLPill is the free iPhone app for daily GLP-1 pills (Foundayo/orforglipron, Rybelsus). One-tap dose logging with streaks, an automatic 30-minute empty-stomach timer for Rybelsus, weight trends, and doctor-ready reports. Syncs privately across your devices (never lose your history) with no accounts and no servers — your data stays on your device and your own iCloud. Completely free, no ads, nothing to sell. Built for the new wave of pill users the injection-first trackers overlook.
 - **First comment (maker):** why you built it (the injection-first gap + the Rybelsus timing you kept messing up), the privacy/sync philosophy, and an ask for feedback. Line up 15–20 upvoters for the first hour.
 - **Assets:** the app-demo reel + 3–4 screenshots + the icon.
 
 ### X / LinkedIn (build-in-public, from your personal account)
-> The first daily GLP-1 *pill* (Foundayo) got FDA-approved in April. Every tracking app is still built for the weekly shots. So I built the one for the pills: daily streaks, the Rybelsus 30-minute timer, weight trends, doctor reports — syncs across devices, zero servers, fully private. Just shipped 👇 glpillapp.com
+> The first daily GLP-1 *pill* (Foundayo) got FDA-approved in April. Every tracking app is still built for the weekly shots. So I built the one for the pills: daily streaks, the Rybelsus 30-minute timer, weight trends, doctor reports — syncs across devices, zero servers, fully private, and completely free. Just shipped 👇 glpillapp.com
 
 ---
 
 ## Reminder
 - Every post routes to **glpillapp.com** (waitlist now → App Store at launch) and **@glpillapp**.
-- Lead with **pill-first + sync + privacy** (the competitor sore spots), not a feature dump.
+- Lead with **pill-first + sync + privacy** (the competitor sore spots), not a feature dump. Close with **free** as reassurance (no ads, no account) — never the lead.
 - Reddit/FB/PH accounts all need **warmup** before launch — start now.
