@@ -8,7 +8,7 @@ struct ReportScreen: View {
     @Query(sort: \DoseLog.date) private var doseLogs: [DoseLog]
     @Query(sort: \WeightEntry.date) private var weights: [WeightEntry]
     @Query(sort: \SideEffectLog.date) private var sideEffects: [SideEffectLog]
-    @Query private var settingsList: [UserSettings]
+    @Query(sort: \UserSettings.createdAt) private var settingsList: [UserSettings]
 
     private var calendar: Calendar { .current }
 

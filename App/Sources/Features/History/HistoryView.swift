@@ -12,7 +12,7 @@ private struct HistoryDay: Identifiable {
 struct HistoryView: View {
     @Query(sort: \DoseLog.date) private var doseLogs: [DoseLog]
     @Query(sort: \SideEffectLog.date) private var sideEffects: [SideEffectLog]
-    @Query private var settingsList: [UserSettings]
+    @Query(sort: \UserSettings.createdAt) private var settingsList: [UserSettings]
     @State private var monthAnchor = Calendar.current.startOfDay(for: .now)
     @State private var selectedDay: HistoryDay?
 
@@ -192,7 +192,7 @@ private struct DayDetailSheet: View {
     @Query private var doseLogs: [DoseLog]
     @Query private var sideEffects: [SideEffectLog]
     @Query private var intakeDays: [IntakeDay]
-    @Query private var settingsList: [UserSettings]
+    @Query(sort: \UserSettings.createdAt) private var settingsList: [UserSettings]
     @State private var editingEffect: SideEffectLog?
     @State private var errorMessage: String?
 

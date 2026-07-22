@@ -45,16 +45,16 @@ final class ReminderSchedulerTests: XCTestCase {
         XCTAssertEqual(spy.added[0].body, "Your 60-minute wait is up — you can eat now.")
     }
 
-    func testEatTimerBodyGenericWhenNoMeds() {
-        XCTAssertEqual(ReminderScheduler.eatTimerBody(waitWindowMinutes: 45, meds: []), "Your 45-minute wait is up — you can eat now.")
+    func testEatTimerBodyIsNeutralAndNamesNoMeds() {
+        // Privacy: the body must never mention the user's other medications (lock-screen visible).
+        let body = ReminderScheduler.eatTimerBody(waitWindowMinutes: 45)
+        XCTAssertEqual(body, "Your 45-minute wait is up — you can eat now.")
+        XCTAssertFalse(body.lowercased().contains("also take"))
     }
-    func testEatTimerBodyMentionsMedsWhenPresent() {
-        XCTAssertEqual(ReminderScheduler.eatTimerBody(waitWindowMinutes: 30, meds: ["Thyroid", "BP med"]), "Your 30-minute wait is up — you can eat now. You can also take your Thyroid, BP med now.")
-    }
-    func testEatTimerPassesMedsBodyToScheduler() {
+    func testEatTimerScheduledBodyNamesNoMeds() {
         let spy = SpyScheduler()
-        ReminderScheduler.scheduleEatTimer(using: spy, waitWindowMinutes: 60, meds: ["Thyroid"])
-        XCTAssertEqual(spy.added.first?.body, "Your 60-minute wait is up — you can eat now. You can also take your Thyroid now.")
+        ReminderScheduler.scheduleEatTimer(using: spy, waitWindowMinutes: 60)
+        XCTAssertEqual(spy.added.first?.body, "Your 60-minute wait is up — you can eat now.")
     }
 
     func testEnsureDailyScheduledSkipsWhenAlreadyPending() async {

@@ -31,23 +31,26 @@ enum ModelMaintenance {
         }
     }
 
-    /// Fills each of `keep`'s user-meaningful fields from `extra` only when `keep`'s
-    /// value is still default/empty, so the union of both rows survives.
+    /// Merges `extra` into the canonical `keep` row without ever clobbering a real
+    /// value on `keep`. `keep` is the earliest-`createdAt` row and WINS for every
+    /// scalar preference — those are never taken from `extra`, since a genuine value
+    /// on `keep` can coincide with the model default (e.g. `reminderStyle == "full"`,
+    /// 9:00 AM, default targets) and must not be silently reset to `extra`'s value.
+    /// Only fields that carry an explicit "unset" signal (nil / empty collection) are
+    /// filled from `extra`, and only when `keep` is truly unset.
     private static func merge(_ extra: UserSettings, into keep: UserSettings) {
+        // Scalar preferences: canonical `keep` always wins — never merged.
+
+        // Nil-signalled fields: fill only when `keep` is still unset.
         if keep.firstName == nil { keep.firstName = extra.firstName }
         if keep.goalKilograms == nil { keep.goalKilograms = extra.goalKilograms }
         if keep.startKilograms == nil { keep.startKilograms = extra.startKilograms }
-        if !keep.usesMetric { keep.usesMetric = extra.usesMetric }
-        if keep.reminderHour == 9 { keep.reminderHour = extra.reminderHour }
-        if keep.reminderMinute == 0 { keep.reminderMinute = extra.reminderMinute }
-        if keep.proteinTargetGrams == 100 { keep.proteinTargetGrams = extra.proteinTargetGrams }
-        if keep.waterTargetMl == 2000 { keep.waterTargetMl = extra.waterTargetMl }
-        if keep.morningMeds.isEmpty { keep.morningMeds = extra.morningMeds }
         if keep.onboardingStage == nil { keep.onboardingStage = extra.onboardingStage }
+        // Empty-signalled collections: fill only when `keep` is still empty.
+        if keep.morningMeds.isEmpty { keep.morningMeds = extra.morningMeds }
         if keep.sideEffectConcerns.isEmpty { keep.sideEffectConcerns = extra.sideEffectConcerns }
         if keep.goals.isEmpty { keep.goals = extra.goals }
-        if keep.reminderStyle == "full" { keep.reminderStyle = extra.reminderStyle }
-        if !keep.coachingDismissed { keep.coachingDismissed = extra.coachingDismissed }
+        // Completion is a one-way latch: complete on either row wins.
         keep.onboardingComplete = keep.onboardingComplete || extra.onboardingComplete
     }
 
@@ -59,12 +62,10 @@ enum ModelMaintenance {
         }
     }
 
-    /// Medication has far fewer fields; fill the kept row only where it's still on
-    /// the model default (custom kind / no custom name).
+    /// Canonical `keep` wins for the medication's own fields (kind, empty-stomach);
+    /// only the nil-signalled `customName` is filled from `extra` when `keep` lacks one.
     private static func merge(_ extra: Medication, into keep: Medication) {
-        if keep.kind == .custom { keep.kindRaw = extra.kindRaw }
         if keep.customName == nil { keep.customName = extra.customName }
-        if !keep.requiresEmptyStomach { keep.requiresEmptyStomach = extra.requiresEmptyStomach }
     }
 }
 

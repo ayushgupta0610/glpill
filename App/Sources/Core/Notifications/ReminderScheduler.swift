@@ -27,17 +27,18 @@ enum ReminderScheduler {
         )
     }
 
-    static func eatTimerBody(waitWindowMinutes: Int = 30, meds: [String]) -> String {
-        let base = "Your \(waitWindowMinutes)-minute wait is up — you can eat now."
-        guard !meds.isEmpty else { return base }
-        return base + " You can also take your \(meds.joined(separator: ", ")) now."
+    /// Neutral, privacy-safe body: never names the user's other medications, since the
+    /// notification renders on the lock screen where bystanders can read it. The in-app
+    /// `MorningSequenceCard` (behind device unlock) lists those meds instead.
+    static func eatTimerBody(waitWindowMinutes: Int = 30) -> String {
+        "Your \(waitWindowMinutes)-minute wait is up — you can eat now."
     }
 
-    static func scheduleEatTimer(using scheduler: NotificationScheduling, waitWindowMinutes: Int = 30, meds: [String] = []) {
+    static func scheduleEatTimer(using scheduler: NotificationScheduling, waitWindowMinutes: Int = 30) {
         scheduler.add(
             id: eatTimerId,
             title: "You can eat now ✅",
-            body: eatTimerBody(waitWindowMinutes: waitWindowMinutes, meds: meds),
+            body: eatTimerBody(waitWindowMinutes: waitWindowMinutes),
             trigger: .once(after: Double(waitWindowMinutes) * 60)
         )
     }

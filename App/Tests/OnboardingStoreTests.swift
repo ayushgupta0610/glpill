@@ -255,24 +255,37 @@ final class OnboardingStoreTests: XCTestCase {
         XCTAssertEqual(remaining.first?.createdAt, base)
     }
 
-    /// Merge-then-delete: three rows with distinct `createdAt` and complementary
-    /// non-default fields collapse to the single earliest row carrying ALL fields.
+    /// Merge-then-delete: the canonical (earliest-`createdAt`) row WINS for every
+    /// scalar preference — those are never taken from a later row, since a genuine
+    /// value can coincide with the model default. Only nil / empty-collection fields
+    /// are filled from a later row (and only when `keep` is truly unset).
     @MainActor
     func testDeduplicateMergesComplementaryFieldsIntoEarliest() throws {
         let container = try makeContainer()
         let context = container.mainContext
         let base = Date(timeIntervalSince1970: 1_700_000_000)
 
-        // Earliest (kept) row: only firstName set, everything else default.
-        let keep = UserSettings(createdAt: base, firstName: "Ada")
-        // Second row: goal/start weight + metric.
+        // Earliest (kept) row: firstName + real scalar prefs (some equal defaults).
+        let keep = UserSettings(
+            createdAt: base,
+            usesMetric: false,
+            firstName: "Ada",
+            reminderHour: 9,
+            reminderMinute: 0,
+            proteinTargetGrams: 100,
+            waterTargetMl: 2000,
+            reminderStyle: "full",
+            coachingDismissed: false
+        )
+        // Second row: goal/start weight + metric (nil-fill fields only).
         let second = UserSettings(
             createdAt: base.addingTimeInterval(100),
             usesMetric: true,
             goalKilograms: 70,
             startKilograms: 90
         )
-        // Third row: onboarding answers + completion.
+        // Third row: onboarding answers + completion + conflicting scalar prefs
+        // that must NOT clobber the canonical row.
         let third = UserSettings(
             createdAt: base.addingTimeInterval(200),
             onboardingComplete: true,
@@ -296,19 +309,57 @@ final class OnboardingStoreTests: XCTestCase {
         XCTAssertEqual(remaining.count, 1)
         let merged = try XCTUnwrap(remaining.first)
         XCTAssertEqual(merged.createdAt, base)
+        // Nil / empty fields filled from later rows.
         XCTAssertEqual(merged.firstName, "Ada")
         XCTAssertEqual(merged.goalKilograms, 70)
         XCTAssertEqual(merged.startKilograms, 90)
-        XCTAssertTrue(merged.usesMetric)
-        XCTAssertEqual(merged.reminderHour, 7)
-        XCTAssertEqual(merged.reminderMinute, 30)
         XCTAssertEqual(merged.morningMeds, ["Thyroid"])
         XCTAssertEqual(merged.onboardingStage, "switchingFromInjections")
         XCTAssertEqual(merged.sideEffectConcerns, ["nausea"])
         XCTAssertEqual(merged.goals, ["consistency"])
-        XCTAssertEqual(merged.reminderStyle, "pillOnly")
-        XCTAssertTrue(merged.coachingDismissed)
+        // Scalar preferences: canonical row wins, never clobbered.
+        XCTAssertFalse(merged.usesMetric)
+        XCTAssertEqual(merged.reminderHour, 9)
+        XCTAssertEqual(merged.reminderMinute, 0)
+        XCTAssertEqual(merged.reminderStyle, "full")
+        XCTAssertFalse(merged.coachingDismissed)
+        // Completion latches on.
         XCTAssertTrue(merged.onboardingComplete)
+    }
+
+    /// A canonical row whose scalar prefs happen to EQUAL the model defaults must not
+    /// be overwritten by an `extra` row carrying different (non-default) scalars —
+    /// this is the data-loss bug the merge policy guards against.
+    @MainActor
+    func testDeduplicateCanonicalScalarsSurviveEqualToDefault() throws {
+        let container = try makeContainer()
+        let context = container.mainContext
+        let base = Date(timeIntervalSince1970: 1_700_000_000)
+
+        // Canonical row: reminderStyle="full", 9 AM — genuine values equal to defaults,
+        // empty morningMeds.
+        let keep = UserSettings(createdAt: base, reminderHour: 9, reminderStyle: "full")
+        // Extra: would disable reminders + shift the hour, and carries a med list.
+        let extra = UserSettings(
+            createdAt: base.addingTimeInterval(100),
+            reminderHour: 7,
+            morningMeds: ["Thyroid"],
+            reminderStyle: "none"
+        )
+        context.insert(extra)
+        context.insert(keep)
+        try context.save()
+
+        ModelMaintenance.deduplicate(in: context)
+
+        let remaining = try context.fetch(FetchDescriptor<UserSettings>())
+        XCTAssertEqual(remaining.count, 1)
+        let merged = try XCTUnwrap(remaining.first)
+        // Canonical scalars survive.
+        XCTAssertEqual(merged.reminderStyle, "full")
+        XCTAssertEqual(merged.reminderHour, 9)
+        // Unset collection gets filled from extra.
+        XCTAssertEqual(merged.morningMeds, ["Thyroid"])
     }
 
     /// Re-onboarding must NOT reset the original plan `startDate` (streak/plan start),

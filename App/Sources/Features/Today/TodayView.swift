@@ -374,8 +374,7 @@ struct TodayView: View {
                 if (settingsList.first?.reminderStyle ?? "full") == "full" {
                     ReminderScheduler.scheduleEatTimer(
                         using: UNNotificationScheduler(),
-                        waitWindowMinutes: settingsList.first?.waitWindowMinutes ?? 30,
-                        meds: settingsList.first?.morningMeds ?? []
+                        waitWindowMinutes: settingsList.first?.waitWindowMinutes ?? 30
                     )
                 }
             }
