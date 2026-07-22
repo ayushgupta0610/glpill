@@ -363,7 +363,8 @@ final class EdgeFlowTests: XCTestCase {
         // Premium is gated on the doctor-report export: a free user tapping
         // "Export report" on the Report tab gets the paywall.
         app.tabBars.buttons["Report"].tap()
-        let exportButton = app.buttons["Export report"]
+        // Free user's gated control: label reads "Export report, Premium".
+        let exportButton = app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Export report'")).firstMatch
         XCTAssertTrue(exportButton.waitForExistence(timeout: 5), "Export report (premium) button missing")
         exportButton.tap()
         sleep(1)

@@ -80,7 +80,7 @@ struct GLPillWidgetEntryView: View {
                     .foregroundStyle(.white)
                     .contentTransition(.numericText())
             }
-            Text("\(entry.snapshot.streak)-day streak")
+            Text(entry.snapshot.streak == 1 ? "day streak" : "days streak")
                 .font(.system(size: 13, weight: .semibold))
                 .foregroundStyle(.white.opacity(0.85))
 
