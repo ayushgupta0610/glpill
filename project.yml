@@ -8,7 +8,7 @@ settings:
   base:
     SWIFT_VERSION: "5.0"
     MARKETING_VERSION: "1.0.0"
-    CURRENT_PROJECT_VERSION: "4"
+    CURRENT_PROJECT_VERSION: "5"
     CODE_SIGN_STYLE: Automatic
     DEVELOPMENT_TEAM: LPR84B522G
 targets:
@@ -55,8 +55,6 @@ targets:
     platform: iOS
     sources:
       - App/Tests
-      - path: App/Resources/GLPill.storekit
-        buildPhase: resources
     dependencies:
       - target: GLPill
     settings:
@@ -83,10 +81,8 @@ schemes:
         GLPillUITests: [test]
     run:
       config: Debug
-      storeKitConfiguration: App/Resources/GLPill.storekit
     test:
       config: Debug
-      storeKitConfiguration: App/Resources/GLPill.storekit
       commandLineArguments:
         "-disableCloudKit": true
       targets:

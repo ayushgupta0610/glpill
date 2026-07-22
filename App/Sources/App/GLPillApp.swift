@@ -5,7 +5,6 @@ import SwiftData
 struct GLPillApp: App {
     private let container: ModelContainer
     private let storageFailed: Bool
-    @State private var subscriptions = SubscriptionStore()
 
     init() {
         do {
@@ -21,19 +20,14 @@ struct GLPillApp: App {
             ModelContainerFactory.wipe(container)
             UserDefaults.standard.removeObject(forKey: "eatTimerEnd")
         }
-        if ProcessInfo.processInfo.arguments.contains("-uiTestUnlocked") {
-            _subscriptions = State(initialValue: SubscriptionStore(provider: AlwaysActiveProvider()))
-        }
         #endif
     }
 
     var body: some Scene {
         WindowGroup {
             RootView(storageFailed: storageFailed)
-                .environment(subscriptions)
                 .tint(Theme.primary)
                 .task {
-                    subscriptions.startTransactionListener()
                     // Collapse CloudKit-synced duplicates before any read so
                     // `.first` on UserSettings/Medication is deterministic.
                     ModelMaintenance.deduplicate(in: container.mainContext)
@@ -42,16 +36,10 @@ struct GLPillApp: App {
                     if ProcessInfo.processInfo.arguments.contains("-exportCards") {
                         ShareCardExporter.exportSamples()
                     }
-                    if ProcessInfo.processInfo.arguments.contains("-exportPaywall") {
-                        PaywallShotExporter.export()
-                    }
                     if ProcessInfo.processInfo.arguments.contains("-exportScreenshots") {
                         ScreenshotExporter.export()
                     }
                     #endif
-                    async let refreshTask: Void = subscriptions.refresh()
-                    async let productsTask: Void = subscriptions.loadProducts()
-                    _ = await (refreshTask, productsTask)
                 }
         }
         .modelContainer(container)

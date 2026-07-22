@@ -352,35 +352,6 @@ final class EdgeFlowTests: XCTestCase {
                        "Report screen shows a doubled navigation bar (nested NavigationStack)")
     }
 
-    // MARK: - Flow 7: Paywall dismiss
-
-    @MainActor
-    func testPaywallDismiss() {
-        let app = XCUIApplication()
-        launch(app)
-        completeOnboarding(app, OnboardConfig(drug: "Foundayo (orforglipron)"))
-
-        // Premium is gated on the doctor-report export: a free user tapping
-        // "Export report" on the Report tab gets the paywall.
-        app.tabBars.buttons["Report"].tap()
-        // Free user's gated control: label reads "Export report, Premium".
-        let exportButton = app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Export report'")).firstMatch
-        XCTAssertTrue(exportButton.waitForExistence(timeout: 5), "Export report (premium) button missing")
-        exportButton.tap()
-        sleep(1)
-        shot(app, "F7-paywall")
-        // Paywall should be up.
-        XCTAssertTrue(app.staticTexts["Unlock GLPill Premium"].waitForExistence(timeout: 5),
-                      "Paywall did not present from the Export report button")
-        // Close control.
-        let close = app.buttons["Close"]
-        XCTAssertTrue(close.waitForExistence(timeout: 5), "Paywall Close control missing")
-        close.tap()
-        sleep(1)
-        XCTAssertFalse(app.staticTexts["Unlock GLPill Premium"].exists, "Paywall did not dismiss")
-        shot(app, "F7-after-close")
-    }
-
     // MARK: - Flow 8: Many / long morning meds
 
     @MainActor

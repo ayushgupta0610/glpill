@@ -19,7 +19,7 @@ final class GLPillUITests: XCTestCase {
     @MainActor
     func testUnlockedFlowLogsDoseAndVisitsTabs() {
         let app = XCUIApplication()
-        app.launchArguments = ["-resetData", "-uiTestUnlocked", "-disableCloudKit"]
+        app.launchArguments = ["-resetData", "-disableCloudKit"]
         app.launch()
 
         completeOnboarding(app)
