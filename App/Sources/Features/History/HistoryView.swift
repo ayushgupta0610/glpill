@@ -92,7 +92,7 @@ struct HistoryView: View {
                 if let day = days[index] {
                     dayCell(day)
                 } else {
-                    Color.clear.frame(height: 36)
+                    Color.clear.frame(height: 44)
                 }
             }
         }
@@ -120,10 +120,19 @@ struct HistoryView: View {
                             Circle().stroke(Color.secondary.opacity(0.4), lineWidth: 1.5)
                         }
                     }
+                    .overlay(alignment: .bottomTrailing) {
+                        if dosed {
+                            Image(systemName: "checkmark")
+                                .font(.caption2.bold())
+                                .foregroundStyle(.white)
+                                .padding(1)
+                        }
+                    }
                 Circle()
                     .fill(hasEffect ? Theme.warn : Color.clear)
                     .frame(width: 5, height: 5)
             }
+            .frame(minWidth: 44, minHeight: 44)
         }
         .buttonStyle(.plain)
         .disabled(isFuture)

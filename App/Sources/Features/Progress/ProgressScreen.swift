@@ -84,6 +84,8 @@ struct ProgressScreen: View {
                         } label: {
                             Image(systemName: "trash")
                                 .foregroundStyle(.red)
+                                .frame(minWidth: 44, minHeight: 44)
+                                .contentShape(Rectangle())
                         }
                         .buttonStyle(.plain)
                         .accessibilityLabel("Delete weigh-in")
@@ -204,8 +206,19 @@ struct ProgressScreen: View {
                 }
                 .chartYScale(domain: yDomain)
                 .frame(height: 220)
+                .accessibilityElement(children: .ignore)
+                .accessibilityLabel(weightChartSummary)
             }
         }
+    }
+
+    private var weightChartSummary: String {
+        guard let first = entries.first, let last = entries.last else {
+            return "Weight trend"
+        }
+        let firstText = UnitFormat.weightString(kilograms: first.kilograms, metric: metric)
+        let lastText = UnitFormat.weightString(kilograms: last.kilograms, metric: metric)
+        return "Weight trend, \(firstText) to \(lastText) over \(entries.count) entries"
     }
 
     private func displayValue(_ kilograms: Double) -> Double {

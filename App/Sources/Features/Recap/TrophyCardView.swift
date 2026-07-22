@@ -52,5 +52,17 @@ struct TrophyCardView: View {
         .padding(28)
         .frame(width: 360, height: 640)
         .background(Theme.heroGradient)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(accessibilitySummary)
+    }
+
+    private var accessibilitySummary: String {
+        let namePrefix: String
+        if let name = name?.trimmingCharacters(in: .whitespacesAndNewlines), !name.isEmpty {
+            namePrefix = "\(name). "
+        } else {
+            namePrefix = ""
+        }
+        return "\(namePrefix)\(milestone) \(milestone == 1 ? "day" : "days") milestone. \(StreakMilestone.headline(for: milestone))"
     }
 }

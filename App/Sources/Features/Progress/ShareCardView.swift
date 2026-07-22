@@ -60,5 +60,14 @@ struct ShareCardView: View {
         .padding(28)
         .frame(width: 360, height: 450)
         .background(background)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(accessibilitySummary)
+    }
+
+    private var accessibilitySummary: String {
+        if isGain {
+            return "GLPill progress card. Still showing up. \(changeText). \(streak)-day streak."
+        }
+        return "GLPill progress card. \(changeText) in \(weeks) week\(weeks == 1 ? "" : "s"). \(streak)-day streak."
     }
 }
