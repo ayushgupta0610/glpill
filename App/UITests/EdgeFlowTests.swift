@@ -360,18 +360,17 @@ final class EdgeFlowTests: XCTestCase {
         launch(app)
         completeOnboarding(app, OnboardConfig(drug: "Foundayo (orforglipron)"))
 
-        let fab = app.buttons["Log something"]
-        XCTAssertTrue(fab.waitForExistence(timeout: 5))
-        fab.tap()
-        // Tap the "Progress photo · Premium" row.
-        let photoRow = app.staticTexts["Progress photo"]
-        XCTAssertTrue(photoRow.waitForExistence(timeout: 5), "Progress photo row missing")
-        photoRow.tap()
+        // Premium is gated on the doctor-report export: a free user tapping
+        // "Export report" on the Report tab gets the paywall.
+        app.tabBars.buttons["Report"].tap()
+        let exportButton = app.buttons["Export report"]
+        XCTAssertTrue(exportButton.waitForExistence(timeout: 5), "Export report (premium) button missing")
+        exportButton.tap()
         sleep(1)
         shot(app, "F7-paywall")
         // Paywall should be up.
         XCTAssertTrue(app.staticTexts["Unlock GLPill Premium"].waitForExistence(timeout: 5),
-                      "Paywall did not present from Progress photo row")
+                      "Paywall did not present from the Export report button")
         // Close control.
         let close = app.buttons["Close"]
         XCTAssertTrue(close.waitForExistence(timeout: 5), "Paywall Close control missing")
