@@ -9,6 +9,7 @@ struct SideEffectSheet: View {
     @State private var kind: SideEffectKind = .nausea
     @State private var severity = 1
     @State private var note = ""
+    @State private var isSaving = false
 
     private static let noteCharacterLimit = 280
 
@@ -38,9 +39,12 @@ struct SideEffectSheet: View {
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Save") {
+                        guard !isSaving else { return }
+                        isSaving = true
                         onSave(kind, severity, note.isEmpty ? nil : note)
                         dismiss()
                     }
+                    .disabled(isSaving)
                 }
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel", role: .cancel) { dismiss() }

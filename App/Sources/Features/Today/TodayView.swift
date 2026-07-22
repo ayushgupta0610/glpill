@@ -155,19 +155,35 @@ struct TodayView: View {
     }
 
     private var medLevelPoints: [MedicationLevel.Point] {
-        let doses = doseLogs.map { (date: $0.takenAt, mg: $0.doseMg) }
         let kind = medications.first?.kind ?? .custom
-        return MedicationLevel.curve(doses: doses, halfLifeHours: MedicationLevel.halfLifeHours(for: kind), samples: 40, now: .now)
+        let halfLife = MedicationLevel.halfLifeHours(for: kind)
+        // Only feed doses from the last ~5 half-lives; older doses have decayed to
+        // near-zero and would otherwise stretch the fixed 40 samples too thin for a
+        // user whose first dose is very old, making the recent curve inaccurate.
+        let lookbackStart = Date.now.addingTimeInterval(-5 * halfLife * 3600)
+        let doses = doseLogs
+            .filter { $0.doseMg > 0 && $0.takenAt >= lookbackStart }
+            .map { (date: $0.takenAt, mg: $0.doseMg) }
+        return MedicationLevel.curve(doses: doses, halfLifeHours: halfLife, samples: 40, now: .now)
     }
 
     private var medLevelProjection: [MedicationLevel.Point] {
         let kind = medications.first?.kind ?? .custom
-        let dose = doseLogs.last?.doseMg ?? 0
+        let dose = store.currentDoseMg()
         return MedicationLevel.projection(dailyDoseMg: dose, halfLifeHours: MedicationLevel.halfLifeHours(for: kind), days: 7, samples: 40, startingFrom: .now)
     }
 
+    /// Eat-timer end as a Date, but only while the window belongs to today.
+    /// A stale `eatTimerEnd` from a prior day (not cleared until relaunch) would
+    /// otherwise render "After 8:14 AM" for a long-closed window.
+    private var activeWindowEnd: Date? {
+        guard eatTimerEnd > 0 else { return nil }
+        let end = Date(timeIntervalSince1970: eatTimerEnd)
+        return calendar.isDateInToday(end) ? end : nil
+    }
+
     private var morningSequence: [MorningSequence.Step] {
-        let clear = eatTimerEnd > 0 ? Date(timeIntervalSince1970: eatTimerEnd) : nil
+        let clear = activeWindowEnd
         return MorningSequence.make(
             pillTaken: todayLog != nil,
             pillName: medications.first?.displayName ?? "Your GLP-1 pill",
@@ -181,7 +197,7 @@ struct TodayView: View {
         RitualState.make(
             todayLogged: todayLog != nil,
             requiresEmptyStomach: medications.first?.requiresEmptyStomach ?? false,
-            windowEnd: eatTimerEnd > 0 ? Date(timeIntervalSince1970: eatTimerEnd) : nil,
+            windowEnd: activeWindowEnd,
             meds: settingsList.first?.morningMeds ?? [],
             now: .now
         )
@@ -381,7 +397,9 @@ struct TodayView: View {
         settings.lastCelebratedMilestone = milestone
         do {
             try context.save()
-            celebratingMilestone = milestone
+            // Present on the NEXT runloop so a same-tick `activeSheet = nil`
+            // (Log-sheet dismiss) can't swallow this present-while-dismiss.
+            DispatchQueue.main.async { celebratingMilestone = milestone }
         } catch {
             // Revert the bump so the milestone can re-fire next time rather than
             // being silently consumed (never celebrated, never re-fires).

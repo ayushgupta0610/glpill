@@ -1,8 +1,10 @@
 import SwiftUI
 
 struct ReportShortcutCard: View {
+    @Environment(AppRouter.self) private var router
+
     var body: some View {
-        NavigationLink { ReportScreen() } label: {
+        Button { router.selection = .report } label: {
             Card {
                 HStack {
                     SectionHeader(title: "Doctor-ready report")

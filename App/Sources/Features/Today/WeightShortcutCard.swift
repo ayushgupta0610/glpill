@@ -4,9 +4,10 @@ struct WeightShortcutCard: View {
     /// Latest weight in kilograms, or nil if none logged yet.
     let latestKilograms: Double?
     let metric: Bool
+    @Environment(AppRouter.self) private var router
 
     var body: some View {
-        NavigationLink { ProgressScreen() } label: {
+        Button { router.selection = .progress } label: {
             Card {
                 HStack {
                     SectionHeader(title: "Weight")

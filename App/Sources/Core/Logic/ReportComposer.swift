@@ -101,7 +101,16 @@ enum ReportComposer {
             .map { "- \($0.key): \($0.value.count)x (max severity \($0.value.maxSeverity)/3)" }
     }
 
+    /// Fixed en_US_POSIX so the whole clinician report stays consistent ASCII
+    /// (no localized/Devanagari numerals mixed with ASCII numbers elsewhere).
+    private static let dateFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.dateFormat = "MMM d, yyyy"
+        return formatter
+    }()
+
     private static func dateString(_ date: Date) -> String {
-        date.formatted(date: .abbreviated, time: .omitted)
+        dateFormatter.string(from: date)
     }
 }

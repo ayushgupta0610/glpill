@@ -100,6 +100,12 @@ struct SettingsView: View {
                                 settings.reminderMinute = components.minute ?? 0
                                 Task {
                                     let scheduler = UNNotificationScheduler()
+                                    // Don't resurrect a disabled ("Off") daily reminder just
+                                    // because the user nudged the time picker.
+                                    guard settings.reminderStyle != "none" else {
+                                        scheduler.removePending(ids: [ReminderScheduler.dailyId])
+                                        return
+                                    }
                                     if await scheduler.requestAuthorization() {
                                         ReminderScheduler.scheduleDaily(
                                             hour: settings.reminderHour,
