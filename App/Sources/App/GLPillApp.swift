@@ -33,7 +33,7 @@ struct GLPillApp: App {
                 .environment(subscriptions)
                 .tint(Theme.primary)
                 .task {
-                    _ = subscriptions.startTransactionListener()
+                    subscriptions.startTransactionListener()
                     // Collapse CloudKit-synced duplicates before any read so
                     // `.first` on UserSettings/Medication is deterministic.
                     ModelMaintenance.deduplicate(in: container.mainContext)

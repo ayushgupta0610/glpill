@@ -83,8 +83,8 @@ struct HistoryView: View {
     private var monthGrid: some View {
         let days = monthDays()
         return LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 7), spacing: 8) {
-            ForEach(["S", "M", "T", "W", "T", "F", "S"].indices, id: \.self) { index in
-                Text(["S", "M", "T", "W", "T", "F", "S"][index])
+            ForEach(weekdayHeaderSymbols.indices, id: \.self) { index in
+                Text(weekdayHeaderSymbols[index])
                     .font(.caption2.weight(.semibold))
                     .foregroundStyle(.secondary)
             }
@@ -96,6 +96,14 @@ struct HistoryView: View {
                 }
             }
         }
+    }
+
+    /// Short weekday symbols rotated so column 0 is the locale's `firstWeekday`.
+    private var weekdayHeaderSymbols: [String] {
+        let symbols = calendar.shortWeekdaySymbols // index 0 = Sunday
+        let shift = calendar.firstWeekday - 1
+        guard shift > 0 else { return symbols }
+        return Array(symbols[shift...] + symbols[..<shift])
     }
 
     private func dayCell(_ day: Date) -> some View {
@@ -166,7 +174,11 @@ struct HistoryView: View {
             return []
         }
         let firstWeekday = calendar.component(.weekday, from: interval.start)
-        let leading = Array<Date?>(repeating: nil, count: firstWeekday - 1)
+        let leadingCount = CalendarLayout.leadingBlanks(
+            firstWeekdayOfMonth: firstWeekday,
+            calendarFirstWeekday: calendar.firstWeekday
+        )
+        let leading = Array<Date?>(repeating: nil, count: leadingCount)
         let days = (0..<dayCount).compactMap {
             calendar.date(byAdding: .day, value: $0, to: interval.start)
         }

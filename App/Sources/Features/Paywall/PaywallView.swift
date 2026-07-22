@@ -3,6 +3,7 @@ import StoreKit
 
 struct PaywallView: View {
     @Environment(SubscriptionStore.self) private var subscriptions
+    @Environment(\.dismiss) private var dismiss
     @State private var selectedId = SubscriptionStore.yearlyId
     @State private var purchasing = false
     @State private var showPrivacy = false
@@ -20,6 +21,20 @@ struct PaywallView: View {
             .padding(.bottom, 16)
         }
         .background(Color(.systemGroupedBackground))
+        .overlay(alignment: .topTrailing) {
+            Button {
+                dismiss()
+            } label: {
+                Image(systemName: "xmark.circle.fill")
+                    .font(.system(size: 30))
+                    .symbolRenderingMode(.palette)
+                    .foregroundStyle(Color.secondary, Color(.tertiarySystemGroupedBackground))
+                    .frame(width: 44, height: 44)
+            }
+            .accessibilityLabel("Close")
+            .padding(.top, 8)
+            .padding(.trailing, 8)
+        }
         .sheet(isPresented: $showPrivacy) {
             NavigationStack { PrivacyPolicyView() }
         }

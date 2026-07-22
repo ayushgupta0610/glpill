@@ -11,17 +11,24 @@ final class SubscriptionStore {
 
     private let provider: EntitlementProviding
     private let refreshTimeout: Duration
+    private let syncAppStore: @Sendable () async throws -> Void
     private(set) var state: EntitlementState = .unknown
     private(set) var products: [Product] = []
     private(set) var productsLoaded = false
     private(set) var restoring = false
     var lastError: String?
+    private var listenerTask: Task<Void, Never>?
 
     var isUnlocked: Bool { state == .active }
 
-    init(provider: EntitlementProviding = StoreKitEntitlementProvider(), refreshTimeout: Duration = .seconds(5)) {
+    init(
+        provider: EntitlementProviding = StoreKitEntitlementProvider(),
+        refreshTimeout: Duration = .seconds(5),
+        syncAppStore: @escaping @Sendable () async throws -> Void = { try await AppStore.sync() }
+    ) {
         self.provider = provider
         self.refreshTimeout = refreshTimeout
+        self.syncAppStore = syncAppStore
     }
 
     /// Resolves entitlement state, racing the provider against `refreshTimeout`.
@@ -153,20 +160,33 @@ final class SubscriptionStore {
         lastError = nil
         defer { restoring = false }
         do {
-            try await AppStore.sync()
+            try await syncAppStore()
         } catch {
             lastError = "Couldn't restore. Make sure you're signed in to your Apple Account, then try again."
             return
         }
-        await refresh()
-        if !isUnlocked {
+        // Check entitlements DIRECTLY (no 5s timeout race). A real subscriber on
+        // a cold connection would be wrongly told "none found" if we relied on
+        // refresh()'s fail-closed timeout, so only report "none" when the direct
+        // check definitively finds nothing.
+        switch await provider.directCheck() {
+        case .active:
+            state = .active
+        case .none:
+            state = .locked
             lastError = "No active subscription found to restore."
+        case .inconclusive:
+            lastError = "Couldn't confirm your subscription — check your connection and try again."
         }
     }
 
-    /// Long-lived listener for transaction updates (renewals, refunds, Ask to Buy).
-    func startTransactionListener() -> Task<Void, Never> {
-        Task { [weak self] in
+    /// Starts the long-lived listener for transaction updates (renewals, refunds,
+    /// Ask to Buy). Idempotent: only starts if not already running, and the task
+    /// is retained on the store so its lifetime is tied to the store rather than
+    /// to a transient view `.task`.
+    func startTransactionListener() {
+        guard listenerTask == nil else { return }
+        listenerTask = Task { [weak self] in
             for await update in Transaction.updates {
                 if case .verified(let transaction) = update {
                     await transaction.finish()
