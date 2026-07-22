@@ -2,6 +2,8 @@ import SwiftUI
 import SwiftData
 
 struct ReportScreen: View {
+    @Environment(SubscriptionStore.self) private var subscriptions
+    @State private var showPaywall = false
     @Query private var medications: [Medication]
     @Query(sort: \DoseLog.date) private var doseLogs: [DoseLog]
     @Query(sort: \WeightEntry.date) private var weights: [WeightEntry]
@@ -80,17 +82,38 @@ struct ReportScreen: View {
                         }
                     }
 
-                    ShareLink(item: reportText) {
-                        HStack(spacing: 8) {
-                            Text("Share with your doctor")
-                            Image(systemName: "square.and.arrow.up")
+                    if PremiumGate.shouldShowUpgrade(for: subscriptions.state) {
+                        Button {
+                            showPaywall = true
+                        } label: {
+                            HStack(spacing: 8) {
+                                Text("Export report")
+                                Image(systemName: "lock.fill").font(.footnote)
+                                Text("Premium")
+                                    .font(.caption2.weight(.semibold))
+                                    .padding(.horizontal, 8)
+                                    .padding(.vertical, 3)
+                                    .background(.white.opacity(0.2), in: Capsule())
+                            }
+                            .font(.headline)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 16)
                         }
-                        .font(.headline)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 16)
+                        .buttonStyle(.borderedProminent)
+                        .tint(Theme.primary)
+                    } else {
+                        ShareLink(item: reportText) {
+                            HStack(spacing: 8) {
+                                Text("Share with your doctor")
+                                Image(systemName: "square.and.arrow.up")
+                            }
+                            .font(.headline)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 16)
+                        }
+                        .buttonStyle(.borderedProminent)
+                        .tint(Theme.primary)
                     }
-                    .buttonStyle(.borderedProminent)
-                    .tint(Theme.primary)
 
                     Card {
                         SectionHeader(title: "Full report")
@@ -103,6 +126,7 @@ struct ReportScreen: View {
             }
             .background(Color(.systemGroupedBackground))
             .navigationTitle("Doctor report")
+            .sheet(isPresented: $showPaywall) { PaywallView() }
         }
     }
 }

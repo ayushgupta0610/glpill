@@ -8,6 +8,8 @@ import SwiftData
 struct MilestoneCelebrationView: View {
     let milestone: Int
     @Environment(\.dismiss) private var dismiss
+    @Environment(SubscriptionStore.self) private var subscriptions
+    @State private var showPaywall = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Query(sort: \UserSettings.createdAt) private var settingsList: [UserSettings]
     @State private var appeared = false
@@ -29,7 +31,20 @@ struct MilestoneCelebrationView: View {
                 .scaleEffect(appeared ? 1 : 0.8)
                 .opacity(appeared ? 1 : 0)
 
-            if let image = shareImage() {
+            if PremiumGate.shouldShowUpgrade(for: subscriptions.state) {
+                Button {
+                    showPaywall = true
+                } label: {
+                    Label("Share this win", systemImage: "lock.fill")
+                        .font(.headline)
+                        .padding(.horizontal, 28)
+                        .padding(.vertical, 14)
+                        .background(Theme.primary, in: Capsule())
+                        .foregroundStyle(.white)
+                }
+                .opacity(statsShown ? 1 : 0)
+                .offset(y: statsShown ? 0 : 12)
+            } else if let image = shareImage() {
                 ShareLink(
                     item: Image(uiImage: image),
                     preview: SharePreview("\(milestone)-day streak on GLPill", image: Image(uiImage: image))
@@ -64,6 +79,7 @@ struct MilestoneCelebrationView: View {
                 )
             }
         }
+        .sheet(isPresented: $showPaywall) { PaywallView() }
         .sensoryFeedback(.success, trigger: celebrateHaptic)
         .onAppear {
             if reduceMotion {

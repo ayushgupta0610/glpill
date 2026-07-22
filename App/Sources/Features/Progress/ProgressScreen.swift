@@ -4,6 +4,8 @@ import Charts
 
 struct ProgressScreen: View {
     @Environment(\.modelContext) private var context
+    @Environment(SubscriptionStore.self) private var subscriptions
+    @State private var showPaywall = false
     @Query(sort: \WeightEntry.date) private var entries: [WeightEntry]
     @Query(sort: \UserSettings.createdAt) private var settingsList: [UserSettings]
     @Query(sort: \DoseLog.date) private var doseLogs: [DoseLog]
@@ -54,6 +56,7 @@ struct ProgressScreen: View {
             .sheet(isPresented: $showRecap) {
                 RecapView()
             }
+            .sheet(isPresented: $showPaywall) { PaywallView() }
             .alert("Couldn't delete weigh-in", isPresented: Binding(
                 get: { errorMessage != nil },
                 set: { if !$0 { errorMessage = nil } }
@@ -254,7 +257,19 @@ struct ProgressScreen: View {
             Text("A clean card for your GLP-1 journey posts — no medication name on it.")
                 .font(.caption)
                 .foregroundStyle(.secondary)
-            if let image = renderShareImage() {
+            if PremiumGate.shouldShowUpgrade(for: subscriptions.state) {
+                Button {
+                    showPaywall = true
+                } label: {
+                    HStack(spacing: 8) {
+                        Label("Share progress card", systemImage: "square.and.arrow.up")
+                            .font(.subheadline.weight(.semibold))
+                        Text("Premium")
+                            .font(.caption2.weight(.semibold))
+                            .foregroundStyle(.secondary)
+                    }
+                }
+            } else if let image = renderShareImage() {
                 ShareLink(
                     item: Image(uiImage: image),
                     preview: SharePreview("My GLPill progress", image: Image(uiImage: image))

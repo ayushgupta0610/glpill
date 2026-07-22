@@ -51,7 +51,7 @@ struct PaywallView: View {
             Text("Unlock GLPill Premium")
                 .font(.system(.largeTitle, design: .rounded).bold())
                 .multilineTextAlignment(.center)
-            Text("Doctor-ready PDF report, share cards, advanced widgets, weight projection, and data export.")
+            Text("Unlock report export and share cards, and support a private, independent app.")
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
@@ -61,11 +61,9 @@ struct PaywallView: View {
 
     private var featureList: some View {
         VStack(alignment: .leading, spacing: 14) {
-            feature("doc.text.fill", "Doctor-ready PDF report", "Adherence, doses and side effects in one summary to bring to your appointment.")
-            feature("square.and.arrow.up.fill", "Consistency & journey share cards", "Celebrate streaks and progress with share-ready cards.")
-            feature("apps.iphone", "Advanced widgets", "Lock Screen and medication-level widgets at a glance.")
-            feature("chart.line.uptrend.xyaxis", "Weight projection", "See where your trend is heading based on your data.")
-            feature("tablecells.fill", "Data export (CSV)", "Take your full history with you anytime.")
+            feature("doc.text.fill", "Export your doctor-ready report", "Share adherence, doses & side effects with your clinician.")
+            feature("square.and.arrow.up.fill", "Share your progress & milestone cards", "Post your streak and progress, beautifully.")
+            feature("heart.fill", "Support GLPill", "Independent, private by design. Your support keeps it that way.")
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(20)
