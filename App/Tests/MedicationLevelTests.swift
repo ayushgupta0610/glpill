@@ -9,6 +9,17 @@ struct MedicationLevelTests {
     func empty() {
         #expect(MedicationLevel.curve(doses: [], halfLifeHours: 168, samples: 10, now: day(5)).isEmpty)
     }
+    @Test("All-zero (unknown) doses yield an empty curve, never a flat-zero line")
+    func allZeroDosesEmpty() {
+        let doses = (0..<4).map { (date: day($0), mg: 0.0) }
+        #expect(MedicationLevel.curve(doses: doses, halfLifeHours: 168, samples: 10, now: day(3)).isEmpty)
+    }
+    @Test("hasEnoughData is false when every point is at zero level")
+    func allZeroLevelsNotEnough() {
+        let d0 = Date(timeIntervalSince1970: 0)
+        let flat = (0..<4).map { MedicationLevel.Point(date: d0.addingTimeInterval(Double($0) * 86_400), level: 0) }
+        #expect(MedicationLevel.hasEnoughData(points: flat) == false)
+    }
     @Test("Daily dosing climbs monotonically toward steady state")
     func climbs() {
         let doses = (0..<7).map { (date: day($0), mg: 7.0) }

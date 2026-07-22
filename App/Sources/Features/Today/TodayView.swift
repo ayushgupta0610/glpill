@@ -153,7 +153,7 @@ struct TodayView: View {
     private var medLevelProjection: [MedicationLevel.Point] {
         let kind = medications.first?.kind ?? .custom
         let dose = doseLogs.last?.doseMg ?? 0
-        return MedicationLevel.projection(dailyDoseMg: dose, halfLifeHours: MedicationLevel.halfLifeHours(for: kind), days: 7, samples: 40, startingFrom: doseLogs.first?.takenAt ?? .now)
+        return MedicationLevel.projection(dailyDoseMg: dose, halfLifeHours: MedicationLevel.halfLifeHours(for: kind), days: 7, samples: 40, startingFrom: .now)
     }
 
     private var morningSequence: [MorningSequence.Step] {

@@ -18,6 +18,13 @@ struct ReportScreen: View {
         return min(28, max(1, elapsed))
     }
 
+    /// Earliest day the plan could have data: the earlier of the user's start
+    /// date and their first logged dose. Floors the report's adherence + gap.
+    private var planStart: Date? {
+        let starts = [settingsList.first?.startDate, doseLogs.first?.date].compactMap { $0 }
+        return starts.min()
+    }
+
     private var windowStart: Date {
         calendar.date(byAdding: .day, value: -(windowDays - 1), to: calendar.startOfDay(for: .now))!
     }
@@ -48,7 +55,8 @@ struct ReportScreen: View {
                 weights: weights.map { ($0.date, $0.kilograms) },
                 sideEffects: sideEffects.map { ($0.date, $0.kind.label, $0.severity) },
                 metric: settingsList.first?.usesMetric ?? false,
-                today: .now
+                today: .now,
+                planStart: planStart
             ),
             calendar: calendar
         )

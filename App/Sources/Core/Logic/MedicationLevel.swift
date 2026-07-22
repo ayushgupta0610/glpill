@@ -17,7 +17,10 @@ enum MedicationLevel {
     }
 
     /// Samples the accumulated level from the first dose to `now`.
-    static func curve(doses: [(date: Date, mg: Double)], halfLifeHours: Double, samples: Int, now: Date) -> [Point] {
+    static func curve(doses rawDoses: [(date: Date, mg: Double)], halfLifeHours: Double, samples: Int, now: Date) -> [Point] {
+        // Drop "unknown" (0 mg) doses so an unset plan renders as no reading
+        // rather than a fabricated flat-zero "steady daily levels" line.
+        let doses = rawDoses.filter { $0.mg > 0 }
         guard let first = doses.map(\.date).min(), samples > 1, halfLifeHours > 0 else { return [] }
         let span = now.timeIntervalSince(first)
         guard span > 0 else { return [] }
@@ -35,6 +38,8 @@ enum MedicationLevel {
     /// True once the curve is worth showing as a real reading: ≥3 points spanning ≥2 days.
     static func hasEnoughData(points: [Point]) -> Bool {
         guard points.count >= 3, let first = points.first?.date, let last = points.last?.date else { return false }
+        // An all-zero series (e.g. unknown-dose input) is not a real reading.
+        guard (points.map(\.level).max() ?? 0) > 0 else { return false }
         return last.timeIntervalSince(first) >= 2 * 86_400
     }
 

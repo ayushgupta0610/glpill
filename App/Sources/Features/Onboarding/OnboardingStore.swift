@@ -30,7 +30,7 @@ final class OnboardingStore {
 
     var kind: MedicationKind = .foundayo
     var customName = ""
-    var steps: [DraftStep] = [DraftStep(doseMg: 0.8, durationWeeks: 4)]
+    var steps: [DraftStep] = []
     // Default to the device's measurement system (weight step was removed from
     // onboarding, so this is the only place units get inferred); user can still
     // switch in Settings.
