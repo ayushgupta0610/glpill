@@ -27,7 +27,12 @@ struct TrophyCardView: View {
                     .padding(.bottom, 6)
             }
 
-            Text("🏆").font(.system(size: 72))
+            Text(MilestoneTier.emoji(for: milestone))
+                .font(.system(size: 72))
+                .padding(18)
+                .overlay(
+                    Circle().stroke(MilestoneTier.ringColor(for: milestone), lineWidth: 4)
+                )
             Text("\(milestone)")
                 .font(.system(size: 96, weight: .heavy, design: .rounded))
                 .foregroundStyle(.white)
@@ -52,5 +57,17 @@ struct TrophyCardView: View {
         .padding(28)
         .frame(width: 360, height: 640)
         .background(Theme.heroGradient)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(accessibilitySummary)
+    }
+
+    private var accessibilitySummary: String {
+        let namePrefix: String
+        if let name = name?.trimmingCharacters(in: .whitespacesAndNewlines), !name.isEmpty {
+            namePrefix = "\(name). "
+        } else {
+            namePrefix = ""
+        }
+        return "\(namePrefix)\(milestone) \(milestone == 1 ? "day" : "days") milestone. \(StreakMilestone.headline(for: milestone))"
     }
 }

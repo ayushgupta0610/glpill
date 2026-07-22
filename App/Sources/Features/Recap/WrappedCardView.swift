@@ -69,6 +69,19 @@ struct WrappedCardView: View {
         .padding(28)
         .frame(width: 360, height: 640)
         .background(Theme.heroGradient)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(accessibilitySummary)
+    }
+
+    private var accessibilitySummary: String {
+        var parts = ["\(titleLine) recap.",
+                     "\(recap.archetype.title). \(recap.archetype.subtitle)",
+                     "\(recap.currentStreak) day streak.",
+                     "Showed up \(recap.daysLogged) of \(recap.daysElapsed) days.",
+                     "\(recap.consistencyPercent)% consistent."]
+        if let nsv = recap.nonScaleVictory, !nsv.isEmpty { parts.append(nsv + ".") }
+        if let text = weightText { parts.append(text + ".") }
+        return parts.joined(separator: " ")
     }
 
     private var titleLine: String {

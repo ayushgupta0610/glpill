@@ -20,6 +20,8 @@ struct MedicationLevelView: View {
                         .foregroundStyle(Theme.primary)
                 }
                 .frame(height: 220)
+                .accessibilityElement(children: .ignore)
+                .accessibilityLabel("Estimated medication level, \(hasEnoughData ? "steady daily levels" : "building toward steady state").")
             } else {
                 buildingState
             }
@@ -39,6 +41,8 @@ struct MedicationLevelView: View {
                         .foregroundStyle(Theme.primary.opacity(0.6))
                 }
                 .frame(height: 220)
+                .accessibilityElement(children: .ignore)
+                .accessibilityLabel("Estimated medication level, building toward steady state.")
             }
         }
     }
