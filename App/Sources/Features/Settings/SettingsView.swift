@@ -3,11 +3,8 @@ import SwiftData
 import UserNotifications
 
 struct SettingsView: View {
-    @Environment(SubscriptionStore.self) private var subscriptions
     @Query(sort: \UserSettings.createdAt) private var settingsList: [UserSettings]
     @State private var reminderTime = Date.now
-    @State private var restoreMessage: String?
-    @State private var showManageSubscription = false
     @State private var notificationsDenied = false
 
     var body: some View {
@@ -118,21 +115,6 @@ struct SettingsView: View {
                     }
                 }
 
-                Section("Subscription") {
-                    LabeledContent("Status", value: subscriptions.isUnlocked ? "Active" : "Inactive")
-                    Button("Manage subscription") {
-                        showManageSubscription = true
-                    }
-                    Button("Restore purchases") {
-                        Task {
-                            await subscriptions.restore()
-                            restoreMessage = subscriptions.isUnlocked
-                                ? "Subscription restored."
-                                : "No active subscription found for this Apple Account."
-                        }
-                    }
-                }
-
                 Section("About") {
                     NavigationLink("Privacy policy") {
                         PrivacyPolicyView()
@@ -147,7 +129,6 @@ struct SettingsView: View {
                 }
             }
             .navigationTitle("Settings")
-            .manageSubscriptionsSheet(isPresented: $showManageSubscription)
             .task {
                 notificationsDenied = await UNNotificationScheduler().authorizationStatus() == .denied
             }
@@ -157,14 +138,6 @@ struct SettingsView: View {
                         from: DateComponents(hour: settings.reminderHour, minute: settings.reminderMinute)
                     ) ?? .now
                 }
-            }
-            .alert("Restore", isPresented: .init(
-                get: { restoreMessage != nil },
-                set: { if !$0 { restoreMessage = nil } }
-            )) {
-                Button("OK", role: .cancel) {}
-            } message: {
-                Text(restoreMessage ?? "")
             }
         }
     }
@@ -177,9 +150,7 @@ struct PrivacyPolicyView: View {
                 Text("""
                 GLPill Privacy Policy (summary)
 
-                Everything you enter in GLPill — medication choice, dose plan and history, weight, side effects, protein and water — is stored on your device and synced privately through your own iCloud (Apple's, tied to your Apple ID). That means your history follows you to a new iPhone and survives a reinstall. GLPill has no servers of its own, no accounts, no analytics, no ads, and no tracking. We never see, collect, transmit, share, or sell your data — it stays within Apple's ecosystem, under your control.
-
-                Subscriptions are billed and managed entirely by Apple; we receive only an anonymous confirmation that a subscription is active — never your name, email, or payment details. On a new phone, tap Restore Purchases to get your subscription back.
+                Everything you enter in GLPill — medication choice, dose plan and history, weight, side effects, protein and water — is stored on your device and synced privately through your own iCloud (Apple's, tied to your Apple ID). That means your history follows you to a new iPhone and survives a reinstall. GLPill is free, with no accounts, no analytics, no ads, and no tracking. We never see, collect, transmit, share, or sell your data — it stays within Apple's ecosystem, under your control.
 
                 Reminders are scheduled locally on your device. Reports and progress cards leave your phone only when you explicitly share them.
 

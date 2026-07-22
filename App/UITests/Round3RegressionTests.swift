@@ -3,13 +3,12 @@ import XCTest
 /// Runtime regression hunt — Round 3.
 ///
 /// Fresh XCUITest coverage for the flows changed by the last ~20 fixes
-/// (premium gating, med-level caption honesty, reflux side-effect kind,
+/// (med-level caption honesty, reflux side-effect kind,
 /// med-switch eat-timer cancel, onboarding Back navigation, weigh-in
 /// edit/delete, reminder-style cycle, goal-ordered Today + coaching).
 ///
 /// The Round-2 `EdgeFlowTests` predate these fixes; this file is additive.
-/// Each test onboards fresh via a parameterized helper that can flip the
-/// `-uiTestUnlocked` entitlement to simulate a PREMIUM user.
+/// Each test onboards fresh via a parameterized helper.
 final class Round3RegressionTests: XCTestCase {
 
     // MARK: - Onboarding driver
@@ -25,10 +24,8 @@ final class Round3RegressionTests: XCTestCase {
     }
 
     @MainActor
-    private func launch(_ app: XCUIApplication, unlocked: Bool = false) {
-        app.launchArguments = unlocked
-            ? ["-resetData", "-uiTestUnlocked", "-disableCloudKit"]
-            : ["-resetData", "-disableCloudKit"]
+    private func launch(_ app: XCUIApplication) {
+        app.launchArguments = ["-resetData", "-disableCloudKit"]
         app.launch()
     }
 
@@ -111,80 +108,12 @@ final class Round3RegressionTests: XCTestCase {
         XCTAssertTrue(app.tabBars.buttons["Today"].waitForExistence(timeout: 15), "Today tab never appeared")
     }
 
-    // MARK: - Flow 1a: Premium gating — FREE user hits the paywall
-
-    @MainActor
-    func testFreeUserExportAndShareHitPaywall() {
-        let app = XCUIApplication()
-        launch(app, unlocked: false)
-        completeOnboarding(app, OnboardConfig(goals: ["See my weight trend", "Keep records for my doctor"]))
-
-        // Report tab → Export report (Premium) → paywall.
-        app.tabBars.buttons["Report"].tap()
-        let export = app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Export report'")).firstMatch
-        XCTAssertTrue(export.waitForExistence(timeout: 5), "Free user's gated Export report button missing")
-        export.tap()
-        XCTAssertTrue(app.staticTexts["Unlock GLPill Premium"].waitForExistence(timeout: 5),
-                      "Paywall did not present from Export report (free user)")
-        shot(app, "R1a-report-paywall")
-        let close = app.buttons["Close"]
-        XCTAssertTrue(close.waitForExistence(timeout: 5), "Paywall Close control missing")
-        close.tap()
-        sleep(1)
-        XCTAssertFalse(app.staticTexts["Unlock GLPill Premium"].exists, "Report paywall did not dismiss")
-
-        // Progress tab → Share progress card (Premium) → paywall.
-        app.tabBars.buttons["Progress"].tap()
-        let share = app.buttons.matching(NSPredicate(format: "label CONTAINS 'Share progress card'")).firstMatch
-        XCTAssertTrue(share.waitForExistence(timeout: 5), "Free user's gated Share progress card button missing")
-        share.tap()
-        XCTAssertTrue(app.staticTexts["Unlock GLPill Premium"].waitForExistence(timeout: 5),
-                      "Paywall did not present from Share progress card (free user)")
-        shot(app, "R1a-progress-paywall")
-        let close2 = app.buttons["Close"]
-        XCTAssertTrue(close2.waitForExistence(timeout: 5), "Progress paywall Close missing")
-        close2.tap()
-        sleep(1)
-        XCTAssertFalse(app.staticTexts["Unlock GLPill Premium"].exists, "Progress paywall did not dismiss")
-    }
-
-    // MARK: - Flow 1b: Premium gating — UNLOCKED user gets the share sheet, NOT the paywall
-
-    @MainActor
-    func testUnlockedUserExportShowsShareSheetNotPaywall() {
-        let app = XCUIApplication()
-        launch(app, unlocked: true)
-        completeOnboarding(app, OnboardConfig(goals: ["Keep records for my doctor"]))
-
-        app.tabBars.buttons["Report"].tap()
-        // Premium user's control is a ShareLink labelled "Share with your doctor".
-        let share = app.buttons.matching(NSPredicate(format: "label CONTAINS 'Share with your doctor'")).firstMatch
-        XCTAssertTrue(share.waitForExistence(timeout: 5),
-                      "Unlocked user should see the 'Share with your doctor' ShareLink, not the gated Export button")
-        // The gated Export button must NOT be present for an unlocked user.
-        XCTAssertFalse(app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Export report'")).firstMatch.exists,
-                       "Gated Export button leaked to an unlocked user")
-        share.tap()
-        sleep(2)
-        shot(app, "R1b-share-sheet")
-        // The native share sheet should appear — NOT the paywall.
-        XCTAssertFalse(app.staticTexts["Unlock GLPill Premium"].exists,
-                       "Unlocked user got the paywall instead of the share sheet")
-        // A native activity sheet exposes a Close/Copy/activity control. Assert the
-        // app is alive and the paywall is absent; dismiss whatever presented.
-        let closeish = app.buttons.matching(NSPredicate(format: "label == 'Close' OR label == 'Copy' OR label CONTAINS 'Cancel'")).firstMatch
-        if closeish.waitForExistence(timeout: 3) { closeish.tap() }
-        else { app.swipeDown() }
-        XCTAssertTrue(app.tabBars.buttons["Report"].waitForExistence(timeout: 5),
-                      "App did not return after share sheet")
-    }
-
     // MARK: - Flow 2: Med-level early caption honesty (Rybelsus, 1 dose)
 
     @MainActor
     func testMedLevelEarlyStateCaptionIsHonest() {
         let app = XCUIApplication()
-        launch(app, unlocked: false)
+        launch(app)
         completeOnboarding(app, OnboardConfig(drug: "Rybelsus (semaglutide)"))
 
         // Log one dose so there is data, but nowhere near steady state.
@@ -234,7 +163,7 @@ final class Round3RegressionTests: XCTestCase {
     @MainActor
     func testRefluxSideEffectSelectableAndSaves() {
         let app = XCUIApplication()
-        launch(app, unlocked: false)
+        launch(app)
         // Put reflux at the front of the picker via a concern, plus goals so the
         // side-effect card is surfaced on Today.
         completeOnboarding(app, OnboardConfig(concerns: ["Reflux / burping"], goals: ["Manage side effects"]))
@@ -278,7 +207,7 @@ final class Round3RegressionTests: XCTestCase {
     @MainActor
     func testMedicationChangeInSettingsUpdatesRitual() {
         let app = XCUIApplication()
-        launch(app, unlocked: false)
+        launch(app)
         completeOnboarding(app, OnboardConfig(drug: "Rybelsus (semaglutide)"))
 
         // Pre: Rybelsus shows the empty-stomach instruction on Today.
@@ -319,7 +248,7 @@ final class Round3RegressionTests: XCTestCase {
     @MainActor
     func testOnboardingBackNavigation() {
         let app = XCUIApplication()
-        launch(app, unlocked: false)
+        launch(app)
 
         let getStarted = app.buttons["Get started"]
         XCTAssertTrue(getStarted.waitForExistence(timeout: 15))
@@ -385,7 +314,7 @@ final class Round3RegressionTests: XCTestCase {
     @MainActor
     func testWeighInEditAndDelete() {
         let app = XCUIApplication()
-        launch(app, unlocked: false)
+        launch(app)
         completeOnboarding(app, OnboardConfig(goals: ["See my weight trend"]))
 
         // Add a weigh-in via the FAB log sheet.
@@ -449,7 +378,7 @@ final class Round3RegressionTests: XCTestCase {
     @MainActor
     func testReminderStyleCycle() {
         let app = XCUIApplication()
-        launch(app, unlocked: false)
+        launch(app)
         completeOnboarding(app, OnboardConfig(drug: "Rybelsus (semaglutide)", morningMeds: ["Levothyroxine"]))
 
         app.tabBars.buttons["Settings"].tap()
@@ -481,7 +410,7 @@ final class Round3RegressionTests: XCTestCase {
     @MainActor
     func testCoachingCardAndGoalShortcutsSwitchTabs() {
         let app = XCUIApplication()
-        launch(app, unlocked: false)
+        launch(app)
         completeOnboarding(app, OnboardConfig(goals: ["See my weight trend", "Keep records for my doctor"]))
 
         // Coaching card ("Starting soon?" for the aboutToStart stage) should appear

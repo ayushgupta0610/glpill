@@ -55,8 +55,6 @@ targets:
     platform: iOS
     sources:
       - App/Tests
-      - path: App/Resources/GLPill.storekit
-        buildPhase: resources
     dependencies:
       - target: GLPill
     settings:
@@ -83,10 +81,8 @@ schemes:
         GLPillUITests: [test]
     run:
       config: Debug
-      storeKitConfiguration: App/Resources/GLPill.storekit
     test:
       config: Debug
-      storeKitConfiguration: App/Resources/GLPill.storekit
       commandLineArguments:
         "-disableCloudKit": true
       targets:
