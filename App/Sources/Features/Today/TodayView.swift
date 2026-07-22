@@ -43,6 +43,13 @@ struct TodayView: View {
                         .foregroundStyle(.secondary)
                         .frame(maxWidth: .infinity, alignment: .leading)
                     ritualCard
+                    if !(settingsList.first?.coachingDismissed ?? false),
+                       let coaching = StageCoaching.message(
+                           stage: settingsList.first?.onboardingStage,
+                           requiresEmptyStomach: medications.first?.requiresEmptyStomach ?? false
+                       ) {
+                        StageCoachingCard(message: coaching, onDismiss: dismissCoaching)
+                    }
                     if medications.first?.requiresEmptyStomach == true || !(settingsList.first?.morningMeds ?? []).isEmpty {
                         MorningSequenceCard(steps: morningSequence)
                     }
@@ -294,10 +301,12 @@ struct TodayView: View {
             if startTimer {
                 let minutes = settingsList.first?.waitWindowMinutes ?? 30
                 eatTimerEnd = Date().addingTimeInterval(Double(minutes) * 60).timeIntervalSince1970
-                ReminderScheduler.scheduleEatTimer(
-                    using: UNNotificationScheduler(),
-                    meds: settingsList.first?.morningMeds ?? []
-                )
+                if (settingsList.first?.reminderStyle ?? "full") == "full" {
+                    ReminderScheduler.scheduleEatTimer(
+                        using: UNNotificationScheduler(),
+                        meds: settingsList.first?.morningMeds ?? []
+                    )
+                }
             }
         }
         if !wasAlreadyLogged { celebrateMilestoneIfReached() }
@@ -327,6 +336,12 @@ struct TodayView: View {
             eatTimerEnd = 0
             UNNotificationScheduler().removePending(ids: [ReminderScheduler.eatTimerId])
         }
+    }
+
+    private func dismissCoaching() {
+        guard let settings = settingsList.first else { return }
+        settings.coachingDismissed = true
+        try? context.save()
     }
 
     private func withErrorHandling(_ work: () throws -> Void) {

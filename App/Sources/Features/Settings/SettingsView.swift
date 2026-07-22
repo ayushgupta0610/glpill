@@ -52,6 +52,33 @@ struct SettingsView: View {
                         )
                     }
 
+                    Section {
+                        Picker("Reminders", selection: $settings.reminderStyle) {
+                            Text("Pill + window clear").tag("full")
+                            Text("Pill only").tag("pillOnly")
+                            Text("Off").tag("none")
+                        }
+                        .onChange(of: settings.reminderStyle) {
+                            let style = settings.reminderStyle
+                            Task {
+                                let scheduler = UNNotificationScheduler()
+                                if style == "none" {
+                                    scheduler.removePending(ids: [ReminderScheduler.dailyId])
+                                } else if await scheduler.requestAuthorization() {
+                                    ReminderScheduler.scheduleDaily(
+                                        hour: settings.reminderHour,
+                                        minute: settings.reminderMinute,
+                                        using: scheduler
+                                    )
+                                }
+                            }
+                        }
+                    } header: {
+                        Text("Reminder style")
+                    } footer: {
+                        Text("“Pill only” drops the eat-again nudge after your empty-stomach window. “Off” turns off the daily pill reminder.")
+                    }
+
                     Section("Daily reminder") {
                         DatePicker("Remind me at", selection: $reminderTime, displayedComponents: .hourAndMinute)
                             .onChange(of: reminderTime) {

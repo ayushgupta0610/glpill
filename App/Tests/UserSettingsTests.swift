@@ -12,5 +12,6 @@ struct UserSettingsTests {
         #expect(s.sideEffectConcerns.isEmpty)
         #expect(s.goals.isEmpty)
         #expect(s.reminderStyle == "full")
+        #expect(s.coachingDismissed == false)
     }
 }

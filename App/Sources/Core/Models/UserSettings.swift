@@ -26,6 +26,7 @@ final class UserSettings {
     var sideEffectConcerns: [String] = []
     var goals: [String] = []
     var reminderStyle: String = "full"
+    var coachingDismissed: Bool = false
 
     init(
         onboardingComplete: Bool = false,
@@ -44,7 +45,8 @@ final class UserSettings {
         onboardingStage: String? = nil,
         sideEffectConcerns: [String] = [],
         goals: [String] = [],
-        reminderStyle: String = "full"
+        reminderStyle: String = "full",
+        coachingDismissed: Bool = false
     ) {
         self.onboardingComplete = onboardingComplete
         self.usesMetric = usesMetric
@@ -63,5 +65,6 @@ final class UserSettings {
         self.sideEffectConcerns = sideEffectConcerns
         self.goals = goals
         self.reminderStyle = reminderStyle
+        self.coachingDismissed = coachingDismissed
     }
 }
