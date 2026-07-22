@@ -6,6 +6,7 @@ struct TodayView: View {
     @Query(sort: \DoseLog.date) private var doseLogs: [DoseLog]
     @Query private var medications: [Medication]
     @Query(sort: \TitrationStep.order) private var titrationSteps: [TitrationStep]
+    @Query(sort: \WeightEntry.date, order: .reverse) private var weightEntries: [WeightEntry]
     @Query private var settingsList: [UserSettings]
     @AppStorage("eatTimerEnd") private var eatTimerEnd: Double = 0
     private enum ActiveSheet: Int, Identifiable { case log, weight, sideEffect; var id: Int { rawValue } }
@@ -45,15 +46,9 @@ struct TodayView: View {
                     if medications.first?.requiresEmptyStomach == true || !(settingsList.first?.morningMeds ?? []).isEmpty {
                         MorningSequenceCard(steps: morningSequence)
                     }
-                    MedLevelPreviewCard(points: medLevelPoints, projection: medLevelProjection)
-                    streakCard
-                    IntakeCountersView(
-                        onProtein: { grams in withErrorHandling { try store.addProtein(grams) } },
-                        onWater: { ml in withErrorHandling { try store.addWater(ml) } },
-                        onSetProtein: { grams in withErrorHandling { try store.setProtein(grams: grams) } },
-                        onSetWater: { ml in withErrorHandling { try store.setWater(ml: ml) } }
-                    )
-                    sideEffectCard
+                    ForEach(TodayLayout.sections(goals: settingsList.first?.goals ?? []), id: \.self) { section in
+                        sectionView(section)
+                    }
                     Color.clear.frame(height: 76)
                 }
                 .padding()
@@ -113,6 +108,32 @@ struct TodayView: View {
             } message: {
                 Text(errorMessage ?? "")
             }
+        }
+    }
+
+    @ViewBuilder
+    private func sectionView(_ section: TodaySection) -> some View {
+        switch section {
+        case .weightShortcut:
+            WeightShortcutCard(
+                latestKilograms: weightEntries.first?.kilograms,
+                metric: settingsList.first?.usesMetric ?? false
+            )
+        case .reportShortcut:
+            ReportShortcutCard()
+        case .sideEffects:
+            sideEffectCard
+        case .medLevel:
+            MedLevelPreviewCard(points: medLevelPoints, projection: medLevelProjection)
+        case .streak:
+            streakCard
+        case .intake:
+            IntakeCountersView(
+                onProtein: { grams in withErrorHandling { try store.addProtein(grams) } },
+                onWater: { ml in withErrorHandling { try store.addWater(ml) } },
+                onSetProtein: { grams in withErrorHandling { try store.setProtein(grams: grams) } },
+                onSetWater: { ml in withErrorHandling { try store.setWater(ml: ml) } }
+            )
         }
     }
 

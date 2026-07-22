@@ -1,9 +1,11 @@
 import SwiftUI
+import SwiftData
 
 struct SideEffectSheet: View {
     var existing: SideEffectLog? = nil
     let onSave: (SideEffectKind, Int, String?) -> Void
     @Environment(\.dismiss) private var dismiss
+    @Query private var settingsList: [UserSettings]
     @State private var kind: SideEffectKind = .nausea
     @State private var severity = 1
     @State private var note = ""
@@ -14,7 +16,7 @@ struct SideEffectSheet: View {
         NavigationStack {
             Form {
                 Picker("Side effect", selection: $kind) {
-                    ForEach(SideEffectKind.allCases, id: \.self) { kind in
+                    ForEach(SideEffectOrder.ordered(concerns: settingsList.first?.sideEffectConcerns ?? []), id: \.self) { kind in
                         Text("\(kind.emoji) \(kind.label)").tag(kind)
                     }
                 }

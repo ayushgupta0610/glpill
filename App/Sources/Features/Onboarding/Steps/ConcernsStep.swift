@@ -11,7 +11,7 @@ struct ConcernsStep: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             Text("What are you most worried about?").font(.title.bold()).padding(.top, 24)
-            Text("We'll tailor gentle tips and make these one-tap to log.").font(.subheadline).foregroundStyle(.secondary)
+            Text("We'll put these first when you log how you feel.").font(.subheadline).foregroundStyle(.secondary)
             ScrollView {
                 VStack(spacing: 10) {
                     ForEach(options, id: \.id) { opt in
