@@ -219,7 +219,9 @@ private struct DayDetailSheet: View {
     @Query private var sideEffects: [SideEffectLog]
     @Query private var intakeDays: [IntakeDay]
     @Query(sort: \UserSettings.createdAt) private var settingsList: [UserSettings]
+    @Query(sort: \WeightEntry.date) private var weightEntries: [WeightEntry]
     @State private var editingEffect: SideEffectLog?
+    @State private var editingWeightEntry: WeightEntry?
     @State private var errorMessage: String?
 
     private var calendar: Calendar { .current }
@@ -243,6 +245,25 @@ private struct DayDetailSheet: View {
                     }
                     .onDelete { offsets in
                         deleteDoses(logs, at: offsets)
+                    }
+                }
+                Section("Weight") {
+                    let dayEntries = weightEntries.filter { calendar.isDate($0.date, inSameDayAs: day) }
+                    if dayEntries.isEmpty {
+                        Text("No weigh-in logged")
+                            .foregroundStyle(.secondary)
+                    }
+                    ForEach(dayEntries) { entry in
+                        Button {
+                            editingWeightEntry = entry
+                        } label: {
+                            Text(UnitFormat.weightString(kilograms: entry.kilograms, metric: metric))
+                                .foregroundStyle(.primary)
+                        }
+                        .buttonStyle(.plain)
+                    }
+                    .onDelete { offsets in
+                        deleteWeightEntries(dayEntries, at: offsets)
                     }
                 }
                 Section("Side effects") {
@@ -289,6 +310,10 @@ private struct DayDetailSheet: View {
                 }
                 .presentationDetents([.medium])
             }
+            .sheet(item: $editingWeightEntry, onDismiss: { editingWeightEntry = nil }) { entry in
+                WeightEntrySheet(metric: metric, entry: entry)
+                    .presentationDetents([.medium])
+            }
             .alert("Couldn't save", isPresented: .init(
                 get: { errorMessage != nil },
                 set: { if !$0 { errorMessage = nil } }
@@ -332,6 +357,18 @@ private struct DayDetailSheet: View {
         do {
             try store.updateSideEffect(effect, kind: kind, severity: severity, note: note)
         } catch {
+            errorMessage = "Your change couldn't be saved. Please try again."
+        }
+    }
+
+    private func deleteWeightEntries(_ entries: [WeightEntry], at offsets: IndexSet) {
+        for index in offsets {
+            context.delete(entries[index])
+        }
+        do {
+            try context.save()
+        } catch {
+            context.rollback()
             errorMessage = "Your change couldn't be saved. Please try again."
         }
     }
