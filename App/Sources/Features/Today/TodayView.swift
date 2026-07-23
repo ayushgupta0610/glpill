@@ -53,7 +53,7 @@ struct TodayView: View {
         guard let settings = settingsList.first,
               let goalKg = settings.goalKilograms,
               let currentKg = weightEntries.first?.kilograms else { return nil }
-        let startKg = settings.startKilograms ?? currentKg
+        let startKg = settings.startKilograms ?? weightEntries.last?.kilograms ?? currentKg
         guard startKg != goalKg else { return nil }
 
         let daysSinceStart = max(0, calendar.dateComponents([.day], from: settings.startDate, to: .now).day ?? 0)

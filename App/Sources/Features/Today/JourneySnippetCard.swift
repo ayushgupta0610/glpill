@@ -20,6 +20,7 @@ struct JourneySnippetCard: View {
                             .font(.caption)
                             .foregroundStyle(paceIsWarning ? Theme.warn : .secondary)
                     }
+                    .accessibilityElement(children: .combine)
                     Spacer()
                     Image(systemName: "chevron.right")
                         .font(.caption)
