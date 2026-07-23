@@ -13,6 +13,7 @@ struct HistoryView: View {
     @Query(sort: \DoseLog.date) private var doseLogs: [DoseLog]
     @Query(sort: \SideEffectLog.date) private var sideEffects: [SideEffectLog]
     @Query(sort: \UserSettings.createdAt) private var settingsList: [UserSettings]
+    @Query(sort: \WeightEntry.date) private var weightEntries: [WeightEntry]
     @State private var monthAnchor = Calendar.current.startOfDay(for: .now)
     @State private var selectedDay: HistoryDay?
 
@@ -24,6 +25,21 @@ struct HistoryView: View {
 
     private var effectDays: Set<Date> {
         Set(sideEffects.map { calendar.startOfDay(for: $0.date) })
+    }
+
+    private var weighInDays: Set<Date> {
+        Set(weightEntries.map { calendar.startOfDay(for: $0.date) })
+    }
+
+    private var milestoneDays: Set<Date> {
+        guard let settings = settingsList.first, let goalKg = settings.goalKilograms else { return [] }
+        let startKg = settings.startKilograms ?? weightEntries.first?.kilograms ?? goalKg
+        let milestones = JourneyMilestones.generate(
+            startKg: startKg,
+            goalKg: goalKg,
+            entries: weightEntries.map { (date: $0.date, kg: $0.kilograms) }
+        )
+        return Set(milestones.compactMap { $0.reachedDate.map { calendar.startOfDay(for: $0) } })
     }
 
     /// The first day a dose was "expected" — the earlier of the user's plan start
@@ -44,6 +60,7 @@ struct HistoryView: View {
                         HStack(spacing: 16) {
                             legend(color: Theme.primary, text: "Pill taken")
                             legend(color: Theme.warn, text: "Side effect")
+                            legend(color: Theme.mint, text: "Milestone")
                         }
                         .font(.caption2)
                         .foregroundStyle(.secondary)
@@ -109,6 +126,8 @@ struct HistoryView: View {
     private func dayCell(_ day: Date) -> some View {
         let dosed = dosedDays.contains(day)
         let hasEffect = effectDays.contains(day)
+        let hasWeighIn = weighInDays.contains(day)
+        let hasMilestone = milestoneDays.contains(day)
         let isFuture = day > calendar.startOfDay(for: .now)
         // A day is "missed" when it's expected (past-or-today, on/after the plan
         // start) but has no dose — a gap, distinct from a blank future day.
@@ -127,6 +146,9 @@ struct HistoryView: View {
                         if isMissed {
                             Circle().stroke(Color.secondary.opacity(0.4), lineWidth: 1.5)
                         }
+                        if hasMilestone {
+                            Circle().stroke(Theme.mint, lineWidth: 2)
+                        }
                     }
                     .overlay(alignment: .bottomTrailing) {
                         if dosed {
@@ -136,18 +158,19 @@ struct HistoryView: View {
                                 .padding(1)
                         }
                     }
-                Circle()
-                    .fill(hasEffect ? Theme.warn : Color.clear)
-                    .frame(width: 5, height: 5)
+                HStack(spacing: 3) {
+                    Circle().fill(hasEffect ? Theme.warn : Color.clear).frame(width: 5, height: 5)
+                    Circle().fill(hasWeighIn ? Theme.primary : Color.clear).frame(width: 5, height: 5)
+                }
             }
             .frame(minWidth: 44, minHeight: 44)
         }
         .buttonStyle(.plain)
         .disabled(isFuture)
-        .accessibilityLabel(accessibilityText(for: day, dosed: dosed, hasEffect: hasEffect, missed: isMissed))
+        .accessibilityLabel(accessibilityText(for: day, dosed: dosed, hasEffect: hasEffect, missed: isMissed, hasWeighIn: hasWeighIn, hasMilestone: hasMilestone))
     }
 
-    private func accessibilityText(for day: Date, dosed: Bool, hasEffect: Bool, missed: Bool) -> String {
+    private func accessibilityText(for day: Date, dosed: Bool, hasEffect: Bool, missed: Bool, hasWeighIn: Bool, hasMilestone: Bool) -> String {
         var parts = [day.formatted(date: .long, time: .omitted)]
         if dosed {
             parts.append("pill taken")
@@ -157,6 +180,8 @@ struct HistoryView: View {
             parts.append("no pill logged")
         }
         if hasEffect { parts.append("side effect logged") }
+        if hasWeighIn { parts.append("weigh-in logged") }
+        if hasMilestone { parts.append("milestone reached") }
         return parts.joined(separator: ", ")
     }
 
