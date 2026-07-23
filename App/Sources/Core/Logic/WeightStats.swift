@@ -8,10 +8,6 @@ enum WeightStats {
         return sorted.last!.kg - sorted.first!.kg
     }
 
-    static func toGoal(current: Double, goal: Double) -> Double {
-        current - goal
-    }
-
     /// Number of `stepKg` milestones of loss reached since start. 0 if no loss.
     static func milestonesReached(startKg: Double, currentKg: Double, stepKg: Double) -> Int {
         let loss = startKg - currentKg

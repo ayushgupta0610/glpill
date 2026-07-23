@@ -330,7 +330,13 @@ struct ProgressScreen: View {
     }
 
     private var yDomain: ClosedRange<Double> {
-        let values = entries.map { displayValue($0.kilograms) }
+        var values = entries.map { displayValue($0.kilograms) }
+        // Include the goal weight so the dashed projection line (which draws
+        // to goalKg) doesn't get clipped by an axis range sized only from
+        // logged entries.
+        if let goalKg = settingsList.first?.goalKilograms {
+            values.append(displayValue(goalKg))
+        }
         guard let min = values.min(), let max = values.max() else { return 0...1 }
         let padding = Swift.max((max - min) * 0.2, 2)
         return (min - padding)...(max + padding)

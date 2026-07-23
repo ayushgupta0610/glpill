@@ -16,10 +16,6 @@ final class WeightStatsTests: XCTestCase {
         XCTAssertEqual(change!, -3.5, accuracy: 0.0001)
     }
 
-    func testToGoal() {
-        XCTAssertEqual(WeightStats.toGoal(current: 86.5, goal: 75.0), 11.5, accuracy: 0.0001)
-    }
-
     func testMilestonesReached() {
         XCTAssertEqual(WeightStats.milestonesReached(startKg: 90, currentKg: 85.9, stepKg: 2), 2)
         XCTAssertEqual(WeightStats.milestonesReached(startKg: 90, currentKg: 90, stepKg: 2), 0)
