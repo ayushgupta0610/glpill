@@ -80,4 +80,19 @@ final class JourneyInsightTests: XCTestCase {
         ]
         XCTAssertTrue(JourneyInsights.generate(entries: entries, now: now, calendar: utc).isEmpty)
     }
+
+    func testReturnsEmptyWhenPriorRateIsNearZero() {
+        let now = date(2026, 3, 15)
+        // Prior month (Jan 20 - Feb 10): -0.1kg over 21 days -> priorRate ~= -0.0333 kg/week,
+        // well under the 0.05 kg/week noise floor (but nonzero, so it would have slipped
+        // past the old `priorRate != 0` guard and blown up the percentage).
+        // Recent month (Feb 20 - Mar 10): -3kg over 18 days -> recentRate ~= -1.1667 kg/week.
+        let entries: [(date: Date, kg: Double)] = [
+            (date(2026, 1, 20), 90.0),
+            (date(2026, 2, 10), 89.9),
+            (date(2026, 2, 20), 89.0),
+            (date(2026, 3, 10), 86.0),
+        ]
+        XCTAssertTrue(JourneyInsights.generate(entries: entries, now: now, calendar: utc).isEmpty)
+    }
 }

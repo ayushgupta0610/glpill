@@ -7,8 +7,10 @@ struct JourneyInsight: Equatable {
 enum JourneyInsights {
     /// Up to one template-filled sentence comparing this month's pace to
     /// last month's. Returns `[]` whenever there isn't enough data to
-    /// support a claim, the trend direction is ambiguous, or the change is
-    /// within noise (<5%) — never fabricates a pace it can't back up.
+    /// support a claim, last month's pace is too close to flat to divide by
+    /// (<=0.05 kg/week, matching `JourneyVelocityCalculator.paceLabel`'s
+    /// "holding steady" floor), the trend direction is ambiguous, or the
+    /// change is within noise (<5%) — never fabricates a pace it can't back up.
     static func generate(
         entries: [(date: Date, kg: Double)],
         now: Date,
@@ -23,7 +25,7 @@ enum JourneyInsights {
         let prior = entries.filter { $0.date > priorStart && $0.date <= recentStart }
         guard recent.count >= 2, prior.count >= 2 else { return [] }
 
-        guard let recentRate = weeklyRate(recent), let priorRate = weeklyRate(prior), priorRate != 0 else {
+        guard let recentRate = weeklyRate(recent), let priorRate = weeklyRate(prior), abs(priorRate) > 0.05 else {
             return []
         }
         guard (recentRate < 0) == (priorRate < 0) else { return [] }
