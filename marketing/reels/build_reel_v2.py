@@ -176,6 +176,8 @@ B = {
     "clock": "gen-clock.jpg", "journal": "gen-journal.jpg", "coffee": "gen-coffee.jpg",
     "protein": "gen-protein.jpg", "water": "gen-water.jpg", "walking": "gen-walking.jpg",
     "phone": "gen-phone.jpg", "bedside": "gen-bedside.jpg",
+    "kitchen": "gen-kitchen.jpg", "cafe": "gen-cafe-dessert.jpg", "tea": "gen-tea.jpg",
+    "calendar": "gen-calendar.jpg", "pillcase": "gen-pillcase.jpg",
 }
 TWIST = ("endcard", 3.6, "Every GLP-1 app wants your data. This one CAN'T see it", "CAN'T")
 
@@ -195,23 +197,26 @@ REELS = {
     ("clock",2.0,"the timer runs itself","timer"),
     ("phone",2.0,"and your data never leaves your phone","never"),
  ],
+ # day2/day3 refreshed 2026-07-22: all-unique images per beat + "free" as end reassurance
  "day2-food-noise": [
     ("bf",2.4,"Nobody warns you about the QUIET","QUIET"),
-    ("coffee",2.2,"One morning the food noise just stops","stops"),
-    ("walking",2.2,"You walk right past the snacks",None),
-    ("bf",2.0,"and don't even think about them","don't"),
-    ("bedside",2.0,"Then it starts to feel normal","normal"),
+    ("kitchen",2.2,"One morning the food noise just stops","stops"),
+    ("cafe",2.2,"You walk right past the dessert","past"),
+    ("walking",2.0,"and don't even think about it","don't"),
+    ("bedside",2.0,"Then it just feels normal","normal"),
     ("journal",2.2,"GLPill tracks the whole shift","tracks"),
-    ("phone",2.0,"privately, on your phone","privately"),
+    ("tea",2.0,"quietly, privately, on your phone","privately"),
+    ("coffee",1.8,"and it's completely free","free"),
  ],
  "day3-app-tour": [
     ("hp",2.4,"Every GLP-1 app was built for the NEEDLE","NEEDLE"),
     ("pw",2.0,"But you take a pill","pill"),
-    ("clock",2.0,"Daily, not weekly","Daily"),
+    ("calendar",2.0,"Daily, not weekly","Daily"),
     ("water",1.8,"No injection sites","No"),
-    ("ns",2.0,"just a 30-minute rule","30-minute"),
-    ("journal",2.2,"GLPill is built for exactly that","built"),
+    ("clock",2.0,"just a 30-minute rule","30-minute"),
+    ("pillcase",2.2,"GLPill is built for exactly that","built"),
     ("phone",2.0,"and it can't see your data","can't"),
+    ("journal",1.8,"Free, private, made for the pill","Free"),
  ],
  "day4-rybelsus-morning": [
     ("pw",2.4,"You're probably WASTING your Rybelsus","WASTING"),
@@ -316,6 +321,11 @@ REELS = {
 }
 
 def build_reel(name, beats, out):
+    # each reel should use a unique image per beat (the loop back to the hook is the only reuse)
+    keys = [b[0] for b in beats]
+    dupes = sorted({k for k in keys if keys.count(k) > 1})
+    if dupes:
+        print(f"  ⚠ {name} reuses image(s) within the reel: {', '.join(dupes)}")
     full = list(beats) + [TWIST, (beats[0][0], 0.8, beats[0][2], beats[0][3])]
     with tempfile.TemporaryDirectory() as tmp:
         segs = []
