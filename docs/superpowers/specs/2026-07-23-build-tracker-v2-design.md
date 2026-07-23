@@ -1,19 +1,25 @@
-# Build Tracker v2 — Journey-style Progress tab
+# Build Tracker v2 — Journey-style Today / Progress / History
 
 **Status:** Approved for planning
 **Branch:** `feat/build-tracker-v2`
 
 ## Problem
 
-GLPill's current Progress tab (`ProgressScreen.swift`) shows isolated values: current weight, total change, a line chart, a list of weigh-ins, a share card. It answers "what is my weight" but not "how am I doing on my journey" — no sense of pace, no milestones, no narrative of progress over time.
+GLPill's current Progress tab (`ProgressScreen.swift`) shows isolated values: current weight, total change, a line chart, a list of weigh-ins, a share card. It answers "what is my weight" but not "how am I doing on my journey" — no sense of pace, no milestones, no narrative of progress over time. That same isolation shows up elsewhere: Today never mentions the journey at all, and History (`HistoryView.swift`) tracks dose/side-effect days but has no notion of weigh-ins or milestones.
 
 ## Goal
 
-Redesign the Progress tab into a journey experience, in the spirit of Apple Health / Flighty / Linear: minimal, calm, every number has historical context, nothing displayed in isolation. Reuse GLPill's existing visual language (`Theme.swift`, `Components.swift`) and existing data — no new backend, no new external dependencies.
+Make the journey concept visible everywhere the user already looks, in the spirit of Apple Health / Flighty / Linear: minimal, calm, every number has historical context, nothing displayed in isolation. Reuse GLPill's existing visual language (`Theme.swift`, `Components.swift`) and existing data — no new backend, no new external dependencies.
+
+Three surfaces change:
+
+1. **Progress tab** — full journey redesign (the core of this spec).
+2. **Today tab** — a compact journey snippet near the top (e.g. "Day 42 · 73% to goal · on pace"), so the momentum feeling is present daily, not just when the user opens Progress.
+3. **History tab** — the existing month calendar grid gains weigh-in/milestone markers, and `DayDetailSheet` gains a "Weight" section alongside its existing Dose/Side effects/Intake sections.
 
 ## Non-goals (explicitly deferred)
 
-- Calendar view, GitHub-style activity heatmap
+- GitHub-style activity heatmap (History's existing month grid gets weigh-in/milestone markers, per below — a full heatmap is a separate build)
 - Notes / daily journal
 - Attachments (photos, links)
 - Cross-entity relationships, full-text search
@@ -52,6 +58,18 @@ New views (in `Features/Progress/`, replacing content of `ProgressScreen.swift`;
 
 Existing pieces carried over unchanged into the new layout: `chartCard` logic, weigh-in edit/delete list, `shareCard`/`ShareCardView`, `WeightEntrySheet`, `baselineNudge` empty state, `monthCard` (My Month → Recap) — folded into the new `ProgressScreen` body rather than rewritten.
 
+### Today tab addition
+
+- `JourneySnippetCard.swift` (new, in `Features/Today/`) — one-line summary using `JourneyVelocity`/`WeightStats.toGoal`: `"Day \(daysSinceStart) · \(percentToGoal)% to goal · \(paceLabel)"`. `paceLabel` is "on pace" / "ahead of pace" / "behind pace" (only case that uses `Theme.warn`) / omitted entirely if no goal or velocity data yet.
+- Inserted into `TodayView.body` directly under the date header, above `ritualCard`. Hidden entirely (not shown as an empty state) when there's no `goalKilograms` or zero `WeightEntry` rows — Today should never nag about a journey that hasn't started.
+- Tapping the card navigates to the Progress tab (`router.selection = .progress`), consistent with the existing `ReportShortcutCard` pattern already in `Today/`.
+
+### History tab addition
+
+- `HistoryView.monthGrid` / `dayCell`: add a third indicator dot (reusing the existing two-dot legend pattern — pill taken / side effect) for "weigh-in logged," plus a distinct marker (e.g. a small ring) on days a `JourneyMilestone` was first reached. Legend row gains one entry.
+- `DayDetailSheet`: add a `Section("Weight")` between "Dose" and "Side effects" showing that day's `WeightEntry` (if any) via `UnitFormat.weightString`, with the same edit/delete affordance the Progress tab's weigh-in list already has.
+- No changes to `CalendarLayout.swift` (leading-blank math is unaffected) or to the History navigation title/month paging.
+
 ## Empty / sparse-data states
 
 - Zero entries: keep existing `baselineNudge` ("Add your starting weight...") — journey UI (ring/timeline/insights) simply doesn't render until there's a baseline.
@@ -74,5 +92,6 @@ Existing pieces carried over unchanged into the new layout: `chartCard` logic, w
 ## Rollout
 
 - Branch `feat/build-tracker-v2` off `main`.
-- Single PR replacing `ProgressScreen.swift` + new files above; existing `ProgressScreen.swift` logic is redistributed, not deleted-and-rewritten from scratch.
+- Single PR touching: `Features/Progress/*` (redesign), `Features/Today/TodayView.swift` + new `JourneySnippetCard.swift`, `Features/History/HistoryView.swift` (calendar dots + day-detail Weight section), plus the new `Core/Logic/Journey*.swift` types shared by all three.
+- Existing `ProgressScreen.swift` logic is redistributed, not deleted-and-rewritten from scratch.
 - No CloudKit schema migration required (no new `@Model` types).
