@@ -84,6 +84,17 @@ Existing pieces carried over unchanged into the new layout: `chartCard` logic, w
 - Reuse `SectionHeader`, `StatBadge`, `PillCTAButton` as-is; no new design-system components
 - Motion: progress ring animates on appear/update (`.animation` on the ring's trim), activity feed rows insert with a subtle transition — no confetti in v1 (spec reserves that for "major milestones," out of scope here)
 
+## Visual reference (MeAgain app screen recording)
+
+A competitor GLP-1 app ("MeAgain") screen recording was reviewed as the visual gold standard. Concrete patterns adopted from it:
+
+- **Progress ring style**: light gray track, single-color filled arc, large bold number centered, small caption below — used for `JourneyProgressCard`'s ring (matches what `WeightShortcutCard`/protein ring already do elsewhere in the app, so this is also internally consistent).
+- **"My GLP-1 Journey" card layout**: caps-style title, a pill/badge in the top-right corner (their "0 days" badge → our streak or days-since-start badge), a compact stat column (Date / BMI / Weight / Weight Diff) — informs `JourneyHeaderView`'s stat layout.
+- **Bottom horizontal date scrubber**: a draggable timeline strip with date labels — directly informs `JourneyTimelineView`'s interaction model (scrollable/draggable chips rather than a static row).
+- **Medication-level decay chart**: solid line for actual data, dashed continuation for the projected/future portion — adopted for `chartCard`'s weight trend: extend the existing `Chart` with a dashed `LineMark` segment from the last real entry to the `JourneyVelocity.projectedCompletion` point.
+- Card chrome (light gray fill, no border, generous internal padding, icon+label headers) — already matches GLPill's existing `Card` component, no change needed there.
+- Confirms "Journey" is the standard vocabulary in this product category (their premium feature is literally called "Journey Card") — validates the naming used throughout this spec.
+
 ## Testing
 
 - `Core/Logic/*` new types get Swift Testing unit tests (per repo convention — see `App/Tests`): milestone generation across start>goal and edge cases (0 entries, entries past goal, no goal set), velocity/projection math, insight generation (including the "must return `[]` rather than fabricate" cases), activity feed merge/sort ordering.
