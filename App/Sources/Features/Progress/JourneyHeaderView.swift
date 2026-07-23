@@ -21,6 +21,7 @@ struct JourneyHeaderView: View {
             }
             .font(.subheadline.weight(.medium))
             .foregroundStyle(.secondary)
+            .accessibilityElement(children: .combine)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }
