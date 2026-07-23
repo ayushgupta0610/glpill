@@ -70,6 +70,6 @@ struct JourneyTimelineView: View {
             }
         }
         .padding()
-        .presentationDetents([.fraction(0.3)])
+        .presentationDetents([.medium])
     }
 }
