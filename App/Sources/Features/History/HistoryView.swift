@@ -32,8 +32,9 @@ struct HistoryView: View {
     }
 
     private var milestoneDays: Set<Date> {
-        guard let settings = settingsList.first, let goalKg = settings.goalKilograms else { return [] }
-        let startKg = settings.startKilograms ?? weightEntries.first?.kilograms ?? goalKg
+        guard let settings = settingsList.first,
+              let goalKg = settings.goalKilograms,
+              let startKg = settings.startKilograms ?? weightEntries.first?.kilograms else { return [] }
         let milestones = JourneyMilestones.generate(
             startKg: startKg,
             goalKg: goalKg,
