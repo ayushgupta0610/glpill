@@ -81,6 +81,24 @@ final class JourneyInsightTests: XCTestCase {
         XCTAssertTrue(JourneyInsights.generate(entries: entries, now: now, calendar: utc).isEmpty)
     }
 
+    func testReturnsEmptyWhenAWindowsEntriesAreAllOnTheSameDay() {
+        let now = date(2026, 3, 15)
+        // Prior month: normal, well-separated entries (rate ~= -1.0 kg/week).
+        // Recent month: two entries logged hours apart on the same day
+        // (e.g. a correction) -> weeklyRate's days denominator is near-zero.
+        // Regression test: this must not blow up into a fabricated
+        // percentage (the same bug class fixed in JourneyVelocityCalculator).
+        let sameDayMorning = date(2026, 2, 20)
+        let sameDayEvening = sameDayMorning.addingTimeInterval(12 * 3600)
+        let entries: [(date: Date, kg: Double)] = [
+            (date(2026, 1, 20), 94.0),
+            (date(2026, 2, 10), 91.0),
+            (sameDayMorning, 90.0),
+            (sameDayEvening, 89.5),
+        ]
+        XCTAssertTrue(JourneyInsights.generate(entries: entries, now: now, calendar: utc).isEmpty)
+    }
+
     func testReturnsEmptyWhenPriorRateIsNearZero() {
         let now = date(2026, 3, 15)
         // Prior month (Jan 20 - Feb 10): -0.1kg over 21 days -> priorRate ~= -0.0333 kg/week,

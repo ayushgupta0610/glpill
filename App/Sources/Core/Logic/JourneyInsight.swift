@@ -40,8 +40,13 @@ enum JourneyInsights {
 
     private static func weeklyRate(_ entries: [(date: Date, kg: Double)]) -> Double? {
         let sorted = entries.sorted { $0.date < $1.date }
-        guard let first = sorted.first, let last = sorted.last, first.date != last.date else { return nil }
+        guard let first = sorted.first, let last = sorted.last else { return nil }
         let days = last.date.timeIntervalSince(first.date) / 86400
+        // Require at least a full day of separation — entries within the
+        // same day produce a near-zero denominator that inflates the rate
+        // to a nonsense value (the same bug class fixed in
+        // JourneyVelocityCalculator.calculate).
+        guard days >= 1 else { return nil }
         return (last.kg - first.kg) / days * 7
     }
 }
