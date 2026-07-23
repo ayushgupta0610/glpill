@@ -9,7 +9,17 @@ What changed vs v1 (build_reels.py):
   - hook -> problem -> app payoff -> twist/loop structure
 Silent (add trending audio in-app; cuts are ~2s so they land on the beat).
 
-Usage: python3 build_reel_v2.py <out.mp4>     # renders the Rybelsus pilot
+VISUAL RULES (locked 2026-07-23 — keep every reel fresh):
+  - CONSISTENT STYLE: all B-roll shares one look — teal/cream palette, soft morning
+    light, faceless, aesthetic, cinematic, 9:16. Never weight/scale/medication-shaming imagery.
+  - FRESH IMAGES PER REEL: generate NEW Magnific B-roll for each reel (`broll:gen-<reel>-*.jpg`)
+    instead of recycling the shared pack, so no reel looks like another.
+  - BLEND: drop a REAL app screenshot (`app:<screen>.png`) exactly where the text names a
+    feature (timer->Today, trend->Progress, doctor->Report); B-roll for emotional/lifestyle lines.
+  - UNIQUE within a reel: every visual distinct (the 0.8s loop back to the hook is the only reuse).
+  - "Free" is an end reassurance beat, never the hook.
+
+Usage: python3 build_reel_v2.py <reel-name> | all
 """
 import os, sys, subprocess, tempfile
 from PIL import Image, ImageDraw, ImageFont, ImageFilter
@@ -182,7 +192,15 @@ B = {
 TWIST = ("endcard", 3.6, "Every GLP-1 app wants your data. This one CAN'T see it", "CAN'T")
 
 def resolve(key):
-    return bg_endcard() if key == "endcard" else bg_broll(B[key])
+    # "endcard" | "app:<screenshot.png>" (real app screen) | "broll:<file.jpg>" (per-reel
+    # fresh B-roll) | short key into the shared B pack (legacy reels)
+    if key == "endcard":
+        return bg_endcard()
+    if key.startswith("app:"):
+        return bg_app(key[4:])
+    if key.startswith("broll:"):
+        return bg_broll(key[6:])
+    return bg_broll(B[key])
 
 # ---- the 14 reels: statement hook -> problem -> payoff (feature via kinetic text) ----
 # Screenshot-free (all B-roll). The twist endcard + a 0.8s loop-back-to-hook are appended
@@ -238,23 +256,24 @@ REELS = {
     ("bedside",2.0,"No account. No servers.","No"),
     ("phone",2.0,"It all stays on your phone","stays"),
  ],
+ # day6/day7 rebuilt 2026-07-23: blended (fresh B-roll + real app screens at feature beats)
  "day6-doctor-report": [
-    ("coffee",2.4,"“So, how's it been going?”",None),
-    ("bedside",2.0,"Most people just guess","guess"),
-    ("journal",2.2,"Walk in with the whole story","whole"),
-    ("ns",2.0,"Adherence. Weight. Side effects.",None),
-    ("journal",2.0,"GLPill puts it in one summary","one"),
-    ("phone",2.2,"One tap to share with your doctor","share"),
-    ("pw",2.0,"and it only leaves when you say so","you"),
+    ("broll:gen-d6-clinic.jpg",2.4,"“So, how's it been going?”",None),
+    ("broll:gen-d6-notepad.jpg",2.0,"Most people just guess","guess"),
+    ("app:07-report.png",2.8,"GLPill hands over the whole story","whole"),
+    ("broll:gen-d6-organizer.jpg",2.0,"Every dose, logged","logged"),
+    ("app:05-progress.png",2.6,"your weight, trended","trended"),
+    ("broll:gen-d6-share.jpg",2.2,"One tap to share — your call","call"),
+    ("broll:gen-d6-tea.jpg",1.8,"Free, private, built for the pill","Free"),
  ],
  "day7-nsv": [
-    ("walking",2.4,"The scale is just ONE number","ONE"),
-    ("coffee",2.0,"The real wins are everywhere else","everywhere"),
-    ("journal",2.0,"More energy. Looser jeans. Better sleep.",None),
-    ("bf",2.0,"A quiet mind at the dinner table","quiet"),
-    ("walking",2.0,"Track those, not just the scale","those"),
-    ("journal",2.2,"GLPill logs the wins that matter","matter"),
-    ("phone",2.0,"privately, on your phone","privately"),
+    ("broll:gen-d7-sunrise.jpg",2.4,"The scale is just ONE number","ONE"),
+    ("broll:gen-d7-coffee.jpg",2.0,"The real wins are everywhere else","everywhere"),
+    ("broll:gen-d7-bed.jpg",2.0,"Deeper sleep. Steadier energy.","energy"),
+    ("app:05-progress.png",2.6,"GLPill tracks the trend, not the day","trend"),
+    ("broll:gen-d7-walk.jpg",2.0,"and the wins a scale never sees","never"),
+    ("broll:gen-d7-journal.jpg",2.0,"logged, just for you","logged"),
+    ("broll:gen-d7-phone.jpg",1.8,"Free, private, on your phone","Free"),
  ],
  "wk2-day1-streak-breakers": [
     ("ns",2.4,"Most people quit the pill for ONE reason","ONE"),
