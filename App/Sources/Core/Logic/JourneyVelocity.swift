@@ -18,7 +18,10 @@ enum JourneyVelocityCalculator {
         let first = window.first!
         let last = window.last!
         let days = last.date.timeIntervalSince(first.date) / 86400
-        guard days > 0 else { return JourneyVelocity(kgPerWeek: 0, projectedCompletion: nil) }
+        // Require at least a full day of separation — entries logged within
+        // the same day (e.g. multiple corrections in one session) produce a
+        // near-zero denominator that blows kgPerWeek up to a nonsense value.
+        guard days >= 1 else { return JourneyVelocity(kgPerWeek: 0, projectedCompletion: nil) }
         let kgPerDay = (last.kg - first.kg) / days
         let kgPerWeek = kgPerDay * 7
 

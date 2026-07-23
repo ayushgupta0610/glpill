@@ -53,6 +53,20 @@ final class JourneyVelocityTests: XCTestCase {
         XCTAssertNil(result.projectedCompletion)
     }
 
+    func testSameDayEntriesDoNotProduceBlownUpRate() {
+        // Regression test: two entries logged hours apart on the same day
+        // (e.g. a correction) must not blow up kgPerWeek via a near-zero
+        // days denominator. Found in manual verification: a real run with
+        // same-day entries produced "123542.7 kg/week" instead of a sane
+        // value.
+        let sameDay = Date(timeIntervalSince1970: 10 * 86400)
+        let hoursLater = sameDay.addingTimeInterval(3 * 3600)
+        let entries: [(date: Date, kg: Double)] = [(sameDay, 90.0), (hoursLater, 89.5)]
+        let result = JourneyVelocityCalculator.calculate(entries: entries, goalKg: 80)
+        XCTAssertEqual(result.kgPerWeek, 0, accuracy: 0.0001)
+        XCTAssertNil(result.projectedCompletion)
+    }
+
     func testPaceLabels() {
         XCTAssertEqual(JourneyVelocityCalculator.paceLabel(kgPerWeek: -0.5).text, "Losing steadily")
         XCTAssertFalse(JourneyVelocityCalculator.paceLabel(kgPerWeek: -0.5).isWarning)
