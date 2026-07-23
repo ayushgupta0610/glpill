@@ -40,6 +40,37 @@ struct TodayView: View {
         StreakCalculator.currentStreak(doseDays: doseLogs.map(\.date), today: .now, calendar: calendar)
     }
 
+    private struct JourneySnippetData {
+        let daysSinceStart: Int
+        let percentToGoal: Int
+        let paceText: String
+        let paceIsWarning: Bool
+    }
+
+    /// Hidden (not an empty state) until there's a goal and at least one
+    /// weigh-in — Today shouldn't nag about a journey that hasn't started.
+    private var journeySnippet: JourneySnippetData? {
+        guard let settings = settingsList.first,
+              let goalKg = settings.goalKilograms,
+              let currentKg = weightEntries.first?.kilograms else { return nil }
+        let startKg = settings.startKilograms ?? currentKg
+        guard startKg != goalKg else { return nil }
+
+        let daysSinceStart = max(0, calendar.dateComponents([.day], from: settings.startDate, to: .now).day ?? 0)
+        let percent = max(0, min(1, (startKg - currentKg) / (startKg - goalKg)))
+        let velocity = JourneyVelocityCalculator.calculate(
+            entries: weightEntries.map { (date: $0.date, kg: $0.kilograms) },
+            goalKg: goalKg
+        )
+        let pace = JourneyVelocityCalculator.paceLabel(kgPerWeek: velocity.kgPerWeek)
+        return JourneySnippetData(
+            daysSinceStart: daysSinceStart,
+            percentToGoal: Int((percent * 100).rounded()),
+            paceText: pace.text,
+            paceIsWarning: pace.isWarning
+        )
+    }
+
     var body: some View {
         NavigationStack {
             ScrollView {
@@ -48,6 +79,14 @@ struct TodayView: View {
                         .font(.subheadline.weight(.medium))
                         .foregroundStyle(.secondary)
                         .frame(maxWidth: .infinity, alignment: .leading)
+                    if let snippet = journeySnippet {
+                        JourneySnippetCard(
+                            daysSinceStart: snippet.daysSinceStart,
+                            percentToGoal: snippet.percentToGoal,
+                            paceText: snippet.paceText,
+                            paceIsWarning: snippet.paceIsWarning
+                        )
+                    }
                     if showNotifDeniedBanner {
                         notifDeniedBanner
                     }
