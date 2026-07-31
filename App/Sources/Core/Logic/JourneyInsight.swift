@@ -34,7 +34,8 @@ enum JourneyInsights {
         guard percentChange >= 5 else { return [] }
 
         let direction = abs(recentRate) > abs(priorRate) ? "faster" : "slower"
-        let text = "You're losing weight \(Int(percentChange.rounded()))% \(direction) than last month."
+        let verb = recentRate < 0 ? "losing" : "gaining"
+        let text = "You're \(verb) weight \(Int(percentChange.rounded()))% \(direction) than last month."
         return [JourneyInsight(text: text)]
     }
 

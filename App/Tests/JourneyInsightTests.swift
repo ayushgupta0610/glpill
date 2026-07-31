@@ -44,6 +44,24 @@ final class JourneyInsightTests: XCTestCase {
         XCTAssertEqual(insights[0].text, "You're losing weight 75% faster than last month.")
     }
 
+    func testGeneratesGainingPhrasingForAPositiveTrend() {
+        let now = date(2026, 3, 15)
+        // Mirror of testGeneratesFasterPaceInsight's magnitudes but gaining
+        // instead of losing (+3kg/+2kg instead of -3kg/-2kg): same 75%
+        // change, but the sentence must say "gaining", not "losing" — a
+        // regression test for a bug where the verb was hardcoded to
+        // "losing" regardless of the actual trend direction.
+        let entries: [(date: Date, kg: Double)] = [
+            (date(2026, 1, 20), 60.0),
+            (date(2026, 2, 10), 62.0),
+            (date(2026, 2, 20), 63.0),
+            (date(2026, 3, 10), 66.0),
+        ]
+        let insights = JourneyInsights.generate(entries: entries, now: now, calendar: utc)
+        XCTAssertEqual(insights.count, 1)
+        XCTAssertEqual(insights[0].text, "You're gaining weight 75% faster than last month.")
+    }
+
     func testReturnsEmptyWithInsufficientDataInEitherWindow() {
         let now = date(2026, 3, 15)
         // Only one entry this month.
