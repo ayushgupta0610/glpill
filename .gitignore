@@ -9,3 +9,4 @@ site/.vercel
 .firecrawl/
 .superpowers/
 .worktrees/
+.claude/worktrees/
