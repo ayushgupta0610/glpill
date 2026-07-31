@@ -26,7 +26,8 @@ struct ProgressScreen: View {
                             daysSinceStart: daysSinceStart,
                             percentToGoal: percentToGoal.map { Int(($0 * 100).rounded()) },
                             paceText: paceInfo.text,
-                            paceIsWarning: paceInfo.isWarning
+                            paceIsWarning: paceInfo.isWarning,
+                            goalAboveStart: goalAboveStart
                         )
                         JourneyProgressCard(
                             percentToGoal: percentToGoal,
@@ -117,11 +118,14 @@ struct ProgressScreen: View {
         )
     }
 
-    private var paceInfo: (text: String, isWarning: Bool) {
-        let goalAboveStart = startKilograms.flatMap { startKg in
+    private var goalAboveStart: Bool? {
+        startKilograms.flatMap { startKg in
             settingsList.first?.goalKilograms.map { $0 > startKg }
         }
-        return JourneyVelocityCalculator.paceLabel(kgPerWeek: journeyVelocity.kgPerWeek, goalAboveStart: goalAboveStart)
+    }
+
+    private var paceInfo: (text: String, isWarning: Bool) {
+        JourneyVelocityCalculator.paceLabel(kgPerWeek: journeyVelocity.kgPerWeek, goalAboveStart: goalAboveStart)
     }
 
     private var sinceLastWeekText: String {

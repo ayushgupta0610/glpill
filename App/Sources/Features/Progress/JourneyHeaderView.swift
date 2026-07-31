@@ -6,10 +6,15 @@ struct JourneyHeaderView: View {
     let percentToGoal: Int?
     let paceText: String
     let paceIsWarning: Bool
+    let goalAboveStart: Bool?
+
+    private var title: String {
+        goalAboveStart == true ? "Weight Gain Journey" : "Weight Loss Journey"
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text("Weight Loss Journey")
+            Text(title)
                 .font(.largeTitle.bold())
             HStack(spacing: 6) {
                 Text("Day \(daysSinceStart)")
