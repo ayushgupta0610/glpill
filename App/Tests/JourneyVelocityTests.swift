@@ -77,4 +77,19 @@ final class JourneyVelocityTests: XCTestCase {
         XCTAssertEqual(JourneyVelocityCalculator.paceLabel(kgPerWeek: 0.01).text, "Holding steady")
         XCTAssertFalse(JourneyVelocityCalculator.paceLabel(kgPerWeek: 0.01).isWarning)
     }
+
+    func testPaceLabelsForGainGoal() {
+        // Goal above start: gaining weight is on-plan, must not warn.
+        let gaining = JourneyVelocityCalculator.paceLabel(kgPerWeek: 2.0, goalAboveStart: true)
+        XCTAssertEqual(gaining.text, "Trending up")
+        XCTAssertFalse(gaining.isWarning)
+
+        // Goal above start: losing weight is off-plan, should warn.
+        let losing = JourneyVelocityCalculator.paceLabel(kgPerWeek: -0.5, goalAboveStart: true)
+        XCTAssertEqual(losing.text, "Trending down")
+        XCTAssertTrue(losing.isWarning)
+
+        XCTAssertEqual(JourneyVelocityCalculator.paceLabel(kgPerWeek: 0.01, goalAboveStart: true).text, "Holding steady")
+        XCTAssertFalse(JourneyVelocityCalculator.paceLabel(kgPerWeek: 0.01, goalAboveStart: true).isWarning)
+    }
 }

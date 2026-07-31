@@ -43,7 +43,21 @@ enum JourneyVelocityCalculator {
     /// Direction-based pace label. There's no target date in `UserSettings`,
     /// so this describes trend direction rather than an invented "on/behind
     /// schedule" concept the data can't actually support.
-    static func paceLabel(kgPerWeek: Double) -> (text: String, isWarning: Bool) {
+    ///
+    /// `goalAboveStart` disambiguates whether a positive/negative rate is
+    /// toward or away from the goal — e.g. for a gain goal (goal above the
+    /// starting weight), gaining weight is on-plan and shouldn't warn.
+    /// `nil` (no goal) preserves the original loss-focused wording.
+    static func paceLabel(kgPerWeek: Double, goalAboveStart: Bool? = nil) -> (text: String, isWarning: Bool) {
+        if goalAboveStart == true {
+            if kgPerWeek > 0.05 {
+                return ("Trending up", false)
+            } else if kgPerWeek < -0.05 {
+                return ("Trending down", true)
+            } else {
+                return ("Holding steady", false)
+            }
+        }
         if kgPerWeek < -0.05 {
             return ("Losing steadily", false)
         } else if kgPerWeek > 0.05 {

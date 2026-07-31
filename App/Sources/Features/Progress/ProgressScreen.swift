@@ -118,7 +118,10 @@ struct ProgressScreen: View {
     }
 
     private var paceInfo: (text: String, isWarning: Bool) {
-        JourneyVelocityCalculator.paceLabel(kgPerWeek: journeyVelocity.kgPerWeek)
+        let goalAboveStart = startKilograms.flatMap { startKg in
+            settingsList.first?.goalKilograms.map { $0 > startKg }
+        }
+        return JourneyVelocityCalculator.paceLabel(kgPerWeek: journeyVelocity.kgPerWeek, goalAboveStart: goalAboveStart)
     }
 
     private var sinceLastWeekText: String {

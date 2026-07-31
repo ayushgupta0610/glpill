@@ -62,7 +62,7 @@ struct TodayView: View {
             entries: weightEntries.map { (date: $0.date, kg: $0.kilograms) },
             goalKg: goalKg
         )
-        let pace = JourneyVelocityCalculator.paceLabel(kgPerWeek: velocity.kgPerWeek)
+        let pace = JourneyVelocityCalculator.paceLabel(kgPerWeek: velocity.kgPerWeek, goalAboveStart: goalKg > startKg)
         return JourneySnippetData(
             daysSinceStart: daysSinceStart,
             percentToGoal: Int((percent * 100).rounded()),
