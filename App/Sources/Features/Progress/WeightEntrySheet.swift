@@ -13,6 +13,7 @@ struct WeightEntrySheet: View {
     @State private var errorMessage: String?
     @State private var showOutlierAlert = false
     @State private var isSaving = false
+    @State private var isInitializing = true
 
     var body: some View {
         NavigationStack {
@@ -24,7 +25,7 @@ struct WeightEntrySheet: View {
                 .pickerStyle(.segmented)
                 .onChange(of: usesMetric) { oldMetric, newMetric in
                     // Convert the shown number in place — no data change.
-                    guard let value = displayValue else { return }
+                    guard !isInitializing, let value = displayValue else { return }
                     let kg = UnitFormat.kilograms(fromDisplay: value, metric: oldMetric)
                     displayValue = newMetric ? kg : kg / UnitFormat.kgPerLb
                 }
@@ -59,9 +60,11 @@ struct WeightEntrySheet: View {
             }
             .onAppear {
                 usesMetric = metric
-                guard let entry else { return }
-                displayValue = usesMetric ? entry.kilograms : entry.kilograms / UnitFormat.kgPerLb
-                date = entry.date
+                if let entry {
+                    displayValue = usesMetric ? entry.kilograms : entry.kilograms / UnitFormat.kgPerLb
+                    date = entry.date
+                }
+                isInitializing = false
             }
         }
     }
