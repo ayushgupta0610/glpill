@@ -284,19 +284,21 @@ struct ProgressScreen: View {
                 }
                 .frame(maxWidth: .infinity, minHeight: 120)
             } else {
-                Chart(entries) { entry in
-                    LineMark(
-                        x: .value("Date", entry.date),
-                        y: .value("Weight", displayValue(entry.kilograms))
-                    )
-                    .foregroundStyle(Theme.primary)
-                    .interpolationMethod(.catmullRom)
-                    AreaMark(
-                        x: .value("Date", entry.date),
-                        y: .value("Weight", displayValue(entry.kilograms))
-                    )
-                    .foregroundStyle(Theme.primary.opacity(0.12))
-                    .interpolationMethod(.catmullRom)
+                Chart {
+                    ForEach(entries) { entry in
+                        LineMark(
+                            x: .value("Date", entry.date),
+                            y: .value("Weight", displayValue(entry.kilograms))
+                        )
+                        .foregroundStyle(Theme.primary)
+                        .interpolationMethod(.catmullRom)
+                        AreaMark(
+                            x: .value("Date", entry.date),
+                            y: .value("Weight", displayValue(entry.kilograms))
+                        )
+                        .foregroundStyle(Theme.primary.opacity(0.12))
+                        .interpolationMethod(.catmullRom)
+                    }
 
                     if let last = entries.last,
                        let projected = journeyVelocity.projectedCompletion,
