@@ -295,7 +295,8 @@ struct ProgressScreen: View {
                     ForEach(entries) { entry in
                         LineMark(
                             x: .value("Date", entry.date),
-                            y: .value("Weight", displayValue(entry.kilograms))
+                            y: .value("Weight", displayValue(entry.kilograms)),
+                            series: .value("Series", "actual")
                         )
                         .foregroundStyle(Theme.primary)
                         .interpolationMethod(.catmullRom)
@@ -311,9 +312,13 @@ struct ProgressScreen: View {
                        let projected = journeyVelocity.projectedCompletion,
                        let goalKg = settingsList.first?.goalKilograms {
                         ForEach([(last.date, displayValue(last.kilograms)), (projected, displayValue(goalKg))], id: \.0) { point in
-                            LineMark(x: .value("Date", point.0), y: .value("Weight", point.1))
-                                .lineStyle(StrokeStyle(lineWidth: 2, dash: [4, 4]))
-                                .foregroundStyle(Theme.primary.opacity(0.5))
+                            LineMark(
+                                x: .value("Date", point.0),
+                                y: .value("Weight", point.1),
+                                series: .value("Series", "projected")
+                            )
+                            .lineStyle(StrokeStyle(lineWidth: 2, dash: [4, 4]))
+                            .foregroundStyle(Theme.primary.opacity(0.5))
                         }
                     }
                 }
