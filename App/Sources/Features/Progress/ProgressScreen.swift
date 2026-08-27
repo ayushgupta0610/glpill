@@ -323,6 +323,7 @@ struct ProgressScreen: View {
                     }
                 }
                 .chartYScale(domain: yDomain)
+                .chartXScale(domain: xDomain)
                 .frame(height: 220)
                 .accessibilityElement(children: .ignore)
                 .accessibilityLabel(weightChartSummary)
@@ -354,6 +355,17 @@ struct ProgressScreen: View {
         guard let min = values.min(), let max = values.max() else { return 0...1 }
         let padding = Swift.max((max - min) * 0.2, 2)
         return (min - padding)...(max + padding)
+    }
+
+    // Bounds the visible x-axis to the real weigh-in range (plus a small pad)
+    // so the projected-completion mark, which can sit months out, doesn't
+    // stretch the axis and compress the real entries into a sliver of width.
+    private var xDomain: ClosedRange<Date> {
+        guard let first = entries.first?.date, let last = entries.last?.date else {
+            let now = Date.now
+            return now...now
+        }
+        return ChartXDomain.weightTrendDomain(firstEntryDate: first, lastEntryDate: last)
     }
 
     private var shareCard: some View {
