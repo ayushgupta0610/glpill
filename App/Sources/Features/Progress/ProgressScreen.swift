@@ -22,10 +22,35 @@ struct ProgressScreen: View {
                     if entries.isEmpty {
                         baselineNudge
                     } else {
-                        statsCard
+                        JourneyHeaderView(
+                            daysSinceStart: daysSinceStart,
+                            percentToGoal: percentToGoal.map { Int(($0 * 100).rounded()) },
+                            paceText: paceInfo.text,
+                            paceIsWarning: paceInfo.isWarning,
+                            goalAboveStart: goalAboveStart
+                        )
+                        JourneyProgressCard(
+                            percentToGoal: percentToGoal,
+                            currentWeightText: entries.last.map { UnitFormat.weightString(kilograms: $0.kilograms, metric: metric) } ?? "—",
+                            sinceLastWeekText: sinceLastWeekText,
+                            sinceStartText: sinceStartText,
+                            velocityText: velocityText,
+                            projectedCompletionText: projectedCompletionText,
+                            streak: streak
+                        )
+                        if !milestones.isEmpty {
+                            JourneyTimelineView(
+                                startDate: settingsList.first?.startDate ?? entries.first?.date ?? .now,
+                                milestones: milestones,
+                                projectedCompletion: journeyVelocity.projectedCompletion,
+                                metric: metric
+                            )
+                        }
                     }
                     chartCard
                     if !entries.isEmpty {
+                        ActivityFeedView(events: activityEvents, metric: metric)
+                        JourneyInsightsCard(insights: insights)
                         weighInsCard
                     }
                     shareCard
@@ -67,6 +92,95 @@ struct ProgressScreen: View {
 
     private var sortedEntries: [WeightEntry] {
         entries.sorted { $0.date > $1.date }
+    }
+
+    private var daysSinceStart: Int {
+        guard let start = settingsList.first?.startDate else { return 0 }
+        return max(0, Calendar.current.dateComponents([.day], from: start, to: .now).day ?? 0)
+    }
+
+    private var startKilograms: Double? {
+        settingsList.first?.startKilograms ?? entries.first?.kilograms
+    }
+
+    private var percentToGoal: Double? {
+        guard let startKg = startKilograms,
+              let goalKg = settingsList.first?.goalKilograms,
+              let currentKg = entries.last?.kilograms,
+              startKg != goalKg else { return nil }
+        return max(0, min(1, (startKg - currentKg) / (startKg - goalKg)))
+    }
+
+    private var journeyVelocity: JourneyVelocity {
+        JourneyVelocityCalculator.calculate(
+            entries: entries.map { (date: $0.date, kg: $0.kilograms) },
+            goalKg: settingsList.first?.goalKilograms
+        )
+    }
+
+    private var goalAboveStart: Bool? {
+        startKilograms.flatMap { startKg in
+            settingsList.first?.goalKilograms.map { $0 > startKg }
+        }
+    }
+
+    private var paceInfo: (text: String, isWarning: Bool) {
+        JourneyVelocityCalculator.paceLabel(kgPerWeek: journeyVelocity.kgPerWeek, goalAboveStart: goalAboveStart)
+    }
+
+    private var sinceLastWeekText: String {
+        guard let currentKg = entries.last?.kilograms,
+              let weekAgo = Calendar.current.date(byAdding: .day, value: -7, to: .now),
+              let priorEntry = sortedEntries.first(where: { $0.date <= weekAgo }) else {
+            return "— since last week"
+        }
+        let delta = currentKg - priorEntry.kilograms
+        let display = metric ? delta : delta / UnitFormat.kgPerLb
+        return String(format: "%+.1f %@ since last week", display, metric ? "kg" : "lb")
+    }
+
+    private var sinceStartText: String {
+        guard let change = WeightStats.totalChange(entries: entries.map { (date: $0.date, kg: $0.kilograms) }) else {
+            return "— since start"
+        }
+        let display = metric ? change : change / UnitFormat.kgPerLb
+        return String(format: "%+.1f %@ since start", display, metric ? "kg" : "lb")
+    }
+
+    private var velocityText: String {
+        guard entries.count >= 2 else { return "Velocity —" }
+        let display = metric ? journeyVelocity.kgPerWeek : journeyVelocity.kgPerWeek / UnitFormat.kgPerLb
+        return String(format: "%.1f %@/week", abs(display), metric ? "kg" : "lb")
+    }
+
+    private var projectedCompletionText: String {
+        guard let projected = journeyVelocity.projectedCompletion else { return "Est. completion —" }
+        return "Est. goal \(projected.formatted(date: .abbreviated, time: .omitted))"
+    }
+
+    private var milestones: [JourneyMilestone] {
+        guard let startKg = startKilograms, let goalKg = settingsList.first?.goalKilograms else { return [] }
+        return JourneyMilestones.generate(
+            startKg: startKg,
+            goalKg: goalKg,
+            entries: entries.map { (date: $0.date, kg: $0.kilograms) }
+        )
+    }
+
+    private var activityEvents: [ActivityEvent] {
+        ActivityFeed.merge(
+            weightEntries: entries.map { (id: String(describing: $0.persistentModelID), date: $0.date, kg: $0.kilograms) },
+            doseLogs: doseLogs.map { (id: String(describing: $0.persistentModelID), date: $0.date) },
+            milestones: milestones
+        )
+    }
+
+    private var insights: [JourneyInsight] {
+        JourneyInsights.generate(entries: entries.map { (date: $0.date, kg: $0.kilograms) }, now: .now)
+    }
+
+    private var streak: Int {
+        StreakCalculator.currentStreak(doseDays: doseLogs.map(\.date), today: .now, calendar: .current)
     }
 
     private var weighInsCard: some View {
@@ -158,35 +272,6 @@ struct ProgressScreen: View {
         }
     }
 
-    private var statsCard: some View {
-        Card {
-            HStack {
-                StatBadge(
-                    value: entries.last.map { UnitFormat.weightString(kilograms: $0.kilograms, metric: metric) } ?? "—",
-                    label: "Current"
-                )
-                StatBadge(value: changeString, label: "Total change", tint: .orange)
-                StatBadge(value: toGoalString, label: "To goal", tint: .blue)
-            }
-        }
-    }
-
-    private var changeString: String {
-        guard let change = WeightStats.totalChange(entries: entries.map { (date: $0.date, kg: $0.kilograms) }) else {
-            return "—"
-        }
-        let display = metric ? change : change / UnitFormat.kgPerLb
-        return String(format: "%+.1f %@", display, metric ? "kg" : "lb")
-    }
-
-    private var toGoalString: String {
-        guard let current = entries.last?.kilograms, let goal = settingsList.first?.goalKilograms else { return "—" }
-        let remaining = WeightStats.toGoal(current: current, goal: goal)
-        guard remaining > 0 else { return "Reached ✓" }
-        let display = metric ? remaining : remaining / UnitFormat.kgPerLb
-        return String(format: "%.1f %@", display, metric ? "kg" : "lb")
-    }
-
     private var chartCard: some View {
         Card {
             SectionHeader(title: "Weight trend")
@@ -206,21 +291,39 @@ struct ProgressScreen: View {
                 }
                 .frame(maxWidth: .infinity, minHeight: 120)
             } else {
-                Chart(entries) { entry in
-                    LineMark(
-                        x: .value("Date", entry.date),
-                        y: .value("Weight", displayValue(entry.kilograms))
-                    )
-                    .foregroundStyle(Theme.primary)
-                    .interpolationMethod(.catmullRom)
-                    AreaMark(
-                        x: .value("Date", entry.date),
-                        y: .value("Weight", displayValue(entry.kilograms))
-                    )
-                    .foregroundStyle(Theme.primary.opacity(0.12))
-                    .interpolationMethod(.catmullRom)
+                Chart {
+                    ForEach(entries) { entry in
+                        LineMark(
+                            x: .value("Date", entry.date),
+                            y: .value("Weight", displayValue(entry.kilograms)),
+                            series: .value("Series", "actual")
+                        )
+                        .foregroundStyle(Theme.primary)
+                        .interpolationMethod(.catmullRom)
+                        AreaMark(
+                            x: .value("Date", entry.date),
+                            y: .value("Weight", displayValue(entry.kilograms))
+                        )
+                        .foregroundStyle(Theme.primary.opacity(0.12))
+                        .interpolationMethod(.catmullRom)
+                    }
+
+                    if let last = entries.last,
+                       let projected = journeyVelocity.projectedCompletion,
+                       let goalKg = settingsList.first?.goalKilograms {
+                        ForEach([(last.date, displayValue(last.kilograms)), (projected, displayValue(goalKg))], id: \.0) { point in
+                            LineMark(
+                                x: .value("Date", point.0),
+                                y: .value("Weight", point.1),
+                                series: .value("Series", "projected")
+                            )
+                            .lineStyle(StrokeStyle(lineWidth: 2, dash: [4, 4]))
+                            .foregroundStyle(Theme.primary.opacity(0.5))
+                        }
+                    }
                 }
                 .chartYScale(domain: yDomain)
+                .chartXScale(domain: xDomain)
                 .frame(height: 220)
                 .accessibilityElement(children: .ignore)
                 .accessibilityLabel(weightChartSummary)
@@ -242,10 +345,27 @@ struct ProgressScreen: View {
     }
 
     private var yDomain: ClosedRange<Double> {
-        let values = entries.map { displayValue($0.kilograms) }
+        var values = entries.map { displayValue($0.kilograms) }
+        // Include the goal weight so the dashed projection line (which draws
+        // to goalKg) doesn't get clipped by an axis range sized only from
+        // logged entries.
+        if let goalKg = settingsList.first?.goalKilograms {
+            values.append(displayValue(goalKg))
+        }
         guard let min = values.min(), let max = values.max() else { return 0...1 }
         let padding = Swift.max((max - min) * 0.2, 2)
         return (min - padding)...(max + padding)
+    }
+
+    // Bounds the visible x-axis to the real weigh-in range (plus a small pad)
+    // so the projected-completion mark, which can sit months out, doesn't
+    // stretch the axis and compress the real entries into a sliver of width.
+    private var xDomain: ClosedRange<Date> {
+        guard let first = entries.first?.date, let last = entries.last?.date else {
+            let now = Date.now
+            return now...now
+        }
+        return ChartXDomain.weightTrendDomain(firstEntryDate: first, lastEntryDate: last)
     }
 
     private var shareCard: some View {

@@ -10,7 +10,7 @@
 | Primary category | Health & Fitness |
 | Secondary category | Medical |
 | Age rating | 12+ (medical/treatment information) |
-| Price | Free with in-app subscriptions |
+| Price | Free — **no in-app purchases, no subscriptions** (paywall removed in `2c24573`) |
 
 ## Keywords (100 chars max)
 
@@ -46,7 +46,7 @@ WALK INTO APPOINTMENTS PREPARED
 PRIVATE BY DESIGN
 • No account. No servers. No analytics. Every data point stays on your iPhone.
 
-GLPill Pro: $6.99/month or $39.99/year with a 7-day free trial. Subscriptions renew automatically until cancelled in Settings.
+GLPill is free. No account, no subscription, no ads.
 
 GLPill is a tracking tool, not medical advice. Always follow your prescriber's instructions. Foundayo® is a trademark of Eli Lilly and Company. Rybelsus® is a trademark of Novo Nordisk A/S. GLPill is not affiliated with or endorsed by either company.
 ```
@@ -57,17 +57,27 @@ GLPill is a tracking tool, not medical advice. Always follow your prescriber's i
 Built for the new GLP-1 pills. Daily streaks, the Rybelsus 30-minute timer, weight trends, and a doctor-ready report — all private, all on your iPhone.
 ```
 
-## Subscription setup (App Store Connect)
+## Monetization — NONE (read this before touching subscriptions)
 
-1. Create subscription group: **GLPill Pro**
-2. Products (IDs must match exactly — they're hardcoded in `SubscriptionStore.swift`):
-   - `glpill.pro.monthly` — $6.99/month
-   - `glpill.pro.yearly` — $39.99/year + **7-day free trial** introductory offer
-   - glpill.pro.monthly ALSO gets a 7-day free introductory offer — configure it in App Store Connect (Subscriptions → Pro Monthly → Subscription Prices → Introductory Offer: Free, 1 week) before submitting.
-3. Localization (en-US): display name "GLPill Pro Monthly" / "GLPill Pro Yearly", description "Unlimited tracking, reports and reminders."
-4. Attach both products to the app version before submitting (missing this is the #1 rejection cause for subscription apps).
-5. App Store Connect → App Privacy: answer **"Data Not Collected"** (accurate: no accounts, no analytics, local-only storage).
-6. Paid Apps agreement + banking must be active before subscriptions go live.
+**The app ships free.** Commit `2c24573` deleted `SubscriptionStore.swift`, `PaywallView.swift`,
+`PremiumGate.swift`, `Entitlement.swift` and `GLPill.storekit`. There is no `import StoreKit`
+anywhere in `App/Sources`.
+
+**Do NOT reintroduce subscription language into any metadata.** The 2026-08-04 rejection
+(Guideline 2.1(b)) happened because the App Review notes still said "this is a subscription app…
+start the 7-day free trial", while no IAP products were submitted. Metadata that promises a
+purchase the binary can't deliver is an automatic rejection.
+
+Current App Store Connect state (verified 2026-08-27):
+
+- Subscription group **"Pro Subs"** (ID `22247155`) still exists with `glpill.pro.monthly` and
+  `glpill.pro.yearly`, both in **Prepare for Submission** — created, never submitted, not attached
+  to any version. Harmless while dormant; leave them unless you actually ship a paywall.
+- App Privacy: **"Data Not Collected"** ✅
+- Privacy Policy URL: `https://glpillapp.com/privacy.html` (NOT the `glpill-privacy.vercel.app` one)
+
+If you ever do monetize: re-add StoreKit code first, ship the paywall in a build, *then* attach the
+products to that version. Never metadata-first.
 
 ## iCloud / CloudKit capability (required for data sync — do this in Xcode once)
 
@@ -81,35 +91,69 @@ GLPill syncs user data through the user's **own private iCloud** (CloudKit priva
 
 ## Privacy policy URL
 
-**Live: https://glpill-privacy.vercel.app/privacy.html** (deployed 2026-07-12, Vercel project `glpill-privacy`). Paste this into App Store Connect → App Privacy / App Information. To update: edit `docs/website/privacy.html`, then `cd docs/website && vercel deploy --prod --yes`.
+**The URL actually set in App Store Connect is `https://glpillapp.com/privacy.html`** (verified 2026-08-27),
+served from `site/` (Vercel project `glpill`). Source of truth: `site/privacy.html`, mirrored to
+`web/public/privacy.html`. To update: edit `site/privacy.html`, `cp site/privacy.html web/public/privacy.html`,
+then deploy the `site/` project.
+
+⚠️ A second, **stale** copy is still public at `https://glpill-privacy.vercel.app/privacy.html`
+(Vercel project `glpill-privacy`, source `docs/website/privacy.html`). It is v1.0 and wrongly claims the
+app does not sync to iCloud. It is not referenced by App Store Connect — retire or redirect it.
 
 ## Review notes (paste into App Review Information)
 
+This is the text currently live in App Store Connect (set 2026-08-27):
+
 ```
-GLPill is a medication-adherence tracking tool for users of oral GLP-1 medications. It provides no medical advice and no dosing recommendations — users enter the dose plan given by their own doctor. All data is stored locally on device; there are no accounts or servers.
+GLPill is a medication-adherence tracking tool for people taking oral GLP-1 medications (Rybelsus/semaglutide, Foundayo/orforglipron, and compounded oral GLP-1s). It provides no medical advice and no dosing recommendations - the user enters the dose plan their own prescriber gave them. Disclaimers appear on the onboarding, dose-plan, settings, and report screens.
 
-To test: complete onboarding (any values work), then the paywall appears. Use a sandbox account to start the free trial. The daily flow is: tap "Take today's pill" on the Today tab.
+THE APP IS COMPLETELY FREE. There is no paywall, no subscription, and no in-app purchase in this build. Nothing is gated, and no sign-in or demo account is needed to review any feature. (An earlier build had a paywall; it was removed and the app now ships fully free. The previous review notes describing a subscription were out of date - that is what this resubmission corrects.)
+
+HOW TO REVIEW
+1. Launch and complete the short onboarding - any values work.
+2. On the Today tab, tap "Take today's pill" to log a dose and start a streak.
+3. If Rybelsus is selected, a 30-minute empty-stomach timer starts automatically.
+4. The Progress, History, and Report tabs show weight trends, dose history, and a doctor-ready 4-week summary.
+5. A Home/Lock Screen widget showing the streak can be added from the widget gallery.
+
+PRIVACY: no accounts, no servers, no analytics, no third-party SDKs. Data is stored on-device and synced only through the user's own private iCloud (CloudKit private database), which the developer cannot access. The App Privacy answer is "Data Not Collected".
 ```
 
-## Screenshot plan (6.9" + 6.5" required)
+## Screenshot plan — 6.5" only
 
-Use the simulator (iPhone 17 Pro Max for 6.9"). Suggested storyline:
-1. Today screen with an active streak — headline "One tap a day"
-2. Rybelsus timer running — "We time the 30-minute wait for you"
-3. Progress chart trending down — "Watch it work"
-4. Doctor report — "Walk into appointments prepared"
-5. Paywall/features — "Private by design — no account, no servers"
+This app record has **one iPhone slot: 6.5" Display** (accepts 1242×2688 or 1284×2778). There is no
+6.9" slot. Ignore any older note claiming 6.9" is mandatory.
 
-Capture: `xcrun simctl io booted screenshot shot.png` after walking the app with the StoreKit config active (run from Xcode).
+**Screenshots must be real app screens.** The 2026-08-04 rejection (Guideline 2.3.3) was caused by
+`App/Sources/Features/Marketing/ScreenshotExporter.swift`, which renders synthetic marketing
+compositions — a headline, a subtitle, and a few floating cards on a gradient, with no status bar,
+nav bar, or tab bar. Apple: *"Marketing or promotional materials that do not reflect the UI of the
+app are not appropriate for screenshots."* All five shots were rejected on that basis.
+
+Capture real screens instead — boot a 6.5"-class simulator, walk the app, and use:
+
+```
+xcrun simctl io booted screenshot shot.png
+```
+
+Storyline (each must be an actual screen, not a composition):
+1. Today tab with an active streak and the dose logged
+2. Rybelsus 30-minute timer running
+3. Progress tab — weight trend chart with milestones
+4. History tab — calendar with logged days
+5. Report tab — the 4-week doctor summary
+
+`ScreenshotExporter` is `#if DEBUG` and never ships, but its output must not be uploaded to the
+App Store. Keep it for social/marketing use only.
 
 ## Submission checklist
 
 - [ ] Apple Developer Program membership active
 - [ ] App Store Connect app record created (bundle ID `com.ayushgupta.glpill`)
-- [ ] Subscription group + 2 products created and attached to version
-- [ ] Privacy policy deployed + URL set
+- [ ] No subscription/IAP language anywhere in description, promo text, review notes, or privacy policy
+- [ ] Privacy policy deployed + URL set (`https://glpillapp.com/privacy.html`)
 - [ ] App Privacy questionnaire: Data Not Collected
-- [ ] Screenshots uploaded (6.9" mandatory; 6.5" auto-scales)
+- [ ] Screenshots uploaded — 6.5" slot, **real app screens** (not `ScreenshotExporter` output)
 - [ ] Review notes pasted
 - [ ] Build uploaded via Xcode (set your Team in Signing & Capabilities first, bump build number)
 - [ ] Submit for review

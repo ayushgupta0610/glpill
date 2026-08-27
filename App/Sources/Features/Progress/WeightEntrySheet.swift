@@ -7,12 +7,23 @@ struct WeightEntrySheet: View {
     @Environment(\.modelContext) private var context
     @Environment(\.dismiss) private var dismiss
     @Query(sort: \WeightEntry.date, order: .reverse) private var allEntries: [WeightEntry]
-    @State private var usesMetric = false
+    @State private var usesMetric: Bool
     @State private var displayValue: Double?
     @State private var date = Date.now
     @State private var errorMessage: String?
     @State private var showOutlierAlert = false
     @State private var isSaving = false
+    @State private var isInitializing = true
+
+    init(metric: Bool, entry: WeightEntry? = nil) {
+        self.metric = metric
+        self.entry = entry
+        // Seed usesMetric from `metric` at init, not in onAppear — assigning it
+        // there is a real state change when metric == true, which schedules
+        // .onChange(of: usesMetric) to fire on the next run-loop tick, after
+        // onAppear has already cleared isInitializing (see Round 2 QA regression).
+        _usesMetric = State(initialValue: metric)
+    }
 
     var body: some View {
         NavigationStack {
@@ -24,7 +35,7 @@ struct WeightEntrySheet: View {
                 .pickerStyle(.segmented)
                 .onChange(of: usesMetric) { oldMetric, newMetric in
                     // Convert the shown number in place — no data change.
-                    guard let value = displayValue else { return }
+                    guard !isInitializing, let value = displayValue else { return }
                     let kg = UnitFormat.kilograms(fromDisplay: value, metric: oldMetric)
                     displayValue = newMetric ? kg : kg / UnitFormat.kgPerLb
                 }
@@ -58,10 +69,11 @@ struct WeightEntrySheet: View {
                 Text(outlierMessage)
             }
             .onAppear {
-                usesMetric = metric
-                guard let entry else { return }
-                displayValue = usesMetric ? entry.kilograms : entry.kilograms / UnitFormat.kgPerLb
-                date = entry.date
+                if let entry {
+                    displayValue = usesMetric ? entry.kilograms : entry.kilograms / UnitFormat.kgPerLb
+                    date = entry.date
+                }
+                isInitializing = false
             }
         }
     }

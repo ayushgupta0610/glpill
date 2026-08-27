@@ -1,0 +1,69 @@
+import Foundation
+
+struct JourneyVelocity: Equatable {
+    let kgPerWeek: Double
+    let projectedCompletion: Date?
+}
+
+enum JourneyVelocityCalculator {
+    /// Average weekly rate of change over the last 4 entries (or fewer),
+    /// plus — with >=3 entries and a goal, moving toward it — the projected
+    /// date of reaching goalKg by extrapolating that rate. No projection
+    /// with fewer entries, no goal, or a rate moving away from the goal.
+    static func calculate(entries: [(date: Date, kg: Double)], goalKg: Double?) -> JourneyVelocity {
+        let sorted = entries.sorted { $0.date < $1.date }
+        guard sorted.count >= 2 else { return JourneyVelocity(kgPerWeek: 0, projectedCompletion: nil) }
+
+        let window = Array(sorted.suffix(4))
+        let first = window.first!
+        let last = window.last!
+        let days = last.date.timeIntervalSince(first.date) / 86400
+        // Require at least a full day of separation — entries logged within
+        // the same day (e.g. multiple corrections in one session) produce a
+        // near-zero denominator that blows kgPerWeek up to a nonsense value.
+        guard days >= 1 else { return JourneyVelocity(kgPerWeek: 0, projectedCompletion: nil) }
+        let kgPerDay = (last.kg - first.kg) / days
+        let kgPerWeek = kgPerDay * 7
+
+        guard let goalKg, sorted.count >= 3, abs(kgPerDay) > 0.001 else {
+            return JourneyVelocity(kgPerWeek: kgPerWeek, projectedCompletion: nil)
+        }
+
+        let remainingKg = last.kg - goalKg
+        let movingTowardGoal = (remainingKg > 0 && kgPerDay < 0) || (remainingKg < 0 && kgPerDay > 0)
+        guard movingTowardGoal else {
+            return JourneyVelocity(kgPerWeek: kgPerWeek, projectedCompletion: nil)
+        }
+
+        let daysRemaining = remainingKg / -kgPerDay
+        let projected = Calendar.current.date(byAdding: .day, value: Int(daysRemaining.rounded()), to: last.date)
+        return JourneyVelocity(kgPerWeek: kgPerWeek, projectedCompletion: projected)
+    }
+
+    /// Direction-based pace label. There's no target date in `UserSettings`,
+    /// so this describes trend direction rather than an invented "on/behind
+    /// schedule" concept the data can't actually support.
+    ///
+    /// `goalAboveStart` disambiguates whether a positive/negative rate is
+    /// toward or away from the goal — e.g. for a gain goal (goal above the
+    /// starting weight), gaining weight is on-plan and shouldn't warn.
+    /// `nil` (no goal) preserves the original loss-focused wording.
+    static func paceLabel(kgPerWeek: Double, goalAboveStart: Bool? = nil) -> (text: String, isWarning: Bool) {
+        if goalAboveStart == true {
+            if kgPerWeek > 0.05 {
+                return ("Trending up", false)
+            } else if kgPerWeek < -0.05 {
+                return ("Trending down", true)
+            } else {
+                return ("Holding steady", false)
+            }
+        }
+        if kgPerWeek < -0.05 {
+            return ("Losing steadily", false)
+        } else if kgPerWeek > 0.05 {
+            return ("Trending up", true)
+        } else {
+            return ("Holding steady", false)
+        }
+    }
+}

@@ -20,6 +20,10 @@ struct GLPillApp: App {
             ModelContainerFactory.wipe(container)
             UserDefaults.standard.removeObject(forKey: "eatTimerEnd")
         }
+        // Seed after the wipe so App Store screenshots show a real journey, not empty states.
+        if ProcessInfo.processInfo.arguments.contains("-seedDemoData") {
+            DemoDataSeeder.seed(into: container.mainContext)
+        }
         #endif
     }
 
