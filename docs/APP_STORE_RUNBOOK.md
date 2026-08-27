@@ -1,13 +1,26 @@
 # GLPill — "Once the Apple account is sorted" Runbook
 
-The exact, ordered steps to run **when your Apple Developer account / legal-entity address is fixed**, to get the **payment plans (subscriptions)** and **CloudKit (iCloud sync)** working for a production App Store release, then submit.
+> ## ⚠️ OBSOLETE: Part 3 (subscriptions) and every paywall reference below
+>
+> **The app ships free.** Commit `2c24573` (2026-07-22) removed the paywall, StoreKit code, and
+> `GLPill.storekit`. Anything in this runbook about subscriptions, sandbox accounts, free trials, or
+> "the reviewer faces the real hard paywall" is **historical and must not be pasted into App Store
+> Connect.**
+>
+> Doing exactly that caused the **2026-08-04 rejection under Guideline 2.1(b)** — the App Review
+> notes still promised a subscription the binary no longer contained. Corrected notes are in
+> `docs/APP_STORE.md` → *Review notes*, and are already live in App Store Connect as of 2026-08-27.
+>
+> Parts 1, 2, 4 and 5 (account, identifiers, CloudKit schema promotion, archive/upload) remain valid.
+
+The exact, ordered steps to run **when your Apple Developer account / legal-entity address is fixed**, to get **CloudKit (iCloud sync)** working for a production App Store release, then submit.
 
 Owner tags: **[YOU]** = only the account holder can do it · **[CLAUDE]** = I can do it in the repo/metadata.
 
 Constants used everywhere:
 - Bundle ID (app): `com.ayushgupta.glpill` · Widget: `com.ayushgupta.glpill.widget`
 - App Group: `group.com.ayushgupta.glpill` · iCloud container: `iCloud.com.ayushgupta.glpill`
-- Team: `LPR84B522G` · Subscriptions: `glpill.pro.monthly` ($6.99/mo), `glpill.pro.yearly` ($39.99/yr + 3-day free trial)
+- Team: `LPR84B522G` · Subscriptions: **none shipped** (dormant products `glpill.pro.monthly` / `glpill.pro.yearly` sit unsubmitted in group `22247155`)
 
 ---
 
@@ -68,30 +81,12 @@ SwiftData's CloudKit mirroring auto-creates the record schema in the **Developme
 
 ## Reviewer notes (paste into App Review Information → Notes)
 
-The `-uiTestUnlocked` bypass is DEBUG-only, so the reviewer faces the real hard paywall — they MUST be told how to get in:
+**The paywall version of these notes is what got the app rejected on 2026-08-04.** It has been
+removed. The single source of truth is now `docs/APP_STORE.md` → *Review notes*, which is already
+live in App Store Connect. Do not re-derive reviewer notes from this file.
 
-```
-GLPill is a private, on-device adherence tracker for people on oral GLP-1 pills
-(Foundayo/orforglipron, Rybelsus/semaglutide). It gives NO medical or dosing
-advice — the user enters the plan their prescriber gave them; disclaimers appear
-on the onboarding, settings, dose-plan, and report screens.
-
-PRIVACY: no accounts, no servers. Data is stored on-device and optionally synced
-only through the user's OWN private iCloud (CloudKit private database), which the
-developer cannot access. App Privacy answer is "Data Not Collected" — no analytics,
-no tracking, no third-party SDKs.
-
-HOW TO REVIEW (there is a hard paywall by design):
-1. Launch and complete the short onboarding — any values work.
-2. At the paywall, use a StoreKit SANDBOX Apple ID to start the 3-day free trial
-   on the Yearly plan (or buy Monthly). This unlocks the full app.
-3. On the Today tab, tap "Take today's pill" to log a dose and start a streak.
-   If Rybelsus is selected, a 30-minute empty-stomach timer starts automatically.
-   The Progress, History, and Report tabs show trends, history, and a doctor summary.
-A Home-/Lock-Screen widget shows the streak (add "GLPill" from the widget gallery).
-No external logins or back-end to configure. Contact us if the sandbox purchase
-fails on your end and we'll assist immediately.
-```
+There is no paywall and no `-uiTestUnlocked` bypass to explain — the reviewer can reach every
+feature immediately.
 
 ---
 
@@ -99,8 +94,9 @@ fails on your end and we'll assist immediately.
 
 | Risk | Mitigation (status) |
 |---|---|
-| Reviewer stuck at hard paywall | Reviewer notes above + StoreKit sandbox path. **Do not skip.** |
-| Subscriptions not attached to version | Part 3 step 6 — attach both to the 1.0 version. |
+| **2.1(b) — metadata references subscriptions** | **HIT on 2026-08-04.** Review notes claimed a paywall the free binary didn't have. Fixed 2026-08-27: notes rewritten, privacy policy §5 rewritten. Keep all metadata free-only. |
+| **2.3.3 — screenshots aren't the app** | **HIT on 2026-08-04.** All five shots were `ScreenshotExporter` marketing compositions. Fix: upload real 6.5" simulator captures. |
+| Reviewer stuck at a paywall | N/A — no paywall exists. |
 | CloudKit sync broken for real users | Part 4 step 11 — **deploy schema to Production.** |
 | Guideline 1.4.1 (medical) | App never suggests doses; disclaimers in 5 places (already in code). |
 | Trademarked drug names in app name | Kept in keywords only, never the app name; non-affiliation disclaimer in metadata. |
