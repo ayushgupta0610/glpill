@@ -361,12 +361,15 @@ final class Round3RegressionTests: XCTestCase {
         sleep(1)
         shot(app, "R6-after-edit")
 
-        // The list must now reflect the edit without a duplicate 82/79 pair.
-        let after82 = app.staticTexts.matching(NSPredicate(format: "label CONTAINS '82.0 kg'")).count
-        let after79 = app.staticTexts.matching(NSPredicate(format: "label CONTAINS '79.0 kg'")).count
-        XCTAssertTrue(after79 >= 1 || after82 >= 1, "Weigh-in vanished after edit")
-        // The ring and the Weigh-ins row both show the value, so 2 is the expected ceiling.
-        XCTAssertLessThanOrEqual(after79, 2, "Edit produced a duplicate 79 kg row")
+        // The list must now reflect the edit without a duplicate 82/79 pair. Count the
+        // Weigh-ins ROWS (buttons) rather than staticTexts — the value also appears in the
+        // progress ring, the activity feed and the summary line, so a staticText count is
+        // not a measure of duplication.
+        let rows82 = app.buttons.matching(NSPredicate(format: "label CONTAINS '82.0 kg'")).count
+        let rows79 = app.buttons.matching(NSPredicate(format: "label CONTAINS '79.0 kg'")).count
+        XCTAssertTrue(rows79 >= 1 || rows82 >= 1, "Weigh-in vanished after edit")
+        XCTAssertEqual(rows79, 1, "Edit produced a duplicate 79 kg row")
+        XCTAssertEqual(rows82, 0, "Edit left the original 82 kg row behind")
 
         // Delete the entry via the trash button.
         let deleteButton = app.buttons["Delete weigh-in"].firstMatch

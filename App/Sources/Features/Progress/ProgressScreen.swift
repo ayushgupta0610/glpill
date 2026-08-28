@@ -199,6 +199,10 @@ struct ProgressScreen: View {
                                 Text(UnitFormat.weightString(kilograms: entry.kilograms, metric: metric))
                                     .foregroundStyle(.secondary)
                             }
+                            // Without this the Spacer between the date and the weight is not
+                            // hit-testable, so a tap in the middle of the row — the natural
+                            // place to aim — does nothing. The trash button already does this.
+                            .contentShape(Rectangle())
                         }
                         .buttonStyle(.plain)
 

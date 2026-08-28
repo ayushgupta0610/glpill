@@ -97,6 +97,7 @@ feature immediately.
 | **2.1(b) — metadata references subscriptions** | **HIT on 2026-08-04.** Review notes claimed a paywall the free binary didn't have. Fixed 2026-08-27: notes rewritten, privacy policy §5 rewritten. Keep all metadata free-only. |
 | **2.3.3 — screenshots aren't the app** | **HIT on 2026-08-04.** All five shots were `ScreenshotExporter` marketing compositions. Fix: upload real 6.5" simulator captures. |
 | Reviewer stuck at a paywall | N/A — no paywall exists. |
+| Tap targets that silently do nothing | Fixed 2026-08-28: the Weigh-ins row Button's label was an `HStack` with a `Spacer()` and no `.contentShape(Rectangle())`, so a tap in the middle of the row — the natural place to aim — was not hit-tested and the Edit weigh-in sheet never opened. Any Button whose label relies on a `Spacer` for layout needs an explicit content shape. |
 | CloudKit sync broken for real users | Part 4 step 11 — **deploy schema to Production.** |
 | Guideline 1.4.1 (medical) | App never suggests doses; disclaimers in 5 places (already in code). |
 | Trademarked drug names in app name | Kept in keywords only, never the app name; non-affiliation disclaimer in metadata. |
