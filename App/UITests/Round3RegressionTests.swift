@@ -337,11 +337,15 @@ final class Round3RegressionTests: XCTestCase {
         app.tabBars.buttons["Progress"].tap()
         sleep(1)
         shot(app, "R6-after-add")
-        let originalCount = app.staticTexts.matching(NSPredicate(format: "label == '82 kg'")).count
-        XCTAssertGreaterThanOrEqual(originalCount, 1, "Added weigh-in (82 kg) did not appear")
+        // UnitFormat.weightString formats as "%.1f kg", so the label is "82.0 kg" — an
+        // exact match on "82 kg" never hit. The tappable row lives in the "Weigh-ins"
+        // card below the fold, and is a Button labelled "<date> … <weight>".
+        let originalCount = app.staticTexts.matching(NSPredicate(format: "label CONTAINS '82.0 kg'")).count
+        XCTAssertGreaterThanOrEqual(originalCount, 1, "Added weigh-in (82.0 kg) did not appear")
 
         // Edit it — tap the weigh-in row, change value to 79.
-        let row = app.staticTexts.matching(NSPredicate(format: "label == '82 kg'")).firstMatch
+        let row = app.buttons.matching(NSPredicate(format: "label CONTAINS '82.0 kg'")).firstMatch
+        XCTAssertTrue(scrollUntilHittable(row, in: app), "Weigh-ins row never became hittable")
         row.tap()
         XCTAssertTrue(app.navigationBars["Edit weigh-in"].waitForExistence(timeout: 5), "Edit weigh-in sheet did not open")
         let editField = app.textFields.firstMatch
@@ -358,21 +362,34 @@ final class Round3RegressionTests: XCTestCase {
         shot(app, "R6-after-edit")
 
         // The list must now reflect the edit without a duplicate 82/79 pair.
-        let after82 = app.staticTexts.matching(NSPredicate(format: "label == '82 kg'")).count
-        let after79 = app.staticTexts.matching(NSPredicate(format: "label == '79 kg'")).count
+        let after82 = app.staticTexts.matching(NSPredicate(format: "label CONTAINS '82.0 kg'")).count
+        let after79 = app.staticTexts.matching(NSPredicate(format: "label CONTAINS '79.0 kg'")).count
         XCTAssertTrue(after79 >= 1 || after82 >= 1, "Weigh-in vanished after edit")
+        // The ring and the Weigh-ins row both show the value, so 2 is the expected ceiling.
         XCTAssertLessThanOrEqual(after79, 2, "Edit produced a duplicate 79 kg row")
 
         // Delete the entry via the trash button.
         let deleteButton = app.buttons["Delete weigh-in"].firstMatch
-        XCTAssertTrue(deleteButton.waitForExistence(timeout: 5), "Delete control missing")
+        XCTAssertTrue(scrollUntilHittable(deleteButton, in: app), "Delete control missing")
         deleteButton.tap()
         sleep(1)
         shot(app, "R6-after-delete")
         // App survives; weigh-in list is now empty (baseline nudge or empty state).
         XCTAssertTrue(app.tabBars.buttons["Progress"].exists, "App crashed deleting a weigh-in")
-        let remaining = app.staticTexts.matching(NSPredicate(format: "label == '79 kg' OR label == '82 kg'")).count
+        let remaining = app.buttons.matching(
+            NSPredicate(format: "label CONTAINS '79.0 kg' OR label CONTAINS '82.0 kg'")
+        ).count
         XCTAssertEqual(remaining, 0, "Weigh-in row lingered after delete")
+    }
+
+    /// Scrolls the app until `element` is hittable. XCUITest finds off-screen elements in
+    /// the hierarchy but cannot tap them, and the Weigh-ins card sits below the fold.
+    @MainActor private func scrollUntilHittable(_ element: XCUIElement, in app: XCUIApplication) -> Bool {
+        for _ in 0..<8 {
+            if element.exists && element.isHittable { return true }
+            app.swipeUp()
+        }
+        return element.exists && element.isHittable
     }
 
     // MARK: - Flow 7: Reminder-style cycle in Settings
@@ -392,7 +409,10 @@ final class Round3RegressionTests: XCTestCase {
             if reminderPicker.waitForExistence(timeout: 3) {
                 reminderPicker.tap()
                 sleep(1)
-                let opt = app.staticTexts.matching(NSPredicate(format: "label == %@", style)).firstMatch
+                // SwiftUI renders menu-Picker options as buttons, not staticTexts. Querying
+                // staticTexts left the menu open, so the next iteration's tap hit an
+                // overlay-covered (non-hittable) picker row.
+                let opt = app.buttons.matching(NSPredicate(format: "label == %@", style)).firstMatch
                 if opt.waitForExistence(timeout: 3) {
                     opt.tap()
                     sleep(1)
