@@ -185,7 +185,8 @@ final class Round3RegressionTests: XCTestCase {
             picker.tap()
             sleep(1)
         }
-        let reflux = app.staticTexts.matching(NSPredicate(format: "label CONTAINS 'Reflux'")).firstMatch
+        // SwiftUI renders menu-Picker options as buttons, not staticTexts.
+        let reflux = app.buttons.matching(NSPredicate(format: "label CONTAINS 'Reflux'")).firstMatch
         XCTAssertTrue(reflux.waitForExistence(timeout: 5),
                       "'Reflux / burping' is not a selectable side-effect option")
         reflux.tap()
@@ -223,7 +224,8 @@ final class Round3RegressionTests: XCTestCase {
         // The medication Picker (Form navigation-style). Open it and pick Foundayo.
         let medPicker = app.buttons.matching(NSPredicate(format: "label CONTAINS 'Medication'")).firstMatch
         if medPicker.waitForExistence(timeout: 3) { medPicker.tap(); sleep(1) }
-        let foundayo = app.staticTexts.matching(NSPredicate(format: "label CONTAINS 'Foundayo'")).firstMatch
+        // SwiftUI renders menu-Picker options as buttons, not staticTexts.
+        let foundayo = app.buttons.matching(NSPredicate(format: "label CONTAINS 'Foundayo'")).firstMatch
         XCTAssertTrue(foundayo.waitForExistence(timeout: 5), "Foundayo option missing in medication picker")
         foundayo.tap()
         sleep(1)

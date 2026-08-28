@@ -56,6 +56,23 @@ final class AppStoreShotsTests: XCTestCase {
         tabs.buttons["Report"].tap()
         sleep(2)
         shot("05-report")
+
+        // 6 — Settings › Privacy policy: the free + private + own-iCloud claim, on a
+        //     real screen. glpillapp.com leads with "The free, private tracker" and the
+        //     App Store description says the same; this is the in-app screen behind it.
+        //     The copy lives in SettingsView.PrivacyPolicyView, a NavigationLink
+        //     destination — so navigate into it rather than scrolling Settings.
+        tabs.buttons["Settings"].tap()
+        sleep(2)
+        let privacyLink = app.buttons["Privacy policy"]
+        if !privacyLink.waitForExistence(timeout: 5) { app.swipeUp(); sleep(1) }
+        XCTAssertTrue(privacyLink.waitForExistence(timeout: 5), "Privacy policy row not reachable")
+        privacyLink.tap()
+        XCTAssertTrue(app.staticTexts.matching(
+            NSPredicate(format: "label CONTAINS 'GLPill is free'")
+        ).firstMatch.waitForExistence(timeout: 5), "Privacy summary copy did not load")
+        sleep(1)
+        shot("06-privacy")
     }
 
     @MainActor private func allowNotificationsIfAsked() {

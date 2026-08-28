@@ -75,7 +75,11 @@ final class EdgeFlowTests: XCTestCase {
             app.buttons["Add"].tap()
         }
         // The morning-meds CTA is "Skip for now" when empty, "Continue" once meds exist.
-        let morningCTA = config.morningMeds.isEmpty ? app.buttons["Skip for now"] : app.buttons["Continue"]
+        // Use firstMatch: the outgoing step's CTA is still in the hierarchy mid-transition,
+        // so a bare ["Continue"] query is ambiguous and throws.
+        let morningCTA = config.morningMeds.isEmpty
+            ? app.buttons["Skip for now"].firstMatch
+            : app.buttons.matching(identifier: "Continue").firstMatch
         XCTAssertTrue(morningCTA.waitForExistence(timeout: 5), "Morning-meds CTA missing")
         morningCTA.tap()
 
@@ -230,7 +234,10 @@ final class EdgeFlowTests: XCTestCase {
 
         // Undo snackbar (from a quick add) — trigger via log sheet water then undo.
         // First open tap-to-type on protein total.
-        let proteinTotal = app.buttons.matching(NSPredicate(format: "label CONTAINS 'grams of protein'")).firstMatch
+        // The tap target's label is "Protein <n> of <target> grams. Tap to type an exact
+        // value." — the "grams of protein" string is a `unit:` argument the stepper never
+        // renders, so matching on it never succeeded.
+        let proteinTotal = app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Protein '")).firstMatch
         XCTAssertTrue(proteinTotal.waitForExistence(timeout: 5), "Protein total tap target missing")
 
         // Huge value.

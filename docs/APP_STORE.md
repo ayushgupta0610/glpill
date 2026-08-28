@@ -21,15 +21,27 @@ glp1,pill,orforglipron,foundayo,rybelsus,tracker,semaglutide,weight,loss,dose,me
 
 ## Description
 
+Must stay consistent with **glpillapp.com** and the in-app privacy summary
+(`SettingsView.PrivacyPolicyView`). All three now say the same two things: the app is
+**free**, and data **syncs through the user's own private iCloud**.
+
+> ⚠️ The previous version said *"Every data point stays on your iPhone."* That was
+> inaccurate — the app mirrors to CloudKit's private database on real devices — and it
+> contradicted both the website and the privacy policy. Do not reintroduce it.
+
 ```
 GLPill is the companion app built for GLP-1 pills — Foundayo® (orforglipron), Rybelsus® (semaglutide), and compounded oral GLP-1s.
 
 Injections had their apps. Your daily pill deserves one too.
 
+COMPLETELY FREE
+• No subscription, no in-app purchases, no ads. Every feature is included.
+
 STAY CONSISTENT
 • One-tap daily dose logging with streaks
 • Smart daily reminder at your time
 • Rybelsus® mode: automatic 30-minute empty-stomach timer — we tell you the exact minute you can eat
+• Home and Lock Screen widget keeps your streak in view
 
 FOLLOW YOUR PLAN
 • Enter your prescriber's dose plan and always know your current step
@@ -44,9 +56,8 @@ WALK INTO APPOINTMENTS PREPARED
 • 4-week doctor report: adherence, doses, weight change, side effects
 
 PRIVATE BY DESIGN
-• No account. No servers. No analytics. Every data point stays on your iPhone.
-
-GLPill is free. No account, no subscription, no ads.
+• No account. No analytics. No tracking. We run no servers and never see your data.
+• Your history stays on your device and syncs privately through your own iCloud — so it follows you to a new iPhone and survives a reinstall.
 
 GLPill is a tracking tool, not medical advice. Always follow your prescriber's instructions. Foundayo® is a trademark of Eli Lilly and Company. Rybelsus® is a trademark of Novo Nordisk A/S. GLPill is not affiliated with or endorsed by either company.
 ```
@@ -54,8 +65,9 @@ GLPill is a tracking tool, not medical advice. Always follow your prescriber's i
 ## Promotional text (170 chars)
 
 ```
-Built for the new GLP-1 pills. Daily streaks, the Rybelsus 30-minute timer, weight trends, and a doctor-ready report — all private, all on your iPhone.
+Free and private, built for the GLP-1 pill. Daily streaks, the Rybelsus 30-minute timer, weight trends and a doctor-ready report — synced through your own iCloud.
 ```
+(162 chars.)
 
 ## Monetization — NONE (read this before touching subscriptions)
 
@@ -136,12 +148,24 @@ Capture real screens instead — boot a 6.5"-class simulator, walk the app, and 
 xcrun simctl io booted screenshot shot.png
 ```
 
-Storyline (each must be an actual screen, not a composition):
-1. Today tab with an active streak and the dose logged
-2. Rybelsus 30-minute timer running
-3. Progress tab — weight trend chart with milestones
-4. History tab — calendar with logged days
+Storyline (each must be an actual screen, not a composition) — 6 shots, reproducible via
+`AppStoreShotsTests` + `DemoDataSeeder`:
+1. Today tab — active streak, current dose step, morning sequence
+2. Rybelsus 30-minute empty-stomach timer running
+3. Progress tab — weight trend chart, ring, milestones
+4. History tab — calendar of logged days
 5. Report tab — the 4-week doctor summary
+6. Settings › Privacy policy — the in-app screen stating the app is free and syncs
+   through the user's own iCloud. Backs the website headline and the description's
+   COMPLETELY FREE / PRIVATE BY DESIGN sections with real UI.
+
+Capture is 1320×2868 (iPhone 17 Pro Max, the only 6.5"-capable sim on Xcode 26), then
+normalised without distortion:
+
+```
+magick in.png -resize 1284x -gravity center -background white \
+  -extent 1284x2778 -alpha remove -alpha off -strip out.png
+```
 
 `ScreenshotExporter` is `#if DEBUG` and never ships, but its output must not be uploaded to the
 App Store. Keep it for social/marketing use only.
