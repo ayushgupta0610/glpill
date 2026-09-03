@@ -1,5 +1,6 @@
 ---
 import '../styles/global.css';
+import { APP_STORE_URL } from '../consts';
 
 interface Props {
   title: string;
@@ -63,7 +64,7 @@ const ogAbs = new URL(ogImage, site).href;
         </a>
         <nav class="flex items-center gap-5 text-sm font-semibold">
           <a class="text-muted hover:text-teal" href="/blog/">Guides</a>
-          <a class="rounded-full bg-teal px-4 py-2 text-white hover:bg-deep" href="/#waitlist">Get the app</a>
+          <a class="rounded-full bg-teal px-4 py-2 text-white hover:bg-deep" href={APP_STORE_URL} target="_blank" rel="noopener">Get the app</a>
         </nav>
       </div>
     </header>

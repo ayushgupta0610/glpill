@@ -1,6 +1,7 @@
 ---
 import Layout from '../layouts/Layout.astro';
-import Waitlist from '../components/Waitlist.astro';
+import { APP_STORE_URL } from '../consts';
+import Download from '../components/Download.astro';
 
 const title = 'Rybelsus Tracker with the 30-Minute Timer — GLPill';
 const description =
@@ -34,7 +35,8 @@ const appLd = {
   '@context': 'https://schema.org', '@type': 'SoftwareApplication',
   name: 'GLPill — Rybelsus Tracker', applicationCategory: 'HealthApplication', operatingSystem: 'iOS 17+',
   description: 'An iPhone tracker built for Rybelsus (oral semaglutide) with an automatic 30-minute empty-stomach timer, daily dose streaks, weight trends and doctor-ready reports. Private by design — data stays on your device and syncs through your own iCloud.',
-  offers: { '@type': 'Offer', price: '39.99', priceCurrency: 'USD' },
+  offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+  url: APP_STORE_URL,
   publisher: { '@type': 'Organization', name: 'GLPill', url: 'https://glpillapp.com' },
 };
 const howToLd = {
@@ -59,11 +61,11 @@ const crumbLd = { '@context': 'https://schema.org', '@type': 'BreadcrumbList', i
 
   <section class="bg-gradient-to-br from-teal to-mint px-5 py-20 text-center text-white">
     <img src="/icon.png" alt="GLPill app icon" width="96" height="96" class="mx-auto h-24 w-24 rounded-[22px] shadow-2xl" />
-    <div class="mt-6"><span class="inline-block rounded-full border border-white/35 bg-white/15 px-4 py-1.5 text-sm font-semibold">Coming soon to the App Store</span></div>
+    <div class="mt-6"><span class="inline-block rounded-full border border-white/35 bg-white/15 px-4 py-1.5 text-sm font-semibold">Free on the App Store</span></div>
     <h1 class="mx-auto mt-5 max-w-3xl text-3xl font-bold tracking-tight sm:text-5xl">The Rybelsus tracker with a built-in 30-minute timer</h1>
     <p class="mx-auto mt-4 max-w-2xl text-lg text-white/90">Take your Rybelsus®, tap once, and GLPill times the empty-stomach wait for you — then tells you the exact minute you can eat. Plus one-tap streaks, weight trends and doctor-ready reports.</p>
     <div class="mt-8 flex flex-wrap justify-center gap-3">
-      <a href="#waitlist" class="rounded-full bg-white px-7 py-3.5 font-bold text-deep hover:bg-white/90">Join the waitlist</a>
+      <a href={APP_STORE_URL} target="_blank" rel="noopener" class="rounded-full bg-white px-7 py-3.5 font-bold text-deep hover:bg-white/90">Download on the App Store</a>
       <a href="https://www.instagram.com/glpillapp/" target="_blank" rel="noopener" class="rounded-full border-2 border-white/70 px-7 py-3.5 font-bold text-white hover:bg-white/10">Follow @glpillapp</a>
     </div>
   </section>
@@ -106,5 +108,5 @@ const crumbLd = { '@context': 'https://schema.org', '@type': 'BreadcrumbList', i
     </div>
   </section>
 
-  <Waitlist source="rybelsus-tracker" />
+  <Download source="rybelsus-tracker" />
 </Layout>

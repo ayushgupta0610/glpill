@@ -1,5 +1,7 @@
 ---
 import Layout from '../layouts/Layout.astro';
+import Download from '../components/Download.astro';
+import { APP_STORE_URL } from '../consts';
 
 const title = 'GLPill — The free, private tracker for GLP-1 pills';
 const description =
@@ -13,7 +15,10 @@ const appJsonLd = {
   operatingSystem: 'iOS',
   description:
     "The private, pill-native iPhone tracker for GLP-1 pills — Foundayo (orforglipron), Rybelsus and compounded oral GLP-1s. Daily dose streaks, the 30-minute meal timer, weight trends and doctor-ready reports. No account, no servers — all data stays on your device.",
-  offers: { '@type': 'Offer', price: '39.99', priceCurrency: 'USD' },
+  // The app is free. This previously said 39.99, left over from the subscription
+  // plan that was dropped before launch.
+  offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+  url: APP_STORE_URL,
   publisher: { '@type': 'Organization', name: 'GLPill', url: 'https://glpillapp.com' },
 };
 
@@ -35,7 +40,7 @@ const features = [
   <section class="bg-gradient-to-br from-teal to-mint px-5 py-20 text-center text-white sm:py-24">
     <img src="/icon.png" alt="GLPill app icon" width="96" height="96" class="mx-auto h-24 w-24 rounded-[22px] shadow-2xl" />
     <div class="mt-6">
-      <span class="inline-block rounded-full border border-white/35 bg-white/15 px-4 py-1.5 text-sm font-semibold">Free — coming soon to the App Store</span>
+      <span class="inline-block rounded-full border border-white/35 bg-white/15 px-4 py-1.5 text-sm font-semibold">Free on the App Store</span>
     </div>
     <h1 class="mx-auto mt-5 max-w-3xl text-4xl font-bold tracking-tight sm:text-5xl">The free, private tracker for GLP-1 pills</h1>
     <p class="mx-auto mt-4 max-w-2xl text-xl font-semibold text-white">
@@ -46,7 +51,7 @@ const features = [
       the 30-minute timer, doctor-ready reports. All on your iPhone, never our servers. No account, no ads.
     </p>
     <div class="mt-8 flex flex-wrap justify-center gap-3">
-      <a href="#waitlist" class="rounded-full bg-white px-7 py-3.5 font-bold text-deep hover:bg-white/90">Join the waitlist</a>
+      <a href={APP_STORE_URL} target="_blank" rel="noopener" class="rounded-full bg-white px-7 py-3.5 font-bold text-deep hover:bg-white/90">Download on the App Store</a>
       <a href="https://www.instagram.com/glpillapp/" target="_blank" rel="noopener" class="rounded-full border-2 border-white/70 px-7 py-3.5 font-bold text-white hover:bg-white/10">Follow @glpillapp</a>
     </div>
   </section>
@@ -95,59 +100,5 @@ const features = [
     </div>
   </section>
 
-  <!-- Waitlist -->
-  <section id="waitlist" class="mx-auto max-w-3xl px-5 py-16">
-    <div class="rounded-3xl bg-white p-8 text-center shadow-md sm:p-10">
-      <h2 class="text-2xl font-bold text-deep">Be first in line</h2>
-      <p class="mx-auto mt-3 max-w-lg text-muted">Launching on the App Store soon. Join the waitlist and we'll send exactly one email — the link, on launch day.</p>
-      <form id="wl-form" class="mx-auto mt-5 flex max-w-md flex-wrap justify-center gap-2.5">
-        <input id="wl-email" type="email" name="email" required placeholder="you@email.com" aria-label="Email address"
-          class="min-w-[240px] flex-1 rounded-full border border-teal/30 px-5 py-3 outline-none focus:border-teal focus:ring-2 focus:ring-teal/20" />
-        <button id="wl-btn" type="submit" class="rounded-full bg-teal px-6 py-3 font-bold text-white hover:bg-deep">Notify me</button>
-      </form>
-      <p id="wl-msg" role="status" aria-live="polite" class="mt-3 min-h-[1.4em] font-semibold text-teal"></p>
-      <p class="mt-4 text-sm text-muted">Or just follow <a href="https://www.instagram.com/glpillapp/" target="_blank" rel="noopener" class="font-bold text-teal">@glpillapp</a> — launch day will be loud.</p>
-      <p class="mt-3 text-xs text-muted">One email at launch, nothing else. Address never shared or sold.</p>
-    </div>
-  </section>
-
-  <script is:inline>
-    (function () {
-      var form = document.getElementById('wl-form');
-      var email = document.getElementById('wl-email');
-      var btn = document.getElementById('wl-btn');
-      var msg = document.getElementById('wl-msg');
-      if (!form) return;
-      form.addEventListener('submit', function (e) {
-        e.preventDefault();
-        msg.style.color = '#0E7C7B';
-        msg.textContent = '';
-        btn.disabled = true;
-        btn.textContent = 'Adding you…';
-        fetch('/api/waitlist', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email: email.value, source: 'landing' }),
-        })
-          .then(function (r) { return r.json().then(function (d) { return { ok: r.ok, d: d }; }); })
-          .then(function (res) {
-            if (res.ok) {
-              if (typeof gtag === 'function') { gtag('event', 'waitlist_signup', { method: 'landing' }); }
-              form.style.display = 'none';
-              msg.textContent = "You're on the list. We'll email you the moment it's live. 💊";
-            } else {
-              msg.innerHTML = 'The fastest way in: follow <a href="https://www.instagram.com/glpillapp/" target="_blank" rel="noopener" style="color:#0E7C7B;font-weight:700;">@glpillapp</a> — launch day will be loud. 💊';
-              btn.disabled = false;
-              btn.textContent = 'Notify me';
-            }
-          })
-          .catch(function () {
-            msg.style.color = '#c0392b';
-            msg.textContent = 'Network hiccup — please try again, or follow @glpillapp.';
-            btn.disabled = false;
-            btn.textContent = 'Notify me';
-          });
-      });
-    })();
-  </script>
+  <Download source="landing" />
 </Layout>

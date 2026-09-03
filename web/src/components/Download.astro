@@ -1,0 +1,48 @@
+---
+import { APP_STORE_URL, INSTAGRAM_URL } from '../consts';
+
+interface Props {
+  /** Fires with the GA event so download clicks stay attributable per page. */
+  source: string;
+}
+const { source } = Astro.props;
+---
+
+<section id="download" class="mx-auto max-w-3xl px-5 py-16">
+  <div class="rounded-3xl bg-white p-8 text-center shadow-md sm:p-10">
+    <h2 class="text-2xl font-bold text-deep">Get GLPill</h2>
+    <p class="mx-auto mt-3 max-w-lg text-muted">
+      Free on the App Store. No subscription, no in-app purchases, no ads, no account.
+    </p>
+    <div class="mt-6 flex flex-wrap justify-center gap-3">
+      <a
+        id="dl-btn"
+        href={APP_STORE_URL}
+        target="_blank"
+        rel="noopener"
+        class="rounded-full bg-teal px-7 py-3.5 font-bold text-white hover:bg-deep"
+        >Download on the App Store</a
+      >
+      <a
+        href={INSTAGRAM_URL}
+        target="_blank"
+        rel="noopener"
+        class="rounded-full border-2 border-teal/40 px-7 py-3.5 font-bold text-teal hover:bg-teal/5"
+        >Follow @glpillapp</a
+      >
+    </div>
+    <p class="mt-4 text-xs text-muted">Requires iPhone. Your data stays on your device and syncs through your own iCloud.</p>
+  </div>
+</section>
+
+<script define:vars={{ source }}>
+  (function () {
+    var btn = document.getElementById('dl-btn');
+    if (!btn) return;
+    btn.addEventListener('click', function () {
+      if (typeof gtag === 'function') {
+        gtag('event', 'app_store_click', { method: source });
+      }
+    });
+  })();
+</script>
